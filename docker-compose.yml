@@ -1,0 +1,51 @@
+# Plain `docker compose up -d`         -> http://localhost:8000 (HTTP: fine on the computer itself)
+# `--profile https` (Caddy)            -> HTTPS on your domain or LAN IP, needed for phones
+# `--profile tunnel` (Cloudflare)      -> temporary public HTTPS URL to try it on a phone
+# `--profile findmy` (anisette server) -> optional helper for FEATURE_FINDMY
+services:
+  app:
+    build: .
+    image: locus:latest
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - data:/data
+
+  caddy:
+    image: caddy:2
+    profiles: [https]
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-localhost}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [app]
+
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    profiles: [tunnel]
+    command: tunnel --no-autoupdate --url http://app:8000
+    depends_on: [app]
+
+  anisette:
+    image: dadoum/anisette-v3-server:latest
+    profiles: [findmy]
+    restart: unless-stopped
+    volumes:
+      - anisette:/home/Alcoholic/.config/anisette-v3/lib/
+
+volumes:
+  data:
+  caddy_data:
+  caddy_config:
+  anisette:

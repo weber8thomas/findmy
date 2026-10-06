@@ -17,14 +17,6 @@ from app.services.devices import lost_mode_out
 
 log = logging.getLogger(__name__)
 router = APIRouter()
-_background: set[asyncio.Task] = set()
-
-
-def _spawn(coro) -> None:
-    """Run outside the connection's cancel scope (the socket task may already be cancelled)."""
-    task = asyncio.create_task(coro)
-    _background.add(task)
-    task.add_done_callback(_background.discard)
 
 
 async def _publish_status(ctx: AppContext, device_id: str, online: bool) -> None:
@@ -143,4 +135,5 @@ async def websocket_endpoint(ws: WebSocket):
             t.cancel()
         went_offline = ctx.hub.remove(conn)
         if went_offline:
-            _spawn(_publish_status(ctx, went_offline, False))
+            # Detached: this socket's task may already be cancelled.
+            ctx.spawn(_publish_status(ctx, went_offline, False))

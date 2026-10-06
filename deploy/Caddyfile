@@ -1,0 +1,7 @@
+# SITE_ADDRESS examples:
+#   find.example.com  -> public certificate from Let's Encrypt (ports 80/443 reachable)
+#   192.168.1.20      -> certificate from Caddy's local CA (trust it on your phones, see docs/https-dev.md)
+{$SITE_ADDRESS} {
+	encode zstd gzip
+	reverse_proxy app:8000
+}

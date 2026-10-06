@@ -30,7 +30,9 @@ findmy = [
     "findmy>=0.10,<0.11",
 ]
 icloud = [
-    "pyicloud>=2.0",
+    "pyicloud>=2.7,<2.8",
+    # pyicloud 2.7 imports rich at runtime without declaring it.
+    "rich>=13",
 ]
 
 [tool.pytest.ini_options]

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+from collections.abc import Coroutine
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
@@ -28,3 +30,16 @@ class AppContext:
     providers: ProviderRegistry = None  # type: ignore[assignment]
     push: PushService = None  # type: ignore[assignment]
     extras: dict[str, Any] = field(default_factory=dict)
+    background: set[asyncio.Task] = field(default_factory=set)
+
+    def spawn(self, coro: Coroutine[Any, Any, Any]) -> asyncio.Task:
+        """Run a coroutine detached from the current request/socket (awaited on shutdown)."""
+        task = asyncio.create_task(coro)
+        self.background.add(task)
+        task.add_done_callback(self.background.discard)
+        return task
+
+    async def drain(self) -> None:
+        """Give detached tasks a few seconds to finish (used on shutdown)."""
+        if self.background:
+            await asyncio.wait(set(self.background), timeout=5)

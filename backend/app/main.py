@@ -95,6 +95,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 await hk
             ctx.hub.close_all()
             await ctx.providers.stop()
+            await ctx.drain()
             await engine.dispose()
 
     app = FastAPI(
