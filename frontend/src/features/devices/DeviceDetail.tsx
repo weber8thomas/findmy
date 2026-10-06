@@ -66,9 +66,12 @@ function LostModeForm({ device, onDone }: { device: Device; onDone: () => void }
           </button>
         </form>
       ) : (
-        <button className="btn btn-block" onClick={() => send.mutate("lost_mode_off")} disabled={send.isPending} data-testid="lost-disable">
-          {t("lost.disable")}
-        </button>
+        <>
+          {native && <p className="muted small">{t("lost.disableNative")}</p>}
+          <button className="btn btn-block" onClick={() => send.mutate("lost_mode_off")} disabled={send.isPending} data-testid="lost-disable">
+            {t("lost.disable")}
+          </button>
+        </>
       )}
     </Section>
   );

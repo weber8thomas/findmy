@@ -1,0 +1,172 @@
+"""iCloud provider: locate Apple devices (iPhone, iPad, Mac, Watch) through the same private
+web API as icloud.com/find, with Apple's own play-sound and Lost Mode. Unofficial, opt-in.
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Any
+
+from fastapi import APIRouter, HTTPException, status
+from pydantic import BaseModel, Field
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.config import Settings
+from app.deps import DB, Ctx, CurrentUser, rate_limit
+from app.models import Command, CommandType, Device, DeviceKind, ProviderAccount
+from app.providers.apple_base import AppleAccountProvider, AppleAuthError, AppleClient
+from app.providers.base import Capability, CommandError, LocationFix
+from app.providers.icloud import client as ic
+from app.schemas import DeviceOut
+from app.services import locations
+from app.services.devices import device_out
+
+
+class TrackIn(BaseModel):
+    icloud_device_id: str = Field(min_length=1, max_length=200)
+    name: str | None = Field(default=None, max_length=80)
+
+
+def _icon_for(model: str) -> str:
+    m = model.lower()
+    if "ipad" in m:
+        return "tablet"
+    if "mac" in m:
+        return "laptop"
+    if "watch" in m:
+        return "watch"
+    if "airpods" in m:
+        return "tag"
+    return "phone"
+
+
+class ICloudProvider(AppleAccountProvider):
+    kind = DeviceKind.ICLOUD
+    provider_name = "icloud"
+    capabilities = frozenset({Capability.PLAY_SOUND, Capability.LOST_MODE, Capability.REFRESH})
+    min_interval_s = 60
+
+    def __init__(self, settings: Settings):
+        super().__init__(settings, settings.icloud_poll_interval_s)
+
+    def cookie_dir(self, user_id: str) -> Path:
+        return self.settings.data_dir / "icloud" / user_id
+
+    def new_client(self, user_id: str, state: dict[str, Any] | None) -> AppleClient:
+        return ic.ICloudPyClient(state, cookie_dir=self.cookie_dir(user_id))
+
+    async def poll_account(
+        self, db: AsyncSession, account: ProviderAccount, client: AppleClient, devices: list[Device]
+    ) -> None:
+        snapshots = await client.locate()  # type: ignore[attr-defined]
+        for device in devices:
+            snap = snapshots.get((device.provider_config or {}).get("icloud_device_id"))
+            if snap is None or snap.lat is None or snap.lon is None or snap.ts is None:
+                continue
+            fix = LocationFix(
+                ts=snap.ts,
+                lat=snap.lat,
+                lon=snap.lon,
+                accuracy_m=snap.accuracy,
+                battery_level=snap.battery_level,
+                battery_charging=snap.charging,
+            )
+            await locations.ingest(self.ctx, db, device, [fix], source="icloud")
+
+    async def refresh(self, device: Device) -> None:
+        await self.request_refresh(device)
+
+    async def execute_command(self, db: AsyncSession, device: Device, command: Command) -> None:
+        account = await self.get_account(db, device.owner_id)
+        if account is None or account.state != "logged_in":
+            raise CommandError("Apple account not connected")
+        icloud_id = (device.provider_config or {}).get("icloud_device_id")
+        async with self.lock(account.id):
+            client = await self.client_for(account)
+            try:
+                if command.type == CommandType.PLAY_SOUND:
+                    await client.play_sound(icloud_id)  # type: ignore[attr-defined]
+                elif command.type == CommandType.LOST_MODE_ON:
+                    await client.lost_mode(  # type: ignore[attr-defined]
+                        icloud_id,
+                        device.lost_phone or "",
+                        device.lost_message or "This device has been lost. Please call me.",
+                    )
+                # LOST_MODE_OFF: the iCloud API has no "stop" call; Apple's Lost Mode ends when
+                # the device is unlocked with its passcode. We only clear Locus' flag.
+            except AppleAuthError as e:
+                await self.mark_reauth(db, account, str(e))
+                raise CommandError(str(e)) from e
+            except CommandError:
+                raise
+            except Exception as e:
+                raise CommandError(f"iCloud error: {e}") from e
+
+    def routers(self) -> list[APIRouter]:
+        router = APIRouter(prefix="/providers/icloud", tags=["icloud"])
+        provider = self
+
+        async def _client(db, user):
+            account = await provider.get_account(db, user.id)
+            if account is None or account.state != "logged_in":
+                raise HTTPException(status.HTTP_409_CONFLICT, "Apple account not connected")
+            return account, await provider.client_for(account)
+
+        @router.get("/devices")
+        async def list_icloud_devices(user: CurrentUser, ctx: Ctx, db: DB):
+            rate_limit(ctx, "icloud-list", user.id, 10, 60)
+            account, client = await _client(db, user)
+            try:
+                async with provider.lock(account.id):
+                    snaps = await client.list_devices()  # type: ignore[attr-defined]
+            except AppleAuthError as e:
+                await provider.mark_reauth(db, account, str(e))
+                raise HTTPException(status.HTTP_409_CONFLICT, str(e)) from None
+            tracked = {
+                (d.provider_config or {}).get("icloud_device_id"): d.id
+                for d in (
+                    await db.execute(
+                        select(Device).where(
+                            Device.owner_id == user.id, Device.kind == DeviceKind.ICLOUD
+                        )
+                    )
+                ).scalars()
+            }
+            return [
+                {
+                    "icloud_device_id": s.icloud_id,
+                    "name": s.name,
+                    "model": s.model,
+                    "tracked_device_id": tracked.get(s.icloud_id),
+                }
+                for s in snaps
+            ]
+
+        @router.post("/devices", response_model=DeviceOut, status_code=201)
+        async def track_icloud_device(data: TrackIn, user: CurrentUser, ctx: Ctx, db: DB):
+            account, client = await _client(db, user)
+            async with provider.lock(account.id):
+                snaps = {s.icloud_id: s for s in await client.list_devices()}  # type: ignore[attr-defined]
+            snap = snaps.get(data.icloud_device_id)
+            if snap is None:
+                raise HTTPException(status.HTTP_404_NOT_FOUND, "device not found in iCloud")
+            device = Device(
+                owner_id=user.id,
+                name=(data.name or snap.name or snap.model or "Apple device").strip()[:80],
+                kind=DeviceKind.ICLOUD,
+                icon=_icon_for(snap.model),
+                token_hash=None,
+                provider_config={"icloud_device_id": snap.icloud_id, "model": snap.model},
+            )
+            db.add(device)
+            await db.flush()
+            if user.primary_device_id is None:
+                user.primary_device_id = device.id
+            await db.commit()
+            account.next_poll_at = None
+            await db.commit()
+            provider.wake()
+            return device_out(ctx, device, user)
+
+        return [self.account_router(), router]

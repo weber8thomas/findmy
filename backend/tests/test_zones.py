@@ -77,3 +77,15 @@ def test_mark_notifications_read(api, client):
     assert len(client.get("/api/notifications?unread=true", headers=api.h(b)).json()) == 1
     client.post("/api/notifications/read", json={"all": True}, headers=api.h(b))
     assert client.get("/api/notifications?unread=true", headers=api.h(b)).json() == []
+
+
+def test_zone_created_around_device_alerts_on_first_exit(api, client):
+    """The baseline comes from the last known position, so leaving once is enough."""
+    a = api.register("A")
+    d = api.device(a, "Phone")
+    api.report(d, HOME["lat"], HOME["lon"], ts=ago(minutes=5))
+    client.post("/api/zones", json=HOME, headers=api.h(a))
+    api.report(d, *FAR, ts=ago(seconds=2))
+    api.report(d, *FAR)
+    events = client.get("/api/zones/events", headers=api.h(a)).json()
+    assert [e["type"] for e in events] == ["exit"]

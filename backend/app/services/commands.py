@@ -47,6 +47,7 @@ async def issue(
 
     now = utcnow()
     payload: dict = {}
+    previous_lost = (device.lost_enabled, device.lost_message, device.lost_phone, device.lost_since)
     if ctype == CommandType.LOST_MODE_ON:
         message = (data.message or "").strip()
         phone = (data.phone or "").strip() or None
@@ -116,8 +117,9 @@ async def issue(
             cmd.delivered_at = cmd.acked_at = utcnow()
         except CommandError as e:
             cmd.status, cmd.channel, cmd.error = CommandStatus.FAILED, "api", str(e)[:255]
-            if ctype == CommandType.LOST_MODE_ON:
-                device.lost_enabled = False
+            (device.lost_enabled, device.lost_message, device.lost_phone, device.lost_since) = (
+                previous_lost
+            )
 
     await db.commit()
     _publish_status(ctx, device.owner_id, cmd)

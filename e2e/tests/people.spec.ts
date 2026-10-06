@@ -67,10 +67,7 @@ test("zone alerts on arrival and departure (French UI)", async ({ browser }) => 
   await page.getByTestId("zone-save").click();
   await expect(page.locator('[data-testid^="zone-item-"]')).toContainText("Maison");
 
-  // Establish the baseline inside, then leave and come back.
-  await page.getByTestId("tab-me").click();
-  await page.getByTestId("btn-update-now").click();
-  await page.waitForTimeout(500);
+  // The zone starts from the device's current position (inside): leave, then come back.
   await ctx.setGeolocation({ ...FAR, accuracy: 10 });
   await expect(page.getByTestId("toast").filter({ hasText: "Téléphone a quitté Maison" })).toBeVisible({ timeout: 15_000 });
   await ctx.setGeolocation({ ...HOME, accuracy: 10 });

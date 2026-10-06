@@ -31,6 +31,32 @@ async def zones_watching(db: AsyncSession, device: Device) -> list[Zone]:
     return [z for z in zones if z.device_ids is None or device.id in z.device_ids]
 
 
+async def seed_states(ctx: AppContext, db: AsyncSession, zone: Zone, owner: User) -> None:
+    """Establish each device's inside/outside baseline from its last known position, so the
+    first movement after a zone is created (or moved) already triggers an alert."""
+    ids = (
+        set(zone.device_ids) if zone.device_ids is not None else await visible_device_ids(db, owner)
+    )
+    if not ids:
+        return
+    devices = (await db.execute(select(Device).where(Device.id.in_(ids)))).scalars().all()
+    circle = geofence.Circle(zone.lat, zone.lon, zone.radius_m)
+    for d in devices:
+        if d.last_lat is None or d.last_lon is None:
+            continue
+        if d.last_accuracy is not None and d.last_accuracy > ctx.settings.zone_max_accuracy_m:
+            continue
+        side = geofence.classify(circle, d.last_lat, d.last_lon, d.last_accuracy)
+        if side is None:
+            continue
+        row = await db.get(ZoneState, (zone.id, d.id))
+        if row is None:
+            db.add(ZoneState(zone_id=zone.id, device_id=d.id, state=side, pending_count=0))
+        else:
+            row.state, row.pending_state, row.pending_count = side, None, 0
+    await db.commit()
+
+
 async def evaluate(
     ctx: AppContext,
     db: AsyncSession,

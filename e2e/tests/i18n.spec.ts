@@ -20,3 +20,12 @@ test("language switch on login page and persisted on the account", async ({ brow
   expect(me.locale).toBe("en");
   await ctx.close();
 });
+
+test("items tab explains that Apple providers are disabled by default", async ({ browser }) => {
+  const ctx = await openContext(browser);
+  await signIn(ctx, newAccount("Items"), "register");
+  const page = await ctx.newPage();
+  await page.goto("/items");
+  await expect(page.getByTestId("items-panel")).toContainText("disabled on this server");
+  await ctx.close();
+});

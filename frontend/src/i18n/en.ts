@@ -77,6 +77,7 @@ const en = {
   "lost.title": "Lost mode",
   "lost.explain": "Shows a full-screen message with your phone number on the device as soon as Locus is open on it.",
   "lost.explainNative": "Locks the device with Apple’s Lost Mode and shows your message and phone number.",
+  "lost.disableNative": "Apple’s Lost Mode ends when the device is unlocked with its passcode. This only clears the flag in Locus.",
   "lost.message": "Message",
   "lost.messagePlaceholder": "This device has been lost. Please call me.",
   "lost.phone": "Phone number",

@@ -78,6 +78,7 @@ const fr: Catalogue = {
   "lost.title": "Mode perdu",
   "lost.explain": "Affiche en plein écran un message et votre numéro sur l’appareil dès que Locus y est ouvert.",
   "lost.explainNative": "Verrouille l’appareil avec le mode Perdu d’Apple et affiche votre message et votre numéro.",
+  "lost.disableNative": "Le mode Perdu d’Apple prend fin quand l’appareil est déverrouillé avec son code. Ceci retire seulement l’indication dans Locus.",
   "lost.message": "Message",
   "lost.messagePlaceholder": "Cet appareil a été perdu. Merci de m’appeler.",
   "lost.phone": "Numéro de téléphone",

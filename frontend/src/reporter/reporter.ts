@@ -96,7 +96,7 @@ export class Reporter {
     if (!("geolocation" in navigator)) return;
     navigator.geolocation.getCurrentPosition(
       (pos) => this.onPosition(pos, force),
-      (err) => this.onError(err),
+      (err) => this.onError(err, true),
       { enableHighAccuracy: this.highAccuracy, maximumAge: force ? 0 : 30_000, timeout: 30_000 },
     );
   }
@@ -136,10 +136,11 @@ export class Reporter {
     void this.flush();
   }
 
-  private onError(err: GeolocationPositionError) {
+  private onError(err: GeolocationPositionError, oneShot = false) {
     if (err.code === err.PERMISSION_DENIED) this.update({ state: "denied", error: err.message });
-    else if (err.code === err.POSITION_UNAVAILABLE) this.update({ state: "unavailable", error: err.message });
-    // TIMEOUT: keep current state, the watch keeps running.
+    else if (err.code === err.POSITION_UNAVAILABLE && !oneShot && !this.status.lastFix)
+      this.update({ state: "unavailable", error: err.message });
+    // TIMEOUT, or a failed one-shot request: keep the current state, the watch keeps running.
   }
 
   private async initBattery() {
@@ -166,6 +167,7 @@ export class Reporter {
     if (!this.queue.length && !batteryOnly) return;
     this.flushing = true;
     const batch = this.queue.slice(0, MAX_QUEUE);
+    let sent = false;
     try {
       await api("/report/locations", {
         method: "POST",
@@ -175,6 +177,7 @@ export class Reporter {
       this.queue.splice(0, batch.length);
       queueStorage.save(this.queue);
       this.update({ lastSentAt: Date.now() });
+      sent = true;
     } catch (e) {
       if (e instanceof ApiError && e.status === 429) this.backoffUntil = Date.now() + 10_000;
       else if (e instanceof ApiError && e.status === 401) this.update({ state: "error", error: "device token rejected" });
@@ -186,5 +189,7 @@ export class Reporter {
     } finally {
       this.flushing = false;
     }
+    // Fixes queued while this request was in flight go out right away.
+    if (sent && this.queue.length) void this.flush();
   }
 }

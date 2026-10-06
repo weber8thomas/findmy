@@ -3,7 +3,7 @@ from sqlalchemy import delete, select, update
 
 from app import access
 from app.clock import utcnow
-from app.deps import DB, CurrentUser
+from app.deps import DB, Ctx, CurrentUser
 from app.models import Notification, Zone, ZoneState
 from app.schemas import MarkReadIn, NotificationOut, ZoneEventOut, ZoneIn, ZoneOut, ZoneUpdate
 from app.services import zones as zones_service
@@ -33,12 +33,13 @@ async def list_zones(user: CurrentUser, db: DB):
 
 
 @router.post("/zones", response_model=ZoneOut, status_code=201)
-async def create_zone(data: ZoneIn, user: CurrentUser, db: DB):
+async def create_zone(data: ZoneIn, user: CurrentUser, ctx: Ctx, db: DB):
     await _check_devices(db, user, data.device_ids)
     zone = Zone(owner_id=user.id, **data.model_dump())
     zone.name = zone.name.strip()
     db.add(zone)
     await db.commit()
+    await zones_service.seed_states(ctx, db, zone, user)
     return zone
 
 
@@ -48,7 +49,7 @@ async def zone_events(user: CurrentUser, db: DB, limit: int = Query(default=50, 
 
 
 @router.patch("/zones/{zone_id}", response_model=ZoneOut)
-async def update_zone(zone_id: str, data: ZoneUpdate, user: CurrentUser, db: DB):
+async def update_zone(zone_id: str, data: ZoneUpdate, user: CurrentUser, ctx: Ctx, db: DB):
     zone = await _get_zone(db, user, zone_id)
     changes = data.model_dump(exclude_unset=True)
     if "device_ids" in changes:
@@ -57,9 +58,11 @@ async def update_zone(zone_id: str, data: ZoneUpdate, user: CurrentUser, db: DB)
     for k, v in changes.items():
         setattr(zone, k, v.strip() if k == "name" and v else v)
     if geometry_changed:
-        # Re-establish the baseline so moving a zone doesn't fire spurious alerts.
+        # Re-establish the baseline from current positions (no spurious alert for the move).
         await db.execute(delete(ZoneState).where(ZoneState.zone_id == zone.id))
     await db.commit()
+    if geometry_changed or "device_ids" in changes:
+        await zones_service.seed_states(ctx, db, zone, user)
     return zone
 
 
