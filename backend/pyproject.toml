@@ -1,0 +1,43 @@
+[project]
+name = "locus"
+version = "0.1.0"
+description = "Locus: self-hosted, web-based device and people finder"
+requires-python = ">=3.13"
+dependencies = [
+    "aiosqlite>=0.22.1",
+    "argon2-cffi>=23",
+    "cryptography>=43",
+    "fastapi>=0.115",
+    "httpx>=0.28.1",
+    "py-vapid>=1.9",
+    "pydantic-settings>=2.4",
+    "pydantic[email]>=2.13.5",
+    "python-multipart>=0.0.32",
+    "pywebpush>=2.0",
+    "sqlalchemy[asyncio]>=2.0",
+    "uvicorn[standard]>=0.30",
+]
+
+[dependency-groups]
+dev = [
+    "anyio>=4.15.1",
+    "pytest>=9.1.1",
+    "ruff>=0.16.10",
+]
+
+[project.optional-dependencies]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = ["ignore::DeprecationWarning:fastapi.testclient", "ignore:Using `httpx`"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "ASYNC"]
+ignore = ["B008", "SIM105"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["SIM117", "E501"]
