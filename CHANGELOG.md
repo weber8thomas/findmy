@@ -16,6 +16,9 @@ l'application l'affiche dans *Moi › Réglages › À propos*, avec la révisio
   balise ou importe une clé privée ou un AirTag. Chaque ligne montre l'état du compte ;
   *Objets* renvoie vers sa page s'il n'y a rien à montrer ou si Apple demande de se
   reconnecter.
+- Sur téléphone et tablette, les petits boutons et le choix de la langue font au moins
+  40 px de haut ; le bouton retour se touche plus facilement ; les champs de fichier
+  (.plist) ont un bouton dans le style de l'application.
 
 ### Corrigé
 
