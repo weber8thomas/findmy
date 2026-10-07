@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { api, ApiError } from "../../api/client";
-import { keys, useMe, usePeople, useShares } from "../../api/queries";
+import { keys, useDevices, useMe, usePeople, useShares } from "../../api/queries";
 import type { Person } from "../../api/types";
 import { useI18n } from "../../i18n";
 import { directionsUrl } from "../../lib/geo";
@@ -131,6 +131,26 @@ function PersonRow({ person }: { person: Person }) {
   );
 }
 
+/** You, as the people you share with see you: your primary device (your phone). */
+function MeRow() {
+  const { t, relTime } = useI18n();
+  const { data: me } = useMe();
+  const { data: devices } = useDevices();
+  const phone = devices?.find((d) => d.is_primary);
+  if (!me || !phone) return null;
+  return (
+    <Link to={`/devices/${phone.id}`} className="row" data-testid="person-me">
+      <span className={`row-avatar avatar-person ${avatarTone(me.id)}`}>{initials(me.display_name)}</span>
+      <span className="row-main">
+        <span className="row-title">{t("people.me")}</span>
+        <span className="row-sub">
+          {phone.location ? `${phone.name} · ${relTime(phone.location.ts)}` : t("devices.noLocation")}
+        </span>
+      </span>
+    </Link>
+  );
+}
+
 export function PeopleList() {
   const { t } = useI18n();
   const { data: people, isLoading } = usePeople();
@@ -154,6 +174,7 @@ export function PeopleList() {
       {isLoading && <Empty>{t("common.loading")}</Empty>}
       {!isLoading && !people?.length && <Empty>{t("people.empty")}</Empty>}
       <div className="list">
+        <MeRow />
         {people?.map((p) => (
           <PersonRow key={p.user.id} person={p} />
         ))}

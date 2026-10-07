@@ -54,6 +54,33 @@ def test_owntracks_auth(api, client):
     assert r.status_code == 400
 
 
+def test_owntracks_is_the_phone(api, client):
+    a = api.register("A")
+    laptop = api.device(a, "Laptop")
+    first = api.device(a, "OwnTracks", kind="owntracks")
+    me = client.get("/api/auth/me", headers=api.h(a)).json()
+    assert me["primary_device_id"] == first["id"]  # the phone, not the laptop registered first
+    msg = {"_type": "location", "lat": 1, "lon": 1, "tst": int(time.time())}
+    # Setting it up again: same device, new password, the old one stops working.
+    again = api.device(a, "Phone", kind="owntracks")
+    assert again["id"] == first["id"] and again["token"] != first["token"]
+    assert (
+        client.post(
+            "/api/owntracks", json=msg, headers=basic(a["email"], first["token"])
+        ).status_code
+        == 401
+    )
+    assert (
+        client.post(
+            "/api/owntracks", json=msg, headers=basic(a["email"], again["token"])
+        ).status_code
+        == 200
+    )
+    devices = client.get("/api/devices", headers=api.h(a)).json()
+    assert sorted(d["name"] for d in devices) == ["Laptop", "Phone"]
+    assert laptop["id"] in {d["id"] for d in devices}
+
+
 def test_push_subscription_upsert_and_dead_cleanup(api, client, fake_push):
     a = api.register("A")
     sub = {"endpoint": "https://push.example/1", "keys": {"p256dh": "k", "auth": "x"}}

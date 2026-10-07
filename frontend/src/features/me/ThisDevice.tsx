@@ -47,6 +47,13 @@ export function ThisDevice({ me }: { me: User }) {
   const local = localDeviceFor(me.id);
   const guess = guessDeviceName();
   const [name, setName] = useState(guess.name);
+  // This browser may run on a device already listed (the Mac or iPad from iCloud): it then
+  // reports to that device instead of adding a copy. Preselected when only one fits.
+  const candidates = devices?.filter((d) => d.kind === "icloud" && ["laptop", "tablet", "phone"].includes(d.icon)) ?? [];
+  const sameKind = candidates.filter((d) => d.icon === guess.icon);
+  const [target, setTarget] = useState<string | null>(null);
+  const chosen = target ?? (sameKind.length === 1 ? sameKind[0].id : "");
+  const localKind = devices?.find((d) => d.id === local?.id)?.kind;
 
   // The device was removed from another browser: forget it here too.
   useEffect(() => {
@@ -58,12 +65,14 @@ export function ThisDevice({ me }: { me: User }) {
 
   const register = useMutation({
     mutationFn: () =>
-      api<{ device: Device; device_token: string }>("/devices", {
-        method: "POST",
-        body: { name: name.trim() || guess.name, kind: "browser", icon: guess.icon },
-      }),
+      chosen
+        ? api<{ device: Device; device_token: string }>(`/devices/${chosen}/browser`, { method: "POST" })
+        : api<{ device: Device; device_token: string }>("/devices", {
+            method: "POST",
+            body: { name: name.trim() || guess.name, kind: "browser", icon: guess.icon },
+          }),
     onSuccess: (res) => {
-      qc.setQueryData<Device[]>(keys.devices, (list) => [...(list ?? []), res.device]);
+      qc.setQueryData<Device[]>(keys.devices, (list) => [...(list ?? []).filter((d) => d.id !== res.device.id), res.device]);
       localDeviceStore.set({ id: res.device.id, token: res.device_token, name: res.device.name, userId: me.id });
       prefsStore.set((p) => ({ ...p, sharing: true }));
       void qc.invalidateQueries({ queryKey: keys.devices });
@@ -73,7 +82,9 @@ export function ThisDevice({ me }: { me: User }) {
   });
 
   const forget = useMutation({
-    mutationFn: () => api(`/devices/${local!.id}`, { method: "DELETE" }),
+    // A device of its own goes away; an iCloud device stays, only this browser lets go of it.
+    mutationFn: () =>
+      api(localKind === "icloud" ? `/devices/${local!.id}/browser` : `/devices/${local!.id}`, { method: "DELETE" }),
     onSettled: () => {
       prefsStore.set((p) => ({ ...p, sharing: false }));
       localDeviceStore.set(null);
@@ -91,9 +102,23 @@ export function ThisDevice({ me }: { me: User }) {
             register.mutate();
           }}
         >
-          <Field label={t("me.deviceName")}>
-            <input value={name} onChange={(e) => setName(e.target.value)} maxLength={80} name="device-name" />
-          </Field>
+          {candidates.length > 0 && (
+            <Field label={t("me.thisDeviceIs")}>
+              <select value={chosen} onChange={(e) => setTarget(e.target.value)} name="device-target" data-testid="device-target">
+                <option value="">{t("me.newDevice")}</option>
+                {candidates.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          )}
+          {!chosen && (
+            <Field label={t("me.deviceName")}>
+              <input value={name} onChange={(e) => setName(e.target.value)} maxLength={80} name="device-name" />
+            </Field>
+          )}
           <button className="btn btn-primary btn-block" disabled={register.isPending} data-testid="btn-register-device">
             {t("me.register")}
           </button>
@@ -125,7 +150,10 @@ export function ThisDevice({ me }: { me: User }) {
         </>
       )}
       <p className="muted small">{t("me.backgroundWarning")}</p>
-      <button className="link-row danger" onClick={() => window.confirm(t("me.unregisterConfirm")) && forget.mutate()}>
+      <button
+        className="link-row danger"
+        onClick={() => window.confirm(t(localKind === "icloud" ? "me.detachConfirm" : "me.unregisterConfirm")) && forget.mutate()}
+      >
         {t("me.unregister")}
       </button>
     </Section>

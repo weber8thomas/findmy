@@ -9,6 +9,11 @@ import { reporterStatus } from "../../reporter/useReporter";
 import { BatteryBadge, Empty, PanelHeader } from "../../ui/components";
 import { DeviceGlyph } from "../../ui/icons";
 
+/** AirPods and the like: listed under Items, with the tags, not under Devices. */
+export function isAccessory(device: Device): boolean {
+  return device.icon === "earbuds";
+}
+
 export function DeviceRow({
   device,
   isLocal,
@@ -59,7 +64,8 @@ export function DeviceList() {
   const primary = devices?.find((d) => d.is_primary && d.location);
   const reference = status.lastFix || localDev?.location ? localDev : primary;
   const from = status.lastFix ?? localDev?.location ?? primary?.location ?? null;
-  const list = (devices ?? []).filter((d) => d.kind === "browser" || d.kind === "owntracks" || d.kind === "icloud");
+  // OwnTracks is the person's phone: it shows under People (as "Me"), not here.
+  const list = (devices ?? []).filter((d) => d.kind === "browser" || (d.kind === "icloud" && !isAccessory(d)));
 
   return (
     <div data-testid="devices-panel">

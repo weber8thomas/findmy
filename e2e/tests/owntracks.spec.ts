@@ -18,5 +18,13 @@ test("OwnTracks credentials come with a setup QR code and link", async ({ browse
     data: { _type: "location", lat: 48.21, lon: 16.37, acc: 10, tst: Math.floor(Date.now() / 1000) },
   });
   expect(r.ok()).toBe(true);
+  // The phone is the person: under People as "Me", not among the devices.
+  await page.goto("/people");
+  await expect(page.getByTestId("person-me")).toContainText("Phone");
+  await page.goto("/devices");
+  await expect(page.getByTestId("devices-panel")).not.toContainText("Phone");
+  // Setting it up again keeps a single phone.
+  await page.goto("/me");
+  await expect(page.getByTestId("owntracks-phone")).toBeVisible();
   await ctx.close();
 });

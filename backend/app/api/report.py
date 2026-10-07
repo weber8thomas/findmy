@@ -33,7 +33,8 @@ async def report_locations(data: ReportIn, device: ReportingDevice, ctx: Ctx, db
         db,
         device,
         fixes,
-        source=device.kind,
+        # Only browsers report here, also for an iCloud device they are attached to.
+        source="browser",
         battery_level=data.battery.level if data.battery else None,
         battery_charging=data.battery.charging if data.battery else None,
     )

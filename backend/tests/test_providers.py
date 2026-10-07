@@ -290,6 +290,34 @@ def test_icloud_track_poll_and_commands(apple):
     assert r.json()["status"] == "acked"
 
 
+def test_browser_attached_to_icloud_device(apple):
+    c, api, fake, app = apple
+    a = api.register()
+    connect(api, a, "icloud")
+    fake.snapshots = {
+        "def": ICloudSnapshot("def", "MacBook", "MacBook Pro", None, None, None, None, None, None)
+    }
+    mac = c.post(
+        "/api/providers/icloud/devices", json={"icloud_device_id": "def"}, headers=api.h(a)
+    )
+    mac_id = mac.json()["id"]
+    # This browser runs on that Mac: it reports to the Mac's entry, no copy is created.
+    r = c.post(f"/api/devices/{mac_id}/browser", headers=api.h(a))
+    assert r.status_code == 200 and r.json()["device"]["id"] == mac_id
+    browser = {"id": mac_id, "token": r.json()["device_token"]}
+    assert api.report(browser, 48.2, 16.4).status_code == 202
+    got = c.get(f"/api/devices/{mac_id}", headers=api.h(a)).json()
+    assert got["location"]["lat"] == 48.2
+    assert [d["id"] for d in c.get("/api/devices", headers=api.h(a)).json()] == [mac_id]
+    # Forgetting the browser keeps the Mac.
+    assert c.delete(f"/api/devices/{mac_id}/browser", headers=api.h(a)).status_code == 204
+    assert api.report(browser, 48.2, 16.4).status_code == 401
+    assert c.get(f"/api/devices/{mac_id}", headers=api.h(a)).status_code == 200
+    # Only iCloud devices take a browser.
+    other = api.device(a, "Laptop")
+    assert c.post(f"/api/devices/{other['id']}/browser", headers=api.h(a)).status_code == 400
+
+
 def test_icloud_poll_tracks_every_device(apple):
     c, api, fake, app = apple
     a = api.register()

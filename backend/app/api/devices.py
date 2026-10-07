@@ -4,11 +4,12 @@ from datetime import datetime, timedelta
 
 from fastapi import APIRouter, HTTPException, Query, status
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import access
 from app.clock import utcnow
 from app.deps import DB, Ctx, CurrentUser, rate_limit
-from app.models import Command, Device, DeviceKind
+from app.models import Command, Device, DeviceKind, User
 from app.providers.base import Capability, CommandError
 from app.schemas import (
     CommandIn,
@@ -41,22 +42,34 @@ async def list_devices(user: CurrentUser, ctx: Ctx, db: DB):
     return [device_out(ctx, d, user) for d in rows]
 
 
+async def _owntracks_phone(db: AsyncSession, user: User) -> Device | None:
+    """The person's OwnTracks device, the one with the latest position if there are several."""
+    rows = await db.execute(
+        select(Device)
+        .where(Device.owner_id == user.id, Device.kind == DeviceKind.OWNTRACKS)
+        .order_by(Device.last_fix_at.desc().nulls_last(), Device.created_at.desc())
+    )
+    return rows.scalars().first()
+
+
 @router.post("", response_model=DeviceCreated, status_code=201)
 async def create_device(data: DeviceCreate, user: CurrentUser, ctx: Ctx, db: DB):
-    if data.kind == DeviceKind.OWNTRACKS and not ctx.settings.feature_owntracks:
+    owntracks = data.kind == DeviceKind.OWNTRACKS
+    if owntracks and not ctx.settings.feature_owntracks:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "OwnTracks is disabled")
     token = new_device_token()
-    device = Device(
-        owner_id=user.id,
-        name=data.name.strip(),
-        kind=data.kind,
-        icon=data.icon,
-        token_hash=hash_token(token),
-        provider_config={},
-    )
-    db.add(device)
+    # OwnTracks is the person's phone: setting it up again gives that device a new password
+    # (the old one stops working) instead of adding a copy.
+    device = await _owntracks_phone(db, user) if owntracks else None
+    if device is None:
+        device = Device(owner_id=user.id, kind=data.kind, provider_config={})
+        db.add(device)
+    device.name = data.name.strip()
+    device.icon = data.icon
+    device.token_hash = hash_token(token)
     await db.flush()
-    if user.primary_device_id is None and data.kind in (DeviceKind.BROWSER, DeviceKind.OWNTRACKS):
+    # The primary device is the one people sharing with you see: the phone, once there is one.
+    if owntracks or (user.primary_device_id is None and data.kind == DeviceKind.BROWSER):
         user.primary_device_id = device.id
     await db.commit()
     return DeviceCreated(device=device_out(ctx, device, user), device_token=token)
@@ -99,6 +112,31 @@ async def rotate_token(device_id: str, user: CurrentUser, db: DB):
     device.token_hash = hash_token(token)
     await db.commit()
     return TokenOut(device_token=token)
+
+
+async def _icloud_device(db: AsyncSession, user: User, device_id: str) -> Device:
+    device = await access.get_owned_device(db, user, device_id)
+    if device.kind != DeviceKind.ICLOUD:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "only an iCloud device takes a browser")
+    return device
+
+
+@router.post("/{device_id}/browser", response_model=DeviceCreated)
+async def attach_browser(device_id: str, user: CurrentUser, ctx: Ctx, db: DB):
+    """Use this browser as an iCloud device already listed (the same Mac or iPad): it then
+    reports its positions to that device instead of to a copy of it."""
+    device = await _icloud_device(db, user, device_id)
+    token = new_device_token()
+    device.token_hash = hash_token(token)  # one browser per device: a previous one stops
+    await db.commit()
+    return DeviceCreated(device=device_out(ctx, device, user), device_token=token)
+
+
+@router.delete("/{device_id}/browser", status_code=204)
+async def detach_browser(device_id: str, user: CurrentUser, db: DB):
+    device = await _icloud_device(db, user, device_id)
+    device.token_hash = None
+    await db.commit()
 
 
 @router.get("/{device_id}/locations", response_model=HistoryOut)

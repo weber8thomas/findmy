@@ -94,22 +94,24 @@ function Notifications({ me }: { me: User }) {
 }
 
 function OwnTracksSetup({ me }: { me: User }) {
-  const { t } = useI18n();
+  const { t, relTime } = useI18n();
   const qc = useQueryClient();
   const { data: devices } = useDevices();
   const [created, setCreated] = useState<{ token: string } | null>(null);
+  // The server keeps one OwnTracks device, the phone: this gives it a new password.
   const create = useMutation({
     mutationFn: () =>
       api<{ device: Device; device_token: string }>("/devices", {
         method: "POST",
-        body: { name: "OwnTracks", kind: "owntracks", icon: "phone" },
+        body: { name: t("owntracks.deviceName"), kind: "owntracks", icon: "phone" },
       }),
     onSuccess: (res) => {
       setCreated({ token: res.device_token });
       void qc.invalidateQueries({ queryKey: keys.devices });
+      void qc.invalidateQueries({ queryKey: keys.me });
     },
   });
-  const existing = devices?.filter((d) => d.kind === "owntracks") ?? [];
+  const phone = devices?.find((d) => d.kind === "owntracks");
   const url = `${location.origin}/api/owntracks`;
   const configUrl =
     created &&
@@ -144,11 +146,18 @@ function OwnTracksSetup({ me }: { me: User }) {
           </Field>
         </div>
       ) : (
-        <button className="btn btn-block" onClick={() => create.mutate()} disabled={create.isPending}>
-          {t("owntracks.create")}
-        </button>
+        <>
+          {phone && (
+            <p className="muted small" data-testid="owntracks-phone">
+              {phone.name} · {phone.location ? t("devices.updated", { time: relTime(phone.location.ts) }) : t("devices.noLocation")}
+            </p>
+          )}
+          <button className="btn btn-block" onClick={() => create.mutate()} disabled={create.isPending}>
+            {phone ? t("owntracks.recreate") : t("owntracks.create")}
+          </button>
+          {phone && <p className="muted small">{t("owntracks.recreateHint")}</p>}
+        </>
       )}
-      {existing.length > 0 && <p className="muted small">{existing.map((d) => d.name).join(", ")}</p>}
     </Section>
   );
 }
