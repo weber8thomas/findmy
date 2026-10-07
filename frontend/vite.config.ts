@@ -17,9 +17,13 @@ export default defineConfig({
         globPatterns: ["**/*.{js,css,html,svg,png,webmanifest}"],
       },
       manifest: {
+        // Same as the start URL, so installed apps keep their identity.
+        id: "/",
         name: "Oukilé",
         short_name: "Oukilé",
         description: "The family’s devices, and the people who share their location, on one private map.",
+        lang: "en",
+        categories: ["navigation", "utilities"],
         start_url: "/",
         scope: "/",
         display: "standalone",
@@ -34,6 +38,12 @@ export default defineConfig({
             type: "image/png",
             purpose: "maskable",
           },
+        ],
+        // Long-press on the home-screen icon.
+        shortcuts: [
+          { name: "People", url: "/people" },
+          { name: "Devices", url: "/devices" },
+          { name: "Items", url: "/items" },
         ],
       },
       devOptions: { enabled: false },

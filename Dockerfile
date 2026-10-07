@@ -27,6 +27,9 @@ COPY backend/pyproject.toml backend/uv.lock ./
 RUN uv sync --frozen --no-dev --no-install-project --extra findmy --extra icloud
 COPY backend/app ./app
 COPY --from=web /web/dist ./static
+# The commit hash deploy.sh writes to REVISION, shown in Settings ("dev" when absent). The glob
+# makes it optional; pyproject.toml (read for the version) keeps the COPY valid without it.
+COPY backend/pyproject.toml REVISION* ./
 RUN useradd --system --uid 10001 --home-dir /data locus && mkdir -p /data && chown locus /data
 USER locus
 ENV PATH=/opt/venv/bin:$PATH \

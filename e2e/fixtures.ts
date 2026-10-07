@@ -43,9 +43,9 @@ export async function signIn(context: BrowserContext, account: Account, mode: "r
   expect(res.ok(), await res.text()).toBeTruthy();
 }
 
-/** Turn this browser into a reporting device from the "Me" tab. */
+/** Turn this browser into a reporting device from Settings ("Me" › gear). */
 export async function registerThisDevice(page: Page, name = "Test phone") {
-  await page.goto("/me");
+  await page.goto("/settings");
   await page.getByTestId("this-device").locator('input[name="device-name"]').fill(name);
   await page.getByTestId("btn-register-device").click();
   await expect(page.getByTestId("reporter-status")).toHaveAttribute("data-state", "active");

@@ -57,6 +57,11 @@ make e2e       # build + Playwright (Chromium, 2 navigateurs, géolocalisation s
 make serve     # build + un seul processus comme en production -> http://localhost:8000
 ```
 
+Versions : voir [CHANGELOG.md](CHANGELOG.md). Une nouvelle version change `version` dans
+`backend/pyproject.toml` **et** `frontend/package.json` (un test vérifie qu'ils sont
+égaux), puis `uv lock`. La révision affichée dans *Réglages › À propos* vient du fichier
+`REVISION` que `deploy/proxmox/deploy.sh` écrit dans l'arborescence livrée (« dev » sinon).
+
 ## Architecture
 
 ```

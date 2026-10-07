@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import html
 import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 from urllib.parse import urlparse
 
-from fastapi import APIRouter, FastAPI, HTTPException, Request
-from fastapi.responses import FileResponse
+from fastapi import APIRouter, FastAPI, HTTPException, Request, Response
+from fastapi.responses import FileResponse, PlainTextResponse
 
 from app.api import auth, devices, me, oidc, people, public, push, report, zones
 from app.config import Settings, bootstrap
@@ -73,6 +74,20 @@ def _csp(request: Request, settings: Settings) -> str:
             "form-action 'self'",
         ]
     )
+
+
+def _render_index(index: Path, settings: Settings) -> bytes | None:
+    """index.html with what only the server knows: the language before any script runs, and
+    absolute URLs for link previews (scrapers ignore relative ones)."""
+    try:
+        page = index.read_text(encoding="utf-8")
+    except OSError:
+        return None
+    if settings.default_locale:
+        page = page.replace('<html lang="en">', f'<html lang="{settings.default_locale}">', 1)
+    if settings.base_origin:
+        page = page.replace('content="/', f'content="{html.escape(settings.base_origin)}/')
+    return page.encode()
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -143,6 +158,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         h.setdefault("Permissions-Policy", "geolocation=(self), camera=(), microphone=()")
         # Other sites can neither embed our responses nor keep a handle on our window.
         h.setdefault("Cross-Origin-Resource-Policy", "same-origin")
+        # A family's private app: nothing here belongs in a search engine.
+        h.setdefault("X-Robots-Tag", "noindex, nofollow")
         if not request.url.path.startswith("/api/"):
             h.setdefault("Content-Security-Policy", _csp(request, settings))
             h.setdefault("X-Frame-Options", "DENY")
@@ -151,24 +168,32 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             h.setdefault("Cache-Control", "no-store")
         return response
 
+    @app.get("/robots.txt", include_in_schema=False)
+    async def robots():
+        return PlainTextResponse("User-agent: *\nDisallow: /\n")
+
     static_dir = settings.static_dir
     if static_dir and Path(static_dir).is_dir():
         root = Path(static_dir).resolve()
         index = root / "index.html"
-        no_cache = {"index.html", "sw.js", "manifest.webmanifest"}
+        index_html = _render_index(index, settings)
+        no_cache = {"sw.js", "manifest.webmanifest"}
 
         @app.get("/{path:path}", include_in_schema=False)
         async def spa(path: str):
             if path.startswith("api/"):
                 raise HTTPException(404)
             target = (root / path).resolve()
-            if path and target.is_file() and target.is_relative_to(root):
+            if path and target != index and target.is_file() and target.is_relative_to(root):
                 headers = {}
                 if target.name in no_cache:
                     headers["Cache-Control"] = "no-cache"
                 elif "/assets/" in f"/{path}":
                     headers["Cache-Control"] = "public, max-age=31536000, immutable"
                 return FileResponse(target, headers=headers)
-            return FileResponse(index, headers={"Cache-Control": "no-cache"})
+            if index_html is None:
+                raise HTTPException(404)
+            headers = {"Cache-Control": "no-cache"}
+            return Response(index_html, media_type="text/html; charset=utf-8", headers=headers)
 
     return app

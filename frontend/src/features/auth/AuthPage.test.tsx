@@ -64,6 +64,13 @@ describe("sign-in methods", () => {
     expect(authMethods({ ...BASE, auth: { password: false, oidc: null } }).password).toBe(true);
   });
 
+  it("shows the server's version and links to the privacy page", () => {
+    const html = render({ ...BASE, version: "0.2.0", revision: "6aace8e" });
+    expect(html).toContain("Oukilé 0.2.0 (6aace8e)");
+    expect(html).toMatch(/<a [^>]*href="\/privacy"[^>]*>Privacy<\/a>/);
+    expect(render(BASE, { locale: "fr" })).toContain(">Confidentialité</a>");
+  });
+
   it("is translated", () => {
     const html = render({ ...BASE, auth: { password: true, oidc: SSO } }, { locale: "fr" });
     expect(html).toContain("Continuer avec Authentik");

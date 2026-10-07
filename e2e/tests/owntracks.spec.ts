@@ -4,7 +4,7 @@ test("OwnTracks credentials come with a setup QR code and link", async ({ browse
   const ctx = await openContext(browser);
   await signIn(ctx, newAccount("Lucia"), "register");
   const page = await ctx.newPage();
-  await page.goto("/me");
+  await page.goto("/settings");
   await page.getByTestId("owntracks").getByRole("button").click();
   await expect(page.getByTestId("owntracks-qr")).toBeVisible();
   const href = await page.getByTestId("owntracks-open").getAttribute("href");
@@ -24,7 +24,7 @@ test("OwnTracks credentials come with a setup QR code and link", async ({ browse
   await page.goto("/devices");
   await expect(page.getByTestId("devices-panel")).not.toContainText("Phone");
   // Setting it up again keeps a single phone.
-  await page.goto("/me");
+  await page.goto("/settings");
   await expect(page.getByTestId("owntracks-phone")).toBeVisible();
   await ctx.close();
 });

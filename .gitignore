@@ -10,6 +10,9 @@ node_modules/
 frontend/dist/
 frontend/dev-dist/
 
+# Written by deploy/proxmox/deploy.sh into the shipped tree only
+/REVISION
+
 # Runtime data / secrets
 data/
 backend/data/
