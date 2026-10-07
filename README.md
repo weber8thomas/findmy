@@ -42,6 +42,8 @@ docker compose up -d --build
 Sur téléphone, il faut du HTTPS : voir [docs/https-dev.md](docs/https-dev.md)
 (tunnel en une commande, Caddy en réseau local, ou nom de domaine).
 La configuration se fait avec [.env.example](.env.example).
+Connexion unique (SSO) avec Authentik ou un autre fournisseur OpenID Connect :
+[docs/sso.md](docs/sso.md).
 
 ## Développement
 

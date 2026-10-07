@@ -16,6 +16,12 @@ async def config(ctx: Ctx):
     return {
         "app_name": "Oukilé",
         "registration_open": s.allow_registration,
+        "auth": {
+            "password": s.password_login,
+            "oidc": {"name": s.oidc_name, "login_url": "/api/auth/oidc/login"}
+            if s.oidc_enabled
+            else None,
+        },
         "providers": ctx.providers.kinds(),
         "features": {
             "owntracks": s.feature_owntracks,

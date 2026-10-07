@@ -23,11 +23,12 @@ class SecretBox:
     def encrypt(self, data: bytes) -> bytes:
         return self._fernet.encrypt(data)
 
-    def decrypt(self, blob: bytes) -> bytes:
-        return self._fernet.decrypt(blob)
+    def decrypt(self, blob: bytes, ttl: int | None = None) -> bytes:
+        """`ttl`: refuse tokens encrypted more than that many seconds ago."""
+        return self._fernet.decrypt(blob, ttl=ttl)
 
     def encrypt_json(self, value: Any) -> bytes:
         return self.encrypt(json.dumps(value).encode())
 
-    def decrypt_json(self, blob: bytes) -> Any:
-        return json.loads(self.decrypt(blob))
+    def decrypt_json(self, blob: bytes, ttl: int | None = None) -> Any:
+        return json.loads(self.decrypt(blob, ttl))

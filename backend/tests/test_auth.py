@@ -85,3 +85,10 @@ def test_update_me_locale(api, client):
     assert r.status_code == 200
     assert r.json()["locale"] == "fr"
     assert client.patch("/api/me", json={"locale": "de"}, headers=api.h(a)).status_code == 422
+
+
+def test_sso_off_by_default(client):
+    assert client.get("/api/config").json()["auth"] == {"password": True, "oidc": None}
+    r = client.get("/api/auth/oidc/login", follow_redirects=False)
+    assert r.status_code == 303
+    assert r.headers["location"] == "/login?sso_error=disabled"

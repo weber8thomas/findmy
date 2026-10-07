@@ -10,7 +10,7 @@ from urllib.parse import urlparse
 from fastapi import APIRouter, FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse
 
-from app.api import auth, devices, me, people, public, push, report, zones
+from app.api import auth, devices, me, oidc, people, public, push, report, zones
 from app.config import Settings, bootstrap
 from app.context import AppContext
 from app.crypto import SecretBox
@@ -87,6 +87,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         box=SecretBox(settings.secret_key or ""),
     )
     ctx.providers = ProviderRegistry(build_providers(settings))
+    if settings.oidc_enabled:
+        from app.services.oidc import OidcClient
+
+        ctx.extras["oidc"] = OidcClient(settings)
+        if not settings.base_url:
+            log.warning("SSO without BASE_URL: the callback URL is guessed from each request")
     try:
         ctx.push = PushService(settings)
     except Exception:  # pragma: no cover - only if key generation fails
@@ -114,7 +120,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.ctx = ctx
 
     api = APIRouter(prefix="/api")
-    for module in (public, auth, me, devices, report, people, zones, push):
+    for module in (public, auth, oidc, me, devices, report, people, zones, push):
         api.include_router(module.router)
     for provider in ctx.providers.all():
         for r in provider.routers():

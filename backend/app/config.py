@@ -35,6 +35,18 @@ class Settings(BaseSettings):
     trust_proxy: bool = False
     rate_limit_enabled: bool = True
     session_days: int = 30
+    # false: sign in only through SSO (no email/password form, no sign-up form).
+    password_login: bool = True
+
+    # Single sign-on with an OpenID Connect provider (Authentik, Keycloak, ...).
+    # Enabled when the issuer and the client id are set.
+    oidc_issuer: str | None = None
+    oidc_client_id: str | None = None
+    oidc_client_secret: str | None = None
+    oidc_name: str = "SSO"
+    oidc_scopes: str = "openid profile email"
+    # Create an account on the first SSO sign-in. Unset: same as allow_registration.
+    oidc_registration: bool | None = None
 
     tile_url: str = DEFAULT_TILE_URL
     # Dark-mode map. Unset: OpenFreeMap dark with the default map, else the same as tile_url.
@@ -68,6 +80,10 @@ class Settings(BaseSettings):
         if self.tile_url_dark:
             return self.tile_url_dark
         return DEFAULT_TILE_URL_DARK if self.tile_url == DEFAULT_TILE_URL else self.tile_url
+
+    @property
+    def oidc_enabled(self) -> bool:
+        return bool(self.oidc_issuer and self.oidc_client_id)
 
     @property
     def cookie_secure(self) -> bool:

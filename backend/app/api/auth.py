@@ -23,6 +23,11 @@ from app.security import (
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
+def _require_password_login(ctx: AppContext) -> None:
+    if not ctx.settings.password_login:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "password sign-in is disabled, use SSO")
+
+
 def _set_cookie(response: Response, ctx: AppContext, token: str) -> None:
     response.set_cookie(
         SESSION_COOKIE,
@@ -59,6 +64,7 @@ async def _start_session(
 async def register(
     data: RegisterIn, request: Request, response: Response, ctx: Ctx, db: DB, bearer: bool = False
 ):
+    _require_password_login(ctx)
     rate_limit(ctx, "register", client_ip(request, ctx), 10, 3600)
     count = (await db.execute(select(func.count()).select_from(User))).scalar_one()
     if count > 0 and not ctx.settings.allow_registration:
@@ -83,6 +89,7 @@ async def register(
 async def login(
     data: LoginIn, request: Request, response: Response, ctx: Ctx, db: DB, bearer: bool = False
 ):
+    _require_password_login(ctx)
     email = data.email.lower()
     rate_limit(ctx, "login-ip", client_ip(request, ctx), 20, 60)
     rate_limit(ctx, "login-email", email, 10, 900)
