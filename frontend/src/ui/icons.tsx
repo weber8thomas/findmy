@@ -1,7 +1,10 @@
 import type { DeviceIcon } from "../api/types";
 
 // Simple line icons drawn for Oukilé (24×24, stroke = currentColor).
-const PATHS: Record<DeviceIcon | "person" | "pin" | "me" | "sound" | "route" | "lock" | "clock" | "refresh" | "bell" | "zone" | "locate" | "trash" | "edit", string> = {
+const PATHS: Record<
+  DeviceIcon | "person" | "pin" | "me" | "sound" | "route" | "lock" | "clock" | "refresh" | "bell" | "zone" | "locate" | "trash" | "edit" | "chevron" | "key",
+  string
+> = {
   phone: '<rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/>',
   tablet: '<rect x="4.5" y="2.5" width="15" height="19" rx="2.5"/><path d="M11 18.5h2"/>',
   laptop: '<rect x="5" y="5" width="14" height="10" rx="1.5"/><path d="M2.5 18.5h19"/>',
@@ -22,6 +25,8 @@ const PATHS: Record<DeviceIcon | "person" | "pin" | "me" | "sound" | "route" | "
   locate: '<circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="1.8"/><path d="M12 2.5V6M12 18v3.5M2.5 12H6M18 12h3.5"/>',
   trash: '<path d="M4.5 7h15M10 7V4.5h4V7M6.5 7l1 13h9l1-13"/>',
   edit: '<path d="M4 20l1-4.5L15.5 5a2 2 0 013 3L8 18.5z"/>',
+  chevron: '<path d="M14.5 5.5L8 12l6.5 6.5"/>',
+  key: '<circle cx="8" cy="15" r="4.5"/><path d="M11.2 11.8L20 3M16.5 6.5l2.5 2.5M14 9l2 2"/>',
 };
 
 export type IconName = keyof typeof PATHS;
@@ -63,6 +68,14 @@ export function deviceGlyphSvg(icon: DeviceIcon, size = 28): string {
 
 export function DeviceGlyph({ icon, size = 28 }: { icon: DeviceIcon; size?: number }) {
   return <span className="icon" style={{ width: size, height: size }} dangerouslySetInnerHTML={{ __html: deviceGlyphSvg(icon, size) }} />;
+}
+
+/** A stable colour per person (class `tone-1`…`tone-5`, or the default blue), shared by lists and map pins. */
+export function avatarTone(id: string): string {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  const n = h % 6;
+  return n ? `tone-${n}` : "";
 }
 
 export function initials(name: string): string {

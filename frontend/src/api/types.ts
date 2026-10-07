@@ -119,6 +119,8 @@ export type AppConfig = {
   features: { owntracks: boolean; findmy: boolean; icloud: boolean; push: boolean };
   map: { tile_url: string; tile_url_dark: string; attribution: string };
   vapid_public_key: string | null;
+  /** Sign-in methods. Older servers omit it: password only. */
+  auth?: { password: boolean; oidc: { name: string; login_url: string } | null };
 };
 
 export type ProviderAccount = {
