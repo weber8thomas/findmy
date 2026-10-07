@@ -296,6 +296,7 @@ const fr: Catalogue = {
   "privacy.stored.history": "Leur historique de positions, effacé au bout de {days} jours.",
   "privacy.stored.historyKept": "Leur historique de positions.",
   "privacy.stored.places": "Vos lieux et alertes, et vos notifications.",
+  "privacy.stored.placesPhone": "Si vous utilisez OwnTracks : vos lieux sont aussi envoyés à son application sur votre téléphone (jamais ceux des autres), pour qu’elle sache quand vous arrivez ou partez.",
   "privacy.stored.apple": "Si vous connectez un compte Apple : sa session, chiffrée.",
   "privacy.visible": "Qui voit quoi",
   "privacy.visible.share": "Seules les personnes avec qui vous partagez votre position la voient : votre position actuelle, prise sur l’une de vos sources (Moi › Ma position), et le nom de cet appareil. Ni historique, ni batterie, ni commandes, ni la liste de vos appareils.",
@@ -311,6 +312,7 @@ const fr: Catalogue = {
   "privacy.law": "Suivre quelqu’un à son insu est illégal dans la plupart des pays.",
 
   "owntracks.explain": "Installez l’application gratuite OwnTracks (iOS/Android), choisissez le mode HTTP et utilisez ces réglages. Les positions sont alors envoyées même téléphone verrouillé.",
+  "owntracks.places": "Vos lieux sont envoyés à l’application : elle signale vos arrivées et vos départs aussitôt. Sur Android, elle envoie aussi moins de positions quand vous êtes dans l’un d’eux, pour ménager la batterie.",
   "owntracks.create": "Créer des identifiants OwnTracks",
   "owntracks.url": "URL",
   "owntracks.username": "Nom d’utilisateur",
@@ -319,10 +321,11 @@ const fr: Catalogue = {
   "owntracks.qr": "Dans OwnTracks, activez d’abord Préférences › Avancé › « Allow external configuration » (iPhone : Réglages › Allow external configuration). Puis scannez ce code avec l’appareil photo du téléphone et validez l’import dans OwnTracks. Vous pouvez ensuite désactiver l’option. Ce code ne sera plus affiché.",
   "owntracks.qrLabel": "QR code de configuration OwnTracks",
   "owntracks.open": "Ouvrir dans OwnTracks (sur ce téléphone)",
-  "owntracks.manual": "Ou réglez OwnTracks à la main (mode HTTP) :",
+  "owntracks.manual": "Ou réglez OwnTracks à la main (mode HTTP), avec les commandes et la configuration à distance activées (Android : Préférences › Remote Control ; iPhone : Réglages › cmd et remoteConfiguration) :",
   "owntracks.deviceName": "Téléphone",
   "owntracks.recreate": "Nouveau QR code OwnTracks",
   "owntracks.recreateHint": "Pour reconfigurer ce téléphone ou en changer. L’ancien mot de passe cesse alors de fonctionner.",
+  "owntracks.setUpAgain": "Application configurée avec un ancien code ? Recommencez pour qu’elle reçoive vos lieux (iPhone) et adapte ses envois (Android) : touchez « Nouveau QR code OwnTracks », puis scannez le nouveau code ou ouvrez le lien sur le téléphone.",
 
   "zones.title": "Lieux et alertes",
   "zones.empty": "Aucun lieu.",

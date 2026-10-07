@@ -57,6 +57,8 @@ sur de vrais appareils :
    la toucher ouvre Oukilé et lance le son.
 4. **Android (Chrome)** : mêmes étapes ; vérifiez la vibration et le niveau de batterie.
 5. **OwnTracks** : créez des identifiants dans *Moi › Réglages*, configurez l'application en mode
-   HTTP, verrouillez le téléphone et marchez : les positions continuent d'arriver.
+   HTTP, verrouillez le téléphone et marchez : les positions continuent d'arriver. Vos lieux
+   apparaissent dans l'application (Android : *Points de passage* ; iPhone : onglet
+   *Zones*), et entrer dans l'un d'eux donne l'alerte aussitôt.
 6. **Zones** : créez un lieu autour de vous, éloignez-vous de quelques centaines de mètres
    puis revenez : notifications « a quitté » / « est arrivé(e) ».

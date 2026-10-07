@@ -15,6 +15,14 @@ l'application l'affiche dans *Moi › Réglages › À propos*, avec la révisio
   Les personnes avec qui on partage voient cette position et le nom de l'appareil, en
   direct, jamais la liste. La ligne *Moi* de *Personnes* dit d'où vient la position. Les
   alertes de lieux suivent seulement la première source.
+- **OwnTracks connaît vos lieux** : en réponse à ses envois, l'application reçoit vos
+  propres lieux (jamais ceux des autres) et les surveille elle-même, sur Android comme sur
+  iPhone : vos arrivées et départs sont signalés aussitôt, et l'alerte part dès cet
+  événement. Un lieu ajouté, modifié ou supprimé lui est renvoyé. Sur Android, elle envoie
+  moins de positions quand vous êtes dans l'un de vos lieux (après 500 m, 5 min au plus
+  souvent) et redevient réactive dehors (100 m, 1 min). Le QR code active pour cela les
+  commandes et la configuration à distance : une application configurée avec un ancien
+  code doit l'être à nouveau (*Moi › Réglages › OwnTracks › Nouveau QR code OwnTracks*).
 
 ### Modifié
 

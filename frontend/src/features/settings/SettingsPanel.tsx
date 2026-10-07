@@ -100,6 +100,7 @@ function OwnTracksSetup({ me }: { me: User }) {
   return (
     <Section title={t("me.owntracks")} testId="owntracks">
       <p className="muted small">{t("owntracks.explain")}</p>
+      <p className="muted small">{t("owntracks.places")}</p>
       {created && configUrl ? (
         <div className="credentials">
           <div className="owntracks-qr">
@@ -131,6 +132,11 @@ function OwnTracksSetup({ me }: { me: User }) {
             {phone ? t("owntracks.recreate") : t("owntracks.create")}
           </button>
           {phone && <p className="muted small">{t("owntracks.recreateHint")}</p>}
+          {phone && (
+            <p className="muted small" data-testid="owntracks-set-up-again">
+              {t("owntracks.setUpAgain")}
+            </p>
+          )}
         </>
       )}
     </Section>

@@ -28,6 +28,7 @@ export function PrivacyContent() {
             {days != null ? t("privacy.stored.history", { days }) : t("privacy.stored.historyKept")}
           </li>
           <li>{t("privacy.stored.places")}</li>
+          {config?.features.owntracks && <li>{t("privacy.stored.placesPhone")}</li>}
           {apple && <li>{t("privacy.stored.apple")}</li>}
         </ul>
       </Section>

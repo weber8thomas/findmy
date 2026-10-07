@@ -23,6 +23,9 @@ describe("OwnTracks setup link", () => {
       password: "lcd_a+b/c=",
       deviceId: "lucia-phone",
       tid: "LN",
+      // The app then takes its places and reporting profile from the server's replies.
+      cmd: true,
+      remoteConfiguration: true,
     });
   });
 

@@ -23,6 +23,11 @@ export function owntracksConfigUrl(s: OwnTracksSettings): string {
     // The app's default is 500 m: coming home from 400 m away was never reported.
     locatorDisplacement: 100,
     locatorInterval: 60, // seconds, at most one position a minute on the move
+    // Obey the server's replies: your places as waypoints (setWaypoints), and on Android a
+    // calmer reporting while in one of them (setConfiguration). Off by default, except
+    // `cmd` on Android; iOS needs both even for the waypoints.
+    cmd: true,
+    remoteConfiguration: true,
   };
   const bytes = new TextEncoder().encode(JSON.stringify(config));
   const b64 = btoa(String.fromCharCode(...bytes));

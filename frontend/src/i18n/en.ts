@@ -295,6 +295,7 @@ const en = {
   "privacy.stored.history": "Their position history, deleted after {days} days.",
   "privacy.stored.historyKept": "Their position history.",
   "privacy.stored.places": "Your places and alerts, and your notifications.",
+  "privacy.stored.placesPhone": "If you use OwnTracks: your places are also sent to its app on your phone (never other people’s), so it can tell when you arrive or leave.",
   "privacy.stored.apple": "If you connect an Apple account: its session, encrypted.",
   "privacy.visible": "Who sees what",
   "privacy.visible.share": "Only the people you share your location with see it: your current position, taken from one of your sources (Me › My location), and that device's name. No history, battery or commands, nor the list of your devices.",
@@ -310,6 +311,7 @@ const en = {
   "privacy.law": "Following someone without their knowledge is illegal in most countries.",
 
   "owntracks.explain": "Install the free OwnTracks app (iOS/Android), set Mode to HTTP and use these settings. Positions are then sent even when the phone is locked.",
+  "owntracks.places": "Your places are sent to the app, so it reports your arrivals and departures right away. On Android, it also reports less often while you are at one of them, to save battery.",
   "owntracks.create": "Create OwnTracks credentials",
   "owntracks.url": "URL",
   "owntracks.username": "Username",
@@ -318,10 +320,11 @@ const en = {
   "owntracks.qr": "In OwnTracks, first turn on Preferences › Advanced › “Allow external configuration” (iPhone: Settings › Allow external configuration). Then scan this code with the phone’s camera and confirm the import in OwnTracks. You can turn the option off afterwards. This code won’t be shown again.",
   "owntracks.qrLabel": "OwnTracks setup QR code",
   "owntracks.open": "Open in OwnTracks (on this phone)",
-  "owntracks.manual": "Or set up OwnTracks by hand (HTTP mode):",
+  "owntracks.manual": "Or set up OwnTracks by hand (HTTP mode), with remote commands and configuration on (Android: Preferences › Remote Control; iPhone: Settings › cmd and remoteConfiguration):",
   "owntracks.deviceName": "Phone",
   "owntracks.recreate": "New OwnTracks QR code",
   "owntracks.recreateHint": "To set this phone up again, or a new one. The old password then stops working.",
+  "owntracks.setUpAgain": "App set up with an older code? Set it up again so it receives your places (iPhone) and adapts its reporting (Android): tap “New OwnTracks QR code”, then scan the new code or open the link on the phone.",
 
   "zones.title": "Places & alerts",
   "zones.empty": "No places yet.",

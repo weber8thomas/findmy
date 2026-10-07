@@ -24,7 +24,7 @@ web installable (PWA). Il fonctionne sur iPhone, Android, Windows, Mac et Linux.
 | Source | Délai | Remarques |
 |---|---|---|
 | **L'application web elle-même** | 1–5 s, en direct | Uniquement quand Oukilé est ouvert (limite des navigateurs, surtout sur iOS) |
-| **OwnTracks** (appli native gratuite) | 30 s à quelques minutes | Fonctionne en arrière-plan, téléphone verrouillé |
+| **OwnTracks** (appli native gratuite) | 30 s à quelques minutes | Fonctionne en arrière-plan, téléphone verrouillé ; reçoit vos lieux et signale aussitôt arrivées et départs |
 | **iCloud** *(optionnel, non officiel)* | ~1–2 min | iPhone, iPad, Mac sans rien installer ; sonnerie et mode Perdu natifs. [docs/icloud.md](docs/icloud.md) |
 | **Réseau Find My** *(optionnel, non officiel)* | minutes à 1 h+ | AirTags et balises DIY OpenHaystack. [docs/findmy-network.md](docs/findmy-network.md) |
 

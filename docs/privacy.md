@@ -16,6 +16,9 @@ Oukilé manipule des positions de personnes : des données sensibles. Choix de c
   Toute ressource non autorisée renvoie un 404. Une photo de profil n'est visible que par
   les personnes avec qui un partage est en cours, dans un sens ou dans l'autre (et par
   celle que vous invitez).
+- **Vos lieux sur votre téléphone.** Avec OwnTracks, vos propres lieux (nom, centre, rayon)
+  sont envoyés à l'application de votre téléphone, en réponse à ses envois, pour qu'elle
+  signale vos arrivées et départs. Jamais les lieux des autres personnes.
 - **Rétention.** L'historique est purgé après `LOCATION_RETENTION_DAYS` jours (30 par défaut).
 - **Secrets.** Mots de passe hachés (Argon2) ; jetons de session et d'appareil stockés
   hachés (SHA-256) ; secrets Apple chiffrés (Fernet).

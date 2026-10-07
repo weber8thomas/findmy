@@ -42,6 +42,7 @@ describe("privacy page", () => {
     expect(html).toContain("deleted after 30 days");
     expect(html).toContain("loads the map from tiles.openfreemap.org");
     expect(html).toContain("push service");
+    expect(html).toContain("your places are also sent to its app on your phone");
     // Apple and SSO only when this server uses them.
     expect(html).not.toContain("Apple account");
     expect(html).not.toContain("asks Apple");
@@ -52,7 +53,7 @@ describe("privacy page", () => {
     const html = render({
       ...BASE,
       retention_days: 7,
-      features: { ...BASE.features, icloud: true, push: false },
+      features: { ...BASE.features, icloud: true, push: false, owntracks: false },
       auth: { password: true, oidc: { name: "Authentik", login_url: "/api/auth/oidc/login" } },
     });
     expect(html).toContain("deleted after 7 days");
@@ -60,6 +61,7 @@ describe("privacy page", () => {
     expect(html).toContain("asks Apple");
     expect(html).toContain("Authentik, if you use it to sign in.");
     expect(html).not.toContain("push service");
+    expect(html).not.toContain("OwnTracks"); // off on this server
   });
 
   it("in French, readable signed out with a way back to sign in", () => {
