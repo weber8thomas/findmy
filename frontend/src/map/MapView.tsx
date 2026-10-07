@@ -6,7 +6,9 @@ import { useNavigate } from "react-router";
 import type { Device, Fix, LocationPoint, PublicUser, Zone } from "../api/types";
 import { useI18n } from "../i18n";
 import { useStore } from "../lib/store";
-import { pointAtTap } from "../lib/trace";
+import type { Journey, Move, Stop } from "../lib/journey";
+import { bandColor, timeColor, traceBands } from "../lib/ramp";
+import { arrowsAlong, pointAtTap } from "../lib/trace";
 import { mapUi, patchMapUi } from "../lib/ui-state";
 import { avatarTone, deviceGlyphSvg, initials } from "../ui/icons";
 
@@ -140,10 +142,6 @@ function Controller({ points, tab, detail, ready }: { points: [number, number][]
   const framed = useRef<string | null>(null);
   const historyPoint = ui.history?.find((p) => p.ts === ui.historyAt);
 
-  useEffect(() => {
-    if (ui.focus) flyToVisible(map, ui.focus.lat, ui.focus.lon, ui.focus.zoom ?? Math.max(map.getZoom(), 15));
-  }, [ui.focus, map]);
-
   // Each tab frames what it shows: at once on opening, gently on a tab switch. Live updates never
   // move the map, and a page about one thing (a device, a person) focuses on it itself.
   useEffect(() => {
@@ -165,6 +163,11 @@ function Controller({ points, tab, detail, ready }: { points: [number, number][]
   useEffect(() => {
     if (historyPoint) panIntoView(map, historyPoint.lat, historyPoint.lon);
   }, [historyPoint, map]);
+
+  // After the pan above: a focus asked along with a pick (a stop of the history) flies there instead.
+  useEffect(() => {
+    if (ui.focus) flyToVisible(map, ui.focus.lat, ui.focus.lon, ui.focus.zoom ?? Math.max(map.getZoom(), 15));
+  }, [ui.focus, map]);
 
   useMapEvents({
     click(e) {
@@ -266,33 +269,179 @@ const PICK_ICON = L.divIcon({
   iconAnchor: [11, 11],
 });
 
-function HistoryLayer({ points, pickedTs }: { points: LocationPoint[]; pickedTs: string | null }) {
-  const map = useMap();
-  const { dateTime } = useI18n();
-  // Points are a few pixels wide: take any tap near the trace, and clear the pick elsewhere.
-  useMapEvents({
-    click(e) {
-      const i = pointAtTap(
-        points.map((p) => map.latLngToContainerPoint([p.lat, p.lon])),
-        e.containerPoint,
-        TAP_TOLERANCE,
-      );
-      patchMapUi({ historyAt: i >= 0 ? points[i].ts : null });
-    },
+/** The history's panes, above the places and below the pins: the trace's casing, the coloured
+ * trace, the positions with the direction marks. Created once and kept. */
+const HISTORY_PANES: [string, number][] = [
+  ["history-casing", 405],
+  ["history-trace", 410],
+  ["history-points", 420],
+];
+
+function ensureHistoryPanes(map: L.Map) {
+  for (const [name, z] of HISTORY_PANES) if (!map.getPane(name)) map.createPane(name).style.zIndex = String(z);
+  return true;
+}
+
+const TRACE_WEIGHT = 6;
+/** White on the day map, dark on the night map (CSS): the trace stands out from the roads. */
+const CASING_WEIGHT = TRACE_WEIGHT + 3;
+/** The positions: small white dots inside the line. */
+const POINT_RADIUS = 1.8;
+/** Direction marks on the moves: about this far apart (px), on moves at least this long on
+ * screen, and no more than this many (they spread out instead). Recomputed on zoom. */
+const ARROW_SPACING = 90;
+const ARROW_MIN_MOVE = 28;
+const MAX_ARROWS = 60;
+const ARROW = 16;
+const STOP_BADGE = 24;
+/** Stops' badges closer than this (px) on screen are shown side by side, overlapping by it. */
+const BADGE_OVERLAP = 5;
+/** The ongoing stop's badge sits on the corner of the pin that is there. */
+const PIN_CORNER = 20;
+
+function arrowIcon(angle: number) {
+  // Rotated in the SVG's own coordinates, around its centre.
+  const c = ARROW / 2;
+  const d = `M${c - 2} ${c - 4} ${c + 2} ${c} ${c - 2} ${c + 4}`;
+  return L.divIcon({
+    className: "pin-wrap",
+    html: `<svg class="history-arrow" viewBox="0 0 ${ARROW} ${ARROW}" width="${ARROW}" height="${ARROW}"><g transform="rotate(${angle.toFixed(1)} ${c} ${c})"><path class="history-arrow-halo" d="${d}"/><path d="${d}"/></g></svg>`,
+    iconSize: [ARROW, ARROW],
+    iconAnchor: [c, c],
   });
-  const line = points.map((p) => [p.lat, p.lon] as [number, number]);
+}
+
+type BadgeGroup = { stops: { stop: Stop; color: string; label: string }[]; at: [number, number]; onPin: boolean };
+
+/** At most this many numbers at one place: the latest ones, after a "+n" for the others. */
+const MAX_BADGES = 4;
+
+/** Stops at one place (home in the morning and in the evening): their numbers side by side. */
+function stopsIcon({ stops, onPin }: BadgeGroup) {
+  const shown = stops.length > MAX_BADGES ? stops.slice(-(MAX_BADGES - 1)) : stops;
+  const hidden = stops.length - shown.length;
+  const count = shown.length + (hidden ? 1 : 0);
+  const width = STOP_BADGE + (count - 1) * (STOP_BADGE - BADGE_OVERLAP);
+  const half = STOP_BADGE / 2;
+  const html =
+    (hidden ? `<div class="history-stop is-more">+${hidden}</div>` : "") +
+    shown
+      .map(
+        ({ stop, color, label }) =>
+          `<div class="history-stop" style="border-color:${color}" data-n="${stop.n}" data-testid="history-stop-${stop.n}" title="${escapeHtml(label)}">${stop.n}</div>`,
+      )
+      .join("");
+  return L.divIcon({
+    className: "pin-wrap",
+    html: `<div class="history-stops">${html}</div>`,
+    iconSize: [width, STOP_BADGE],
+    // On a pin: the last number on its corner, the others to its left.
+    iconAnchor: onPin ? [width - half - PIN_CORNER, half + PIN_CORNER] : [width / 2, half],
+  });
+}
+
+const range = (from: number, to: number) => Array.from({ length: to - from + 1 }, (_, k) => from + k);
+
+/** The trace coloured by time, with the direction of the moves and the numbered stops. */
+function HistoryLayer({ points, journey, pickedTs }: { points: LocationPoint[]; journey: Journey | null; pickedTs: string | null }) {
+  const map = useMap();
+  const { t, dateTime } = useI18n();
+  useState(() => ensureHistoryPanes(map));
+  const [zoom, setZoom] = useState(() => map.getZoom());
+  const handlers = useMemo(
+    () => ({
+      // Points are a few pixels wide: take any tap near the trace, and clear the pick elsewhere.
+      click(e: L.LeafletMouseEvent) {
+        const i = pointAtTap(
+          points.map((p) => map.latLngToContainerPoint([p.lat, p.lon])),
+          e.containerPoint,
+          TAP_TOLERANCE,
+        );
+        patchMapUi({ historyAt: i >= 0 ? points[i].ts : null });
+      },
+      zoomend: () => setZoom(map.getZoom()),
+    }),
+    [points, map],
+  );
+  useMapEvents(handlers);
+  // A fit made in the same commit as the trace, before this layer listened.
+  useEffect(() => setZoom(map.getZoom()), [points, map]);
+
+  const times = useMemo(() => points.map((p) => Date.parse(p.ts)), [points]);
+  const [t0, t1] = [times[0], times[times.length - 1]];
+  const line = useMemo(() => points.map((p) => [p.lat, p.lon] as [number, number]), [points]);
+  const bands = useMemo(() => traceBands(times), [times]);
+
+  const arrows = useMemo(() => {
+    const moves = (journey?.segments ?? []).filter((s): s is Move => s.kind === "move");
+    const lines = moves.map((m) => range(m.first, m.last).map((i) => map.project([points[i].lat, points[i].lon], zoom)));
+    return arrowsAlong(lines, ARROW_SPACING, ARROW_MIN_MOVE, MAX_ARROWS).map((a) => ({
+      at: map.unproject([a.x, a.y], zoom),
+      icon: arrowIcon(a.angle),
+    }));
+  }, [journey, points, zoom, map]);
+
+  const badges = useMemo(() => {
+    const last = points[points.length - 1];
+    const groups: (BadgeGroup & { px: L.Point })[] = [];
+    for (const stop of journey?.stops ?? []) {
+      // Still there: on the pin, which is at the latest position.
+      const at: [number, number] = stop.ongoing ? [last.lat, last.lon] : [stop.lat, stop.lon];
+      const px = map.project(at, zoom);
+      const badge = { stop, color: timeColor(stop.start, t0, t1), label: stop.place ?? t("history.stopNumber", { n: stop.n }) };
+      const group = groups.find((g) => g.px.distanceTo(px) < STOP_BADGE);
+      if (!group) groups.push({ stops: [badge], at, px, onPin: stop.ongoing });
+      else {
+        group.stops.push(badge);
+        if (stop.ongoing) Object.assign(group, { at, px, onPin: true });
+      }
+    }
+    return groups.map((g) => ({ ...g, icon: stopsIcon(g) }));
+  }, [journey, points, zoom, map, t0, t1, t]);
+
+  // A tap on a number picks the start of that stop; on the group (keyboard), the next of its stops.
+  const pickStop = (stops: BadgeGroup["stops"], e: L.LeafletMouseEvent) => {
+    const n = Number((e.originalEvent?.target as HTMLElement | null)?.closest?.("[data-n]")?.getAttribute("data-n"));
+    const at = points.findIndex((p) => p.ts === pickedTs);
+    const current = stops.findIndex(({ stop }) => stop.first <= at && at <= stop.last);
+    const next = stops.find(({ stop }) => stop.n === n) ?? stops[(current + 1) % stops.length];
+    patchMapUi({ historyAt: points[next.stop.first].ts });
+  };
+
   const picked = points.find((p) => p.ts === pickedTs);
   return (
     <>
-      <Polyline positions={line} pathOptions={{ color: ACCENT, weight: 4, opacity: 0.8 }} />
-      {points.map((p, i) => (
+      <Polyline
+        pane="history-casing"
+        positions={line}
+        interactive={false}
+        className="history-casing"
+        pathOptions={{ color: "#fff", weight: CASING_WEIGHT, opacity: 0.9, lineCap: "round", lineJoin: "round" }}
+      />
+      {bands.map((b, k) => (
+        <Polyline
+          key={k}
+          pane="history-trace"
+          positions={line.slice(b.from, b.to + 1)}
+          interactive={false}
+          pathOptions={{ color: bandColor(b.band), weight: TRACE_WEIGHT, opacity: 1, lineCap: "round", lineJoin: "round" }}
+        />
+      ))}
+      {points.map((p) => (
         <CircleMarker
           key={p.ts}
+          pane="history-points"
           center={[p.lat, p.lon]}
-          radius={i === points.length - 1 ? 7 : 4}
+          radius={POINT_RADIUS}
           className="history-point"
-          pathOptions={{ color: "#fff", weight: 1.5, fillColor: i === 0 ? "#30b350" : ACCENT, fillOpacity: 1 }}
+          pathOptions={{ stroke: false, fillColor: "#fff", fillOpacity: 0.95 }}
         />
+      ))}
+      {arrows.map((a, k) => (
+        <Marker key={k} pane="history-points" position={a.at} icon={a.icon} interactive={false} keyboard={false} />
+      ))}
+      {badges.map(({ stops, at, icon }) => (
+        <Marker key={stops[0].stop.n} position={at} icon={icon} zIndexOffset={1500} eventHandlers={{ click: (e) => pickStop(stops, e) }} />
       ))}
       {picked && (
         <Marker position={[picked.lat, picked.lon]} icon={PICK_ICON} interactive={false} keyboard={false} zIndexOffset={2000}>
@@ -352,7 +501,7 @@ export function MapView({ tileUrl, night, attribution, devices, faces, zones, fr
       {ui.draftZone && (
         <Circle center={[ui.draftZone.lat, ui.draftZone.lon]} radius={ui.draftZone.radius_m} pathOptions={{ color: "#f59e0b", weight: 2, fillOpacity: 0.15 }} />
       )}
-      {ui.history && ui.history.length > 0 && <HistoryLayer points={ui.history} pickedTs={ui.historyAt} />}
+      {ui.history && ui.history.length > 0 && <HistoryLayer points={ui.history} journey={ui.historyJourney} pickedTs={ui.historyAt} />}
 
       <DeviceLayer devices={devices} localDeviceId={localDeviceId} onOpen={(id) => navigate(`/devices/${id}`)} />
       {/* Mine opens my page, in the tab it is on; someone else's, theirs. */}

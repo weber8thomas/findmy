@@ -1,5 +1,6 @@
 import { createStore } from "./store";
 import type { LocationPoint } from "../api/types";
+import type { Journey } from "./journey";
 
 export type Focus = { lat: number; lon: number; zoom?: number; seq: number };
 export type DraftZone = { lat: number; lon: number; radius_m: number } | null;
@@ -10,6 +11,8 @@ export type MapUiState = {
   pick: ((lat: number, lon: number) => void) | null;
   draftZone: DraftZone;
   history: LocationPoint[] | null;
+  /** The history's stops and moves (with the owner's places), as the panel lists them. */
+  historyJourney: Journey | null;
   /** `ts` of the history point marked on the map (picked on the trace or in the panel). */
   historyAt: string | null;
   selected: { kind: "device" | "person"; id: string } | null;
@@ -20,6 +23,7 @@ export const mapUi = createStore<MapUiState>({
   pick: null,
   draftZone: null,
   history: null,
+  historyJourney: null,
   historyAt: null,
   selected: null,
 });

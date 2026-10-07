@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { pointAtTap } from "./trace";
+import { arrowsAlong, pointAtTap } from "./trace";
 
 // An L-shaped trace: right along y=0, then down along x=100.
 const TRACE = [
@@ -45,5 +45,46 @@ describe("pointAtTap", () => {
   it("works with a single point", () => {
     expect(pointAtTap([{ x: 5, y: 5 }], { x: 0, y: 0 }, 24)).toBe(0);
     expect(pointAtTap([{ x: 5, y: 5 }], { x: 40, y: 40 }, 24)).toBe(-1);
+  });
+});
+
+describe("arrowsAlong", () => {
+  const right = [
+    { x: 0, y: 0 },
+    { x: 300, y: 0 },
+  ];
+  const down = [
+    { x: 0, y: 0 },
+    { x: 0, y: 0 },
+    { x: 0, y: 180 },
+  ];
+
+  it("spreads marks evenly along a line, heading its way", () => {
+    expect(arrowsAlong([right], 90, 28, 60)).toEqual([
+      { x: 50, y: 0, angle: 0 },
+      { x: 150, y: 0, angle: 0 },
+      { x: 250, y: 0, angle: 0 },
+    ]);
+    expect(arrowsAlong([down], 90, 28, 60)).toEqual([
+      { x: 0, y: 45, angle: 90 },
+      { x: 0, y: 135, angle: 90 },
+    ]);
+  });
+
+  it("follows the turns of a line", () => {
+    const [a, b] = arrowsAlong([TRACE.slice(1)], 90, 28, 60);
+    expect(a).toEqual({ x: 57.5, y: 0, angle: 0 });
+    expect(b).toEqual({ x: 100, y: 52.5, angle: 90 });
+  });
+
+  it("marks a short move once, and not a tiny one", () => {
+    expect(arrowsAlong([right.map((p) => ({ x: p.x / 10, y: 0 }))], 90, 28, 60)).toEqual([{ x: 15, y: 0, angle: 0 }]);
+    expect(arrowsAlong([right.map((p) => ({ x: p.x / 20, y: 0 }))], 90, 28, 60)).toEqual([]);
+  });
+
+  it("spreads out rather than exceed the maximum", () => {
+    const lines = Array.from({ length: 10 }, () => right);
+    expect(arrowsAlong(lines, 90, 28, 12)).toHaveLength(10);
+    expect(arrowsAlong([right, right], 10, 28, 5)).toHaveLength(4);
   });
 });
