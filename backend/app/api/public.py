@@ -23,6 +23,10 @@ async def config(ctx: Ctx):
             "icloud": s.feature_icloud,
             "push": ctx.push is not None,
         },
-        "map": {"tile_url": s.tile_url, "attribution": s.tile_attribution},
+        "map": {
+            "tile_url": s.tile_url,
+            "tile_url_dark": s.resolved_tile_url_dark,
+            "attribution": s.tile_attribution,
+        },
         "vapid_public_key": ctx.push.public_key if ctx.push else None,
     }

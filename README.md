@@ -87,8 +87,9 @@ make serve     # build + un seul processus comme en production -> http://localho
   suffisant pour une famille, pas pour des milliers d'utilisateurs.
 - Pas de chiffrement de bout en bout : l'administrateur voit les positions. Voir
   [docs/privacy.md](docs/privacy.md).
-- Les tuiles OpenStreetMap sont soumises à une politique d'usage raisonnable :
-  configurable via `TILE_URL`.
+- Fond de carte OpenFreeMap (vectoriel, gratuit, sans clé), clair ou sombre selon
+  l'appareil : configurable via `TILE_URL` et `TILE_URL_DARK` (style MapLibre ou tuiles
+  raster `{z}/{x}/{y}`).
 
 ## Licence
 

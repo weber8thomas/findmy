@@ -12,17 +12,18 @@ import { localDeviceFor, localDeviceStore } from "../reporter/storage";
 import { reporterStatus } from "../reporter/useReporter";
 import { Icon, type IconName } from "../ui/icons";
 
-function useIsMobile() {
-  const query = "(max-width: 899px)";
-  const [mobile, setMobile] = useState(() => window.matchMedia(query).matches);
+function useMediaQuery(query: string) {
+  const [matches, setMatches] = useState(() => window.matchMedia(query).matches);
   useEffect(() => {
     const mq = window.matchMedia(query);
-    const on = () => setMobile(mq.matches);
+    const on = () => setMatches(mq.matches);
     mq.addEventListener("change", on);
     return () => mq.removeEventListener("change", on);
-  }, []);
-  return mobile;
+  }, [query]);
+  return matches;
 }
+
+const useIsMobile = () => useMediaQuery("(max-width: 899px)");
 
 const SNAPS = [0.18, 0.5, 0.88];
 
@@ -156,6 +157,7 @@ function SharingIndicator() {
 export function Shell({ me }: { me: User }) {
   const { t } = useI18n();
   const mobile = useIsMobile();
+  const dark = useMediaQuery("(prefers-color-scheme: dark)");
   const { connected, client } = useRealtime();
   const { data: config } = useConfig();
   const { data: devices = [] } = useDevices();
@@ -185,7 +187,7 @@ export function Shell({ me }: { me: User }) {
     <div className={`shell ${mobile ? "is-mobile" : "is-desktop"}`}>
       {config && (
         <MapView
-          tileUrl={config.map.tile_url}
+          tileUrl={dark ? config.map.tile_url_dark : config.map.tile_url}
           attribution={config.map.attribution}
           devices={devices}
           people={people}

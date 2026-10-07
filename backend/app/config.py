@@ -8,8 +8,14 @@ from urllib.parse import urlparse
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-DEFAULT_TILE_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-DEFAULT_TILE_ATTRIBUTION = "&copy; OpenStreetMap contributors"
+# OpenFreeMap vector styles (no key, no account), drawn with MapLibre. A raster tile URL
+# with {z}/{x}/{y} works too.
+DEFAULT_TILE_URL = "https://tiles.openfreemap.org/styles/liberty"
+DEFAULT_TILE_URL_DARK = "https://tiles.openfreemap.org/styles/dark"
+DEFAULT_TILE_ATTRIBUTION = (
+    '<a href="https://openfreemap.org" target="_blank">OpenFreeMap</a> '
+    "&copy; OpenMapTiles &copy; OpenStreetMap contributors"
+)
 
 
 class Settings(BaseSettings):
@@ -31,6 +37,8 @@ class Settings(BaseSettings):
     session_days: int = 30
 
     tile_url: str = DEFAULT_TILE_URL
+    # Dark-mode map. Unset: OpenFreeMap dark with the default map, else the same as tile_url.
+    tile_url_dark: str | None = None
     tile_attribution: str = DEFAULT_TILE_ATTRIBUTION
 
     feature_owntracks: bool = True
@@ -54,6 +62,12 @@ class Settings(BaseSettings):
         if self.database_url:
             return self.database_url
         return f"sqlite+aiosqlite:///{(self.data_dir / 'locus.db').resolve()}"
+
+    @property
+    def resolved_tile_url_dark(self) -> str:
+        if self.tile_url_dark:
+            return self.tile_url_dark
+        return DEFAULT_TILE_URL_DARK if self.tile_url == DEFAULT_TILE_URL else self.tile_url
 
     @property
     def cookie_secure(self) -> bool:

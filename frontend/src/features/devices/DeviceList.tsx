@@ -9,10 +9,21 @@ import { reporterStatus } from "../../reporter/useReporter";
 import { BatteryBadge, Empty, PanelHeader } from "../../ui/components";
 import { DeviceGlyph } from "../../ui/icons";
 
-export function DeviceRow({ device, isLocal, from }: { device: Device; isLocal: boolean; from: { lat: number; lon: number } | null }) {
+export function DeviceRow({
+  device,
+  isLocal,
+  from,
+  isReference = false,
+}: {
+  device: Device;
+  isLocal: boolean;
+  from: { lat: number; lon: number } | null;
+  /** The device distances are measured from: shown as "with you". */
+  isReference?: boolean;
+}) {
   const { t, relTime, distance } = useI18n();
   const loc = device.location;
-  const dist = from && loc && !isLocal ? haversineM(from.lat, from.lon, loc.lat, loc.lon) : null;
+  const dist = from && loc && !isLocal && !isReference ? haversineM(from.lat, from.lon, loc.lat, loc.lon) : null;
   return (
     <Link to={`/devices/${device.id}`} className="row" data-testid={`device-item-${device.id}`}>
       <span className={`row-avatar row-avatar-device${device.online ? " is-online" : ""}`}>
@@ -25,6 +36,7 @@ export function DeviceRow({ device, isLocal, from }: { device: Device; isLocal: 
         </span>
         <span className="row-sub">
           {isLocal ? t("devices.thisDevice") : loc ? t("devices.updated", { time: relTime(loc.ts) }) : t("devices.noLocation")}
+          {isReference && !isLocal && ` · ${t("devices.withYou")}`}
           {dist != null && ` · ${t("devices.distance", { distance: distance(dist) })}`}
         </span>
       </span>
@@ -43,7 +55,10 @@ export function DeviceList() {
   const status = useStore(reporterStatus);
   const local = localDeviceFor(me?.id);
   const localDev = devices?.find((d) => d.id === local?.id);
-  const from = status.lastFix ?? localDev?.location ?? null;
+  // Without this browser as a device, measure from the primary device (e.g. the iPhone or Mac).
+  const primary = devices?.find((d) => d.is_primary && d.location);
+  const reference = status.lastFix || localDev?.location ? localDev : primary;
+  const from = status.lastFix ?? localDev?.location ?? primary?.location ?? null;
   const list = (devices ?? []).filter((d) => d.kind === "browser" || d.kind === "owntracks" || d.kind === "icloud");
 
   return (
@@ -53,7 +68,7 @@ export function DeviceList() {
       {!isLoading && list.length === 0 && <Empty>{t("devices.empty")}</Empty>}
       <div className="list">
         {list.map((d) => (
-          <DeviceRow key={d.id} device={d} isLocal={d.id === local?.id} from={from} />
+          <DeviceRow key={d.id} device={d} isLocal={d.id === local?.id} from={from} isReference={d.id === reference?.id} />
         ))}
       </div>
     </div>

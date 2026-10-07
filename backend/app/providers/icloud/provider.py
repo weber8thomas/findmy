@@ -31,6 +31,9 @@ class TrackIn(BaseModel):
     name: str | None = Field(default=None, max_length=80)
 
 
+PRIMARY_RANK = {"phone": 0, "laptop": 1, "desktop": 1, "tablet": 2, "watch": 3}
+
+
 def _new_device(owner_id: str, snap: ic.ICloudSnapshot, name: str | None = None) -> Device:
     return Device(
         owner_id=owner_id,
@@ -112,7 +115,12 @@ class ICloudProvider(AppleAccountProvider):
         owner = await db.get(User, account.user_id)
         if owner is not None:
             if owner.primary_device_id is None:
-                owner.primary_device_id = added[0].id
+                # The primary device is the one shared with people: prefer a phone, never AirPods.
+                ranked = sorted(
+                    (d for d in added if d.icon in PRIMARY_RANK), key=lambda d: PRIMARY_RANK[d.icon]
+                )
+                if ranked:
+                    owner.primary_device_id = ranked[0].id
             for device in added:
                 self.ctx.hub.send_to_users(
                     [owner.id], "device.updated", device_out(self.ctx, device, owner)

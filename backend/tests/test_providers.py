@@ -160,7 +160,8 @@ def test_login_2fa_and_encrypted_state(apple):
             return row.secret_blob
 
     blob = c.portal.call(stored)
-    assert b"pw" not in blob and b"me@icloud.com" not in blob
+    # Look for plaintext JSON: two bare bytes like b"pw" turn up in random ciphertext now and then.
+    assert b'"password"' not in blob and b"me@icloud.com" not in blob
     assert app.state.ctx.box.decrypt_json(blob)["password"] == "pw"
     assert c.delete("/api/providers/findmy/account", headers=api.h(a)).status_code == 204
     assert c.get("/api/providers/findmy/account", headers=api.h(a)).json()["state"] == "none"
@@ -295,14 +296,15 @@ def test_icloud_poll_tracks_every_device(apple):
     connect(api, a, "icloud")
     ts = datetime.now(UTC) - timedelta(minutes=1)
     fake.snapshots = {
-        "abc": ICloudSnapshot("abc", "iPhone", "iPhone 16", 48.85, 2.29, 12, ts, 0.8, True),
         "def": ICloudSnapshot("def", "AirPods", "AirPods Pro", None, None, None, None, None, None),
+        "abc": ICloudSnapshot("abc", "iPhone", "iPhone 16", 48.85, 2.29, 12, ts, 0.8, True),
     }
     run_poll(c, app, "icloud")
     devices = {d["name"]: d for d in c.get("/api/devices", headers=api.h(a)).json()}
     assert set(devices) == {"iPhone", "AirPods"}
     assert devices["iPhone"]["location"]["lat"] == 48.85
     assert devices["AirPods"]["icon"] == "earbuds" and devices["AirPods"]["location"] is None
+    assert devices["iPhone"]["is_primary"] and not devices["AirPods"]["is_primary"]
 
     async def due_now():
         async with app.state.ctx.sessionmaker() as db:

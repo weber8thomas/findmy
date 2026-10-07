@@ -45,11 +45,18 @@ def build_providers(settings: Settings) -> list[Provider]:
     return providers
 
 
+def _tile_source(url: str) -> str:
+    tile = urlparse(url.replace("{s}", "a"))
+    if not tile.netloc:
+        return ""
+    if "{s}" in url:
+        return f"{tile.scheme}://*.{tile.netloc.split('.', 1)[-1]}"
+    return f"{tile.scheme}://{tile.netloc}"
+
+
 def _csp(request: Request, settings: Settings) -> str:
-    tile = urlparse(settings.tile_url.replace("{s}", "a"))
-    tile_host = f"{tile.scheme}://{tile.netloc}" if tile.netloc else ""
-    if "{s}" in settings.tile_url:
-        tile_host = f"{tile.scheme}://*.{tile.netloc.split('.', 1)[-1]}"
+    sources = {_tile_source(settings.tile_url), _tile_source(settings.resolved_tile_url_dark)}
+    tile_host = " ".join(sorted(s for s in sources if s))
     host = request.headers.get("host", "")
     return "; ".join(
         [
@@ -57,7 +64,8 @@ def _csp(request: Request, settings: Settings) -> str:
             "script-src 'self'",
             "style-src 'self' 'unsafe-inline'",
             f"img-src 'self' data: blob: {tile_host}".strip(),
-            f"connect-src 'self' ws://{host} wss://{host}",
+            # Vector basemaps (MapLibre) fetch their style, tiles, fonts and sprites.
+            f"connect-src 'self' ws://{host} wss://{host} {tile_host}".strip(),
             "worker-src 'self'",
             "manifest-src 'self'",
             "frame-ancestors 'none'",

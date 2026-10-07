@@ -129,6 +129,38 @@ function Controller({ points }: { points: [number, number][] }) {
   return null;
 }
 
+/** Raster tiles for a {z}/{x}/{y} URL, otherwise a MapLibre vector style. */
+function BaseLayer({ url, attribution }: { url: string; attribution: string }) {
+  if (url.includes("{z}")) return <TileLayer url={url} attribution={attribution} maxZoom={19} />;
+  return <VectorLayer styleUrl={url} attribution={attribution} />;
+}
+
+function VectorLayer({ styleUrl, attribution }: { styleUrl: string; attribution: string }) {
+  const map = useMap();
+  useEffect(() => {
+    let layer: L.Layer | null = null;
+    let cancelled = false;
+    // MapLibre is large: load it only when a vector map is used.
+    void Promise.all([
+      import("maplibre-gl"),
+      import("@maplibre/maplibre-gl-leaflet"),
+      // MapLibre looks for its worker next to its own module, which bundling moves: point to it.
+      import("maplibre-gl/dist/maplibre-gl-worker.mjs?url"),
+      import("maplibre-gl/dist/maplibre-gl.css"),
+    ]).then(([maplibre, { maplibreGL }, { default: workerUrl }]) => {
+      if (cancelled) return;
+      maplibre.setWorkerUrl(workerUrl);
+      layer = maplibreGL({ style: styleUrl, attribution } as L.LeafletMaplibreGLOptions);
+      layer.addTo(map);
+    });
+    return () => {
+      cancelled = true;
+      if (layer) map.removeLayer(layer);
+    };
+  }, [map, styleUrl, attribution]);
+  return null;
+}
+
 function HistoryLayer({ points }: { points: LocationPoint[] }) {
   const line = points.map((p) => [p.lat, p.lon] as [number, number]);
   return (
@@ -161,8 +193,8 @@ export function MapView({ tileUrl, attribution, devices, people, zones, localDev
   }, [devices, people]);
 
   return (
-    <MapContainer center={[46.6, 2.4]} zoom={5} zoomControl={false} className="map" worldCopyJump>
-      <TileLayer url={tileUrl} attribution={attribution} maxZoom={19} />
+    <MapContainer center={[46.6, 2.4]} zoom={5} maxZoom={19} zoomControl={false} className="map" worldCopyJump>
+      <BaseLayer key={tileUrl} url={tileUrl} attribution={attribution} />
       <Controller points={points} />
 
       {zones.map((z) => (

@@ -49,6 +49,7 @@ const fr: Catalogue = {
   "devices.battery": "Batterie {percent} %",
   "devices.charging": "en charge",
   "devices.distance": "à {distance}",
+  "devices.withYou": "Avec vous",
   "devices.primary": "Ma position",
   "devices.kind.browser": "Application web",
   "devices.kind.owntracks": "OwnTracks",

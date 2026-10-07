@@ -48,6 +48,7 @@ const en = {
   "devices.battery": "Battery {percent}%",
   "devices.charging": "charging",
   "devices.distance": "{distance} away",
+  "devices.withYou": "With you",
   "devices.primary": "My location",
   "devices.kind.browser": "Web app",
   "devices.kind.owntracks": "OwnTracks",

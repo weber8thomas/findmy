@@ -117,7 +117,7 @@ export type AppConfig = {
   registration_open: boolean;
   providers: string[];
   features: { owntracks: boolean; findmy: boolean; icloud: boolean; push: boolean };
-  map: { tile_url: string; attribution: string };
+  map: { tile_url: string; tile_url_dark: string; attribution: string };
   vapid_public_key: string | null;
 };
 
