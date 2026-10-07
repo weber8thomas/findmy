@@ -752,7 +752,8 @@ a.row:focus-visible {
 }
 .actions {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
+  /* auto-fit: the tiles share the whole width instead of leaving empty columns on a wide sheet. */
+  grid-template-columns: repeat(auto-fit, minmax(78px, 1fr));
   gap: 8px;
   margin: 14px 0;
 }

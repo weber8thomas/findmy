@@ -24,7 +24,8 @@ function useMediaQuery(query: string) {
   return matches;
 }
 
-const useIsMobile = () => useMediaQuery("(max-width: 899px)");
+// Tablets get the side panel in both orientations, like Find My on iPad (an 11" iPad is 834px wide).
+const useIsMobile = () => useMediaQuery("(max-width: 767px)");
 
 const SNAPS = [0.18, 0.5, 0.88];
 
