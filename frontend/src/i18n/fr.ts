@@ -228,7 +228,7 @@ const fr: Catalogue = {
   "owntracks.username": "Nom d’utilisateur",
   "owntracks.password": "Mot de passe",
   "owntracks.once": "Copiez le mot de passe maintenant : il ne sera plus affiché.",
-  "owntracks.qr": "Installez OwnTracks, puis scannez ce code avec l’appareil photo du téléphone : OwnTracks s’ouvre et se configure. Il ne sera plus affiché.",
+  "owntracks.qr": "Dans OwnTracks, activez d’abord Préférences › Avancé › « Allow external configuration » (iPhone : Réglages › Allow external configuration). Puis scannez ce code avec l’appareil photo du téléphone et validez l’import dans OwnTracks. Vous pouvez ensuite désactiver l’option. Ce code ne sera plus affiché.",
   "owntracks.qrLabel": "QR code de configuration OwnTracks",
   "owntracks.open": "Ouvrir dans OwnTracks (sur ce téléphone)",
   "owntracks.manual": "Ou réglez OwnTracks à la main (mode HTTP) :",

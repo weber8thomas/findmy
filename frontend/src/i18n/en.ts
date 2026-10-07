@@ -227,7 +227,7 @@ const en = {
   "owntracks.username": "Username",
   "owntracks.password": "Password",
   "owntracks.once": "Copy the password now: it won’t be shown again.",
-  "owntracks.qr": "Install OwnTracks, then scan this code with the phone's camera: OwnTracks opens and sets itself up. It won't be shown again.",
+  "owntracks.qr": "In OwnTracks, first turn on Preferences › Advanced › “Allow external configuration” (iPhone: Settings › Allow external configuration). Then scan this code with the phone’s camera and confirm the import in OwnTracks. You can turn the option off afterwards. This code won’t be shown again.",
   "owntracks.qrLabel": "OwnTracks setup QR code",
   "owntracks.open": "Open in OwnTracks (on this phone)",
   "owntracks.manual": "Or set up OwnTracks by hand (HTTP mode):",
