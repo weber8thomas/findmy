@@ -23,8 +23,11 @@ export default defineConfig({
     timeout: 60_000,
     env: { E2E_PORT: String(port) },
   },
+  // The map and location sources are checked on every size; the rest on the desktop, and phone
+  // gestures on the phone. Only Chromium is installed: the iPad is emulated with it.
   projects: [
     { name: "desktop", use: { ...devices["Desktop Chrome"] }, testIgnore: /mobile/ },
-    { name: "mobile", use: { ...devices["Pixel 7"] }, testMatch: /mobile/ },
+    { name: "mobile", use: { ...devices["Pixel 7"] }, testMatch: /(mobile|map|sources)\.spec\.ts$/ },
+    { name: "tablet", use: { ...devices["iPad (gen 7)"], browserName: "chromium" }, testMatch: /(map|sources)\.spec\.ts$/ },
   ],
 });
