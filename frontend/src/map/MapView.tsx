@@ -102,29 +102,31 @@ function spreadOffsets(items: Placed[], project: (lat: number, lon: number) => L
   return out;
 }
 
-/** Space covered by the side panel (desktop) or the bottom sheet + tab bar (mobile). A sheet
- * pulled up over the whole map still leaves a band to frame in, or the framing has no room. */
-function coveredArea(map: L.Map): { left: number; bottom: number } {
+/** Space covered by the side panel (desktop) or the bottom sheet + tab bar (mobile), and at the
+ * top by the status bar of an installed app. A sheet pulled up over the whole map still leaves a
+ * band to frame in, or the framing has no room. */
+function coveredArea(map: L.Map): { top: number; left: number; bottom: number } {
   const root = map.getContainer().closest(".shell");
+  const top = root?.querySelector<HTMLElement>(".safe-area")?.offsetTop ?? 0;
   const panel = root?.querySelector<HTMLElement>(".panel");
-  if (panel) return { left: panel.offsetLeft + panel.offsetWidth, bottom: 0 };
+  if (panel) return { top, left: panel.offsetLeft + panel.offsetWidth, bottom: 0 };
   const sheet = root?.querySelector<HTMLElement>(".sheet");
   const tabbar = root?.querySelector<HTMLElement>(".tabbar");
   // The height the sheet is going to, not where its transition is.
   const sheetH = sheet ? parseFloat(sheet.style.height) || sheet.offsetHeight : 0;
   const bottom = sheetH + (tabbar?.offsetHeight ?? 0);
-  return { left: 0, bottom: Math.max(0, Math.min(bottom, map.getSize().y - 200)) };
+  return { top, left: 0, bottom: Math.max(0, Math.min(bottom, map.getSize().y - 200 - top)) };
 }
 
 function fitOptions(map: L.Map, maxZoom: number): L.FitBoundsOptions {
   const c = coveredArea(map);
-  return { paddingTopLeft: [c.left + 48, 72], paddingBottomRight: [48, c.bottom + 48], maxZoom };
+  return { paddingTopLeft: [c.left + 48, c.top + 72], paddingBottomRight: [48, c.bottom + 48], maxZoom };
 }
 
 /** Fly so that the point lands in the middle of the *visible* part of the map. */
 function flyToVisible(map: L.Map, lat: number, lon: number, zoom: number) {
   const c = coveredArea(map);
-  const target = map.project([lat, lon], zoom).subtract([c.left / 2, -c.bottom / 2]);
+  const target = map.project([lat, lon], zoom).subtract([c.left / 2, (c.top - c.bottom) / 2]);
   map.flyTo(map.unproject(target, zoom), zoom, { duration: 0.6 });
 }
 
@@ -132,8 +134,8 @@ function flyToVisible(map: L.Map, lat: number, lon: number, zoom: number) {
 function panIntoView(map: L.Map, lat: number, lon: number) {
   const c = coveredArea(map);
   // A sheet pulled up high leaves little map: keep a band to pan into.
-  const bottom = Math.max(0, Math.min(c.bottom + 24, map.getSize().y - 120));
-  map.panInside([lat, lon], { paddingTopLeft: [c.left + 24, 72], paddingBottomRight: [24, bottom] });
+  const bottom = Math.max(0, Math.min(c.bottom + 24, map.getSize().y - 120 - c.top));
+  map.panInside([lat, lon], { paddingTopLeft: [c.left + 24, c.top + 72], paddingBottomRight: [24, bottom] });
 }
 
 function Controller({ points, tab, detail, ready }: { points: [number, number][]; tab: string; detail: boolean; ready: boolean }) {

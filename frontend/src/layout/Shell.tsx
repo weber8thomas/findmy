@@ -133,6 +133,7 @@ export function Shell({ me }: { me: User }) {
 
   return (
     <div className={`shell ${mobile ? "is-mobile" : "is-desktop"}`}>
+      <div className="safe-area" aria-hidden />
       {config && (
         <TabMap
           me={me}

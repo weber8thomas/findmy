@@ -108,6 +108,37 @@ test("the sheet stays where it's let go, from its title to over the whole map", 
   await expect(sheet).toHaveAttribute("data-snap", "half");
 });
 
+test("installed on an iPhone, nothing hides under the status bar or the home indicator", async ({ page, context }) => {
+  await context.route(/tile\.openstreetmap\.org/, (r) => r.fulfill({ status: 200, contentType: "image/png", body: PNG }));
+  const acc = newAccount("Notch");
+  const res = await context.request.post("/api/auth/register", {
+    data: { email: acc.email, password: acc.password, display_name: acc.name },
+  });
+  expect(res.ok()).toBeTruthy();
+  // An iPhone with a Dynamic Island, opened from the home screen.
+  const cdp = await context.newCDPSession(page);
+  await cdp.send("Emulation.setSafeAreaInsetsOverride", { insets: { top: 59, bottom: 34 } });
+  await page.goto("/people");
+  await expect(page.getByTestId("people-panel")).toBeVisible();
+  const vh = page.viewportSize()!.height;
+
+  const buttons = (await page.locator(".map-buttons").boundingBox())!;
+  expect(buttons.y).toBeGreaterThanOrEqual(59 + 12 - 0.5);
+  const tabbar = (await page.locator(".tabbar").boundingBox())!;
+  expect(Math.round(tabbar.y + tabbar.height)).toBe(vh);
+  expect(Math.round(tabbar.height)).toBe(60 + 34);
+  const sheet = page.getByTestId("bottom-sheet");
+  const box = (await sheet.boundingBox())!;
+  expect(Math.round(box.y + box.height)).toBe(Math.round(tabbar.y));
+
+  // All the way up, the sheet stops under the status bar.
+  await sheet.locator(".sheet-handle").click();
+  await expect(sheet).toHaveAttribute("data-snap", "full");
+  await expect(sheet).toHaveClass(/is-top/);
+  await page.waitForTimeout(400);
+  expect(Math.round((await sheet.boundingBox())!.y)).toBe(59);
+});
+
 test("mobile history: tap the trace to see when the device was there", async ({ page, context }) => {
   await context.route(/tile\.openstreetmap\.org/, (r) => r.fulfill({ status: 200, contentType: "image/png", body: PNG }));
   const acc = newAccount("MobileHist");

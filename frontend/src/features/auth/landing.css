@@ -511,9 +511,9 @@
   }
   .landing-panel {
     position: absolute;
-    top: 12px;
-    left: 12px;
-    bottom: 12px;
+    top: calc(12px + env(safe-area-inset-top));
+    left: calc(12px + env(safe-area-inset-left));
+    bottom: calc(12px + env(safe-area-inset-bottom));
     width: 380px;
     min-height: 0;
     margin: 0;
