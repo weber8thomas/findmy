@@ -11,6 +11,7 @@ export type MapScope = {
   people: boolean;
   /** My own face, where my location is. */
   me: boolean;
+  /** A page about places, which the map then frames. They show on every tab. */
   zones: boolean;
   /** A page about one thing (a device, a person, a place) moves the map itself. */
   detail: boolean;

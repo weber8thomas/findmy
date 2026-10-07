@@ -12,7 +12,6 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 # OpenFreeMap vector styles (no key, no account), drawn with MapLibre. A raster tile URL
 # with {z}/{x}/{y} works too.
 DEFAULT_TILE_URL = "https://tiles.openfreemap.org/styles/liberty"
-DEFAULT_TILE_URL_DARK = "https://tiles.openfreemap.org/styles/dark"
 DEFAULT_TILE_ATTRIBUTION = (
     '<a href="https://openfreemap.org" target="_blank">OpenFreeMap</a> '
     "&copy; OpenMapTiles &copy; OpenStreetMap contributors"
@@ -55,7 +54,8 @@ class Settings(BaseSettings):
     oidc_registration: bool | None = None
 
     tile_url: str = DEFAULT_TILE_URL
-    # Dark-mode map. Unset: OpenFreeMap dark with the default map, else the same as tile_url.
+    # Dark-mode map. Unset: the same as tile_url, which the app draws in night colours when it
+    # is a vector style.
     tile_url_dark: str | None = None
     tile_attribution: str = DEFAULT_TILE_ATTRIBUTION
     # Address search for placing zones (OpenStreetMap Nominatim, or one of your own).
@@ -86,9 +86,7 @@ class Settings(BaseSettings):
 
     @property
     def resolved_tile_url_dark(self) -> str:
-        if self.tile_url_dark:
-            return self.tile_url_dark
-        return DEFAULT_TILE_URL_DARK if self.tile_url == DEFAULT_TILE_URL else self.tile_url
+        return self.tile_url_dark or self.tile_url
 
     @property
     def geocoder_host(self) -> str | None:

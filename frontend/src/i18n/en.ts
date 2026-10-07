@@ -357,6 +357,7 @@ const en = {
   "notifications.markAll": "Mark all as read",
 
   "map.locateMe": "Show my position",
+  "map.credits": "Map credits",
   "map.fit": "Show everything",
 } as const;
 

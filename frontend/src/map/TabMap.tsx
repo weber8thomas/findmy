@@ -14,15 +14,18 @@ const NO_DEVICES: Device[] = [];
 const NO_PEOPLE: Person[] = [];
 const NO_ZONES: Zone[] = [];
 
-/** The map of the current tab: faces on People, devices on Devices, items on Items, me on Me. */
+/** The map of the current tab: faces on People, devices on Devices, items on Items, me on Me.
+ * My places show on all of them. */
 export function TabMap({
   me,
   tileUrl,
+  night,
   attribution,
   localDeviceId,
 }: {
   me: User;
   tileUrl: string;
+  night: boolean;
   attribution: string;
   localDeviceId: string | null;
 }) {
@@ -51,10 +54,12 @@ export function TabMap({
   return (
     <MapView
       tileUrl={tileUrl}
+      night={night}
       attribution={attribution}
       devices={shown}
       faces={faces}
-      zones={scope.zones ? (zones.data ?? NO_ZONES) : NO_ZONES}
+      zones={zones.data ?? NO_ZONES}
+      frameZones={scope.zones}
       localDeviceId={localDeviceId}
       tab={scope.tab}
       detail={scope.detail}

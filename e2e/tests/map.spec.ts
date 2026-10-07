@@ -55,3 +55,29 @@ test("the map shows what the tab is about: faces on People, devices on Devices",
 
   await claireCtx.close();
 });
+
+test("my places show on every tab, and the map credits fold into an ⓘ", async ({ page, context }) => {
+  await stubTiles(context);
+  await signIn(context, newAccount("Marco"), "register");
+  await reportAt(context, await apiDevice(context, "Laptop", { icon: "laptop" }), HOME.latitude, HOME.longitude);
+  const zone = await context.request.post("/api/zones", { data: { name: "Maison", lat: HOME.latitude, lon: HOME.longitude, radius_m: 150 } });
+  expect(zone.ok()).toBeTruthy();
+
+  await page.goto("/people");
+  const place = page.locator(".zone-label", { hasText: "Maison" });
+  await expect(place).toBeVisible();
+  await page.getByTestId("tab-devices").click();
+  await expect(place).toBeVisible();
+
+  // In full at first, as OpenStreetMap asks; folded once the map is touched; back on a tap.
+  const credits = page.getByTestId("map-credits");
+  const text = credits.getByText("OpenStreetMap");
+  await expect(text).toBeVisible();
+  const size = page.viewportSize()!;
+  await page.mouse.click(size.width - 60, 160);
+  await expect(text).toBeHidden();
+  await credits.getByRole("button").click();
+  await expect(text).toBeVisible();
+  await credits.getByRole("button").click();
+  await expect(text).toBeHidden();
+});

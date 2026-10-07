@@ -35,6 +35,7 @@ function BottomSheet({ children }: { children: ReactNode }) {
   const [snap, setSnap] = useState(1);
   const [dragH, setDragH] = useState<number | null>(null);
   const start = useRef<{ y: number; h: number } | null>(null);
+  const self = useRef<HTMLElement>(null);
   const location = useLocation();
 
   // Opening a detail view raises the sheet so actions are visible.
@@ -45,8 +46,17 @@ function BottomSheet({ children }: { children: ReactNode }) {
   const vh = window.innerHeight;
   const height = dragH ?? SNAPS[snap] * vh;
 
+  // The map's corner controls (its credits) sit just above the sheet, wherever it is.
+  useEffect(() => {
+    const shell = self.current?.parentElement;
+    shell?.style.setProperty("--sheet-h", `${height}px`);
+    return () => {
+      shell?.style.removeProperty("--sheet-h");
+    };
+  }, [height]);
+
   return (
-    <section className="sheet" style={{ height }} data-testid="bottom-sheet" data-snap={snap}>
+    <section ref={self} className="sheet" style={{ height }} data-testid="bottom-sheet" data-snap={snap}>
       <div
         className="sheet-handle"
         role="slider"
@@ -189,6 +199,8 @@ export function Shell({ me }: { me: User }) {
         <TabMap
           me={me}
           tileUrl={dark ? config.map.tile_url_dark : config.map.tile_url}
+          // Without a map of its own for the night, the day map in night colours.
+          night={dark && config.map.tile_url_dark === config.map.tile_url}
           attribution={config.map.attribution}
           localDeviceId={local?.id ?? null}
         />

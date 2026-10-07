@@ -18,10 +18,14 @@ export type Face = { user: Pick<PublicUser, "id" | "display_name" | "avatar_url"
 
 type Props = {
   tileUrl: string;
+  /** Draw the tile URL's (vector) style in night colours. */
+  night: boolean;
   attribution: string;
   devices: Device[];
   faces: Face[];
   zones: Zone[];
+  /** The page is about places: they are part of what the map frames. */
+  frameZones: boolean;
   localDeviceId: string | null;
   /** The tab shown: the map frames what it shows again when it changes. */
   tab: string;
@@ -173,15 +177,17 @@ function Controller({ points, tab, detail, ready }: { points: [number, number][]
 }
 
 /** Raster tiles for a {z}/{x}/{y} URL, otherwise a MapLibre vector style. */
-function BaseLayer({ url, attribution }: { url: string; attribution: string }) {
-  if (url.includes("{z}")) return <TileLayer url={url} attribution={attribution} maxZoom={19} />;
-  return <VectorLayer styleUrl={url} attribution={attribution} />;
+function BaseLayer({ url, night }: { url: string; night: boolean }) {
+  if (url.includes("{z}")) return <TileLayer url={url} maxZoom={19} />;
+  return <VectorLayer styleUrl={url} night={night} />;
 }
 
-function VectorLayer({ styleUrl, attribution }: { styleUrl: string; attribution: string }) {
+const NO_STYLE = { version: 8, sources: {}, layers: [] } as const;
+
+function VectorLayer({ styleUrl, night }: { styleUrl: string; night: boolean }) {
   const map = useMap();
   useEffect(() => {
-    let layer: L.Layer | null = null;
+    let layer: L.MaplibreGL | null = null;
     let cancelled = false;
     // MapLibre is large: load it only when a vector map is used.
     void Promise.all([
@@ -190,17 +196,59 @@ function VectorLayer({ styleUrl, attribution }: { styleUrl: string; attribution:
       // MapLibre looks for its worker next to its own module, which bundling moves: point to it.
       import("maplibre-gl/dist/maplibre-gl-worker.mjs?url"),
       import("maplibre-gl/dist/maplibre-gl.css"),
-    ]).then(([maplibre, { maplibreGL }, { default: workerUrl }]) => {
+      import("./night"),
+    ]).then(([maplibre, { maplibreGL }, { default: workerUrl }, , { nightStyle }]) => {
       if (cancelled) return;
       maplibre.setWorkerUrl(workerUrl);
-      layer = maplibreGL({ style: styleUrl, attribution } as L.LeafletMaplibreGLOptions);
+      // At night the style is recoloured between its download and its first drawing.
+      layer = maplibreGL({ style: night ? NO_STYLE : styleUrl } as L.LeafletMaplibreGLOptions);
       layer.addTo(map);
+      if (night) layer.getMaplibreMap().setStyle(styleUrl, { transformStyle: (_, next) => nightStyle(next) });
     });
     return () => {
       cancelled = true;
       if (layer) map.removeLayer(layer);
     };
-  }, [map, styleUrl, attribution]);
+  }, [map, styleUrl, night]);
+  return null;
+}
+
+/** How long the map's credits show in full before folding into their ⓘ, as the OpenStreetMap
+ * attribution guidelines allow (also when the map is first touched). */
+const CREDITS_FOLD_MS = 5000;
+
+/** The map's credits as an ⓘ in a corner, like Apple Maps: in full at first, then on a tap. */
+function Credits({ html }: { html: string }) {
+  const map = useMap();
+  const { t } = useI18n();
+  const label = t("map.credits");
+  useEffect(() => {
+    const control = new L.Control({ position: "bottomright" });
+    const box = L.DomUtil.create("div", "map-credits is-open");
+    box.dataset.testid = "map-credits";
+    const button = L.DomUtil.create("button", "map-credits-btn", box);
+    button.type = "button";
+    button.textContent = "i";
+    button.setAttribute("aria-label", label);
+    // The server's setting, shown as Leaflet's own attribution control did.
+    L.DomUtil.create("span", "map-credits-text", box).innerHTML = html;
+    L.DomEvent.disableClickPropagation(box);
+    L.DomEvent.on(box, "pointerdown", L.DomEvent.stopPropagation);
+    L.DomEvent.on(button, "click", () => box.classList.toggle("is-open"));
+    control.onAdd = () => box;
+    control.addTo(map);
+
+    // Not on the map's own moves (its framing on arrival): on a touch, a click or the wheel.
+    const fold = () => box.classList.remove("is-open");
+    const container = map.getContainer();
+    const timer = window.setTimeout(fold, CREDITS_FOLD_MS);
+    L.DomEvent.on(container, "pointerdown wheel", fold);
+    return () => {
+      window.clearTimeout(timer);
+      L.DomEvent.off(container, "pointerdown wheel", fold);
+      control.remove();
+    };
+  }, [map, html, label]);
   return null;
 }
 
@@ -256,26 +304,41 @@ function HistoryLayer({ points, pickedTs }: { points: LocationPoint[]; pickedTs:
   );
 }
 
-export function MapView({ tileUrl, attribution, devices, faces, zones, localDeviceId, tab, detail, ready }: Props) {
+export function MapView({ tileUrl, night, attribution, devices, faces, zones, frameZones, localDeviceId, tab, detail, ready }: Props) {
   const ui = useStore(mapUi);
   const navigate = useNavigate();
 
-  // What the tab frames: only what it shows.
+  // What the tab frames: the people or devices it is about; places only on their own pages.
   const points = useMemo(() => {
     const pts: [number, number][] = [];
     devices.forEach((d) => d.location && pts.push([d.location.lat, d.location.lon]));
     faces.forEach((f) => pts.push([f.location.lat, f.location.lon]));
-    zones.forEach((z) => pts.push([z.lat, z.lon]));
+    if (frameZones) zones.forEach((z) => pts.push([z.lat, z.lon]));
     return pts;
-  }, [devices, faces, zones]);
+  }, [devices, faces, zones, frameZones]);
 
   return (
-    <MapContainer center={[46.6, 2.4]} zoom={5} maxZoom={19} zoomControl={false} className="map" worldCopyJump>
-      <BaseLayer key={tileUrl} url={tileUrl} attribution={attribution} />
+    <MapContainer
+      center={[46.6, 2.4]}
+      zoom={5}
+      maxZoom={19}
+      zoomControl={false}
+      attributionControl={false}
+      className={`map${night ? " is-night" : ""}`}
+      worldCopyJump
+    >
+      <BaseLayer key={`${tileUrl} ${night}`} url={tileUrl} night={night} />
+      <Credits html={attribution} />
       <Controller points={points} tab={tab} detail={detail} ready={ready} />
 
       {zones.map((z) => (
-        <Circle key={z.id} center={[z.lat, z.lon]} radius={z.radius_m} pathOptions={{ color: ZONE, weight: 2, fillOpacity: 0.08, dashArray: "6 6" }}>
+        // Filled only on the pages about places: elsewhere a tint over the whole street at home.
+        <Circle
+          key={z.id}
+          center={[z.lat, z.lon]}
+          radius={z.radius_m}
+          pathOptions={{ color: ZONE, weight: 2, fillOpacity: frameZones ? 0.08 : 0, dashArray: "6 6" }}
+        >
           {/* Below the centre, so a device at home does not hide the place's name. */}
           <Tooltip direction="center" offset={[0, 32]} permanent className="zone-label">
             {z.name}

@@ -358,6 +358,7 @@ const fr: Catalogue = {
   "notifications.markAll": "Tout marquer comme lu",
 
   "map.locateMe": "Afficher ma position",
+  "map.credits": "Sources de la carte",
   "map.fit": "Tout afficher",
 };
 

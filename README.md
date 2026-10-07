@@ -94,9 +94,9 @@ Versions : voir [CHANGELOG.md](CHANGELOG.md). Une nouvelle version change `versi
   suffisant pour une famille, pas pour des milliers d'utilisateurs.
 - Pas de chiffrement de bout en bout : l'administrateur voit les positions. Voir
   [docs/privacy.md](docs/privacy.md).
-- Fond de carte OpenFreeMap (vectoriel, gratuit, sans clé), clair ou sombre selon
-  l'appareil : configurable via `TILE_URL` et `TILE_URL_DARK` (style MapLibre ou tuiles
-  raster `{z}/{x}/{y}`).
+- Fond de carte OpenFreeMap (vectoriel, gratuit, sans clé), en couleurs de nuit quand
+  l'appareil est en mode sombre : configurable via `TILE_URL` et `TILE_URL_DARK` (style
+  MapLibre ou tuiles raster `{z}/{x}/{y}`).
 - Recherche d'adresse des lieux par OpenStreetMap Nominatim, que le serveur interroge à la
   place de l'utilisateur (seul le texte tapé sort), au plus une fois par seconde et avec un
   cache, comme le demande sa [politique d'usage](https://operations.osmfoundation.org/policies/nominatim/) :
