@@ -7,6 +7,29 @@ l'application l'affiche dans *Moi › Réglages › À propos*, avec la révisio
 
 ## [Non publié]
 
+## [0.6.0] - 2026-10-07
+
+### Ajouté
+
+- **L'historique se lit comme un trajet** : les arrêts (au moins 10 minutes au même
+  endroit) sont numérotés dans l'ordre de la journée et prennent le nom de vos lieux
+  (« Maison », « Travail »), avec les déplacements entre eux et leur distance.
+  - Sur la carte, la couleur du tracé change avec l'heure, du vert (le plus ancien) au
+    bleu (le plus récent). Des flèches montrent le sens du déplacement et chaque arrêt
+    porte son numéro.
+  - Dans le volet, un résumé (positions, distance, arrêts) et la légende des couleurs
+    avec la première et la dernière heure. Puis le trajet, du plus ancien au plus
+    récent : « Maison · 07:30 – 08:28 · 58 min », « Déplacement · 2,4 km · 20 min »… avec
+    le jour quand l'historique en couvre plusieurs.
+  - Toucher un arrêt centre la carte dessus. Toutes les positions restent dans une
+    liste repliée.
+
+### Corrigé
+
+- **Volet sous la carte** : un glissement rapide à la souris le suit jusqu'au bout. La
+  vitesse d'un geste vif est mesurée au moment du geste, même quand le téléphone est
+  occupé.
+
 ## [0.5.0] - 2026-10-07
 
 ### Modifié
@@ -191,7 +214,8 @@ Première version, sous le nom de Locus.
 - Fournisseurs Apple facultatifs, désactivés par défaut : iCloud et réseau Find My.
 - Docker Compose (Caddy, tunnel Cloudflare, serveur anisette) et tests Playwright.
 
-[Non publié]: https://github.com/weber8thomas/findmy/compare/v0.5.0...HEAD
+[Non publié]: https://github.com/weber8thomas/findmy/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/weber8thomas/findmy/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/weber8thomas/findmy/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/weber8thomas/findmy/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/weber8thomas/findmy/compare/v0.3.0...v0.4.0
