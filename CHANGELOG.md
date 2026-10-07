@@ -7,6 +7,20 @@ l'application l'affiche dans *Moi › Réglages › À propos*, avec la révisio
 
 ## [Non publié]
 
+## [0.8.0] - 2026-10-07
+
+### Ajouté
+
+- **Tirer pour actualiser** : sur le volet (téléphone) ou le panneau (tablette), tirer la
+  page vers le bas depuis son haut recharge ce qui est affiché et installe la nouvelle
+  version d'Oukilé s'il y en a une. Les apps installées sur l'écran d'accueil n'ont
+  jamais celui du navigateur.
+
+### Modifié
+
+- **Volet** : tirer la page vers le bas actualise au lieu de baisser le volet ; il se
+  déplace par sa poignée et sa barre de titre.
+
 ## [0.7.0] - 2026-10-07
 
 ### Ajouté
@@ -238,7 +252,8 @@ Première version, sous le nom de Locus.
 - Fournisseurs Apple facultatifs, désactivés par défaut : iCloud et réseau Find My.
 - Docker Compose (Caddy, tunnel Cloudflare, serveur anisette) et tests Playwright.
 
-[Non publié]: https://github.com/weber8thomas/findmy/compare/v0.7.0...HEAD
+[Non publié]: https://github.com/weber8thomas/findmy/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/weber8thomas/findmy/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/weber8thomas/findmy/compare/v0.6.1...v0.7.0
 [0.6.1]: https://github.com/weber8thomas/findmy/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/weber8thomas/findmy/compare/v0.5.0...v0.6.0
