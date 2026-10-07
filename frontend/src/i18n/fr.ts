@@ -228,6 +228,10 @@ const fr: Catalogue = {
   "owntracks.username": "Nom d’utilisateur",
   "owntracks.password": "Mot de passe",
   "owntracks.once": "Copiez le mot de passe maintenant : il ne sera plus affiché.",
+  "owntracks.qr": "Installez OwnTracks, puis scannez ce code avec l’appareil photo du téléphone : OwnTracks s’ouvre et se configure. Il ne sera plus affiché.",
+  "owntracks.qrLabel": "QR code de configuration OwnTracks",
+  "owntracks.open": "Ouvrir dans OwnTracks (sur ce téléphone)",
+  "owntracks.manual": "Ou réglez OwnTracks à la main (mode HTTP) :",
 
   "zones.title": "Lieux et alertes",
   "zones.empty": "Aucun lieu.",

@@ -227,6 +227,10 @@ const en = {
   "owntracks.username": "Username",
   "owntracks.password": "Password",
   "owntracks.once": "Copy the password now: it won’t be shown again.",
+  "owntracks.qr": "Install OwnTracks, then scan this code with the phone's camera: OwnTracks opens and sets itself up. It won't be shown again.",
+  "owntracks.qrLabel": "OwnTracks setup QR code",
+  "owntracks.open": "Open in OwnTracks (on this phone)",
+  "owntracks.manual": "Or set up OwnTracks by hand (HTTP mode):",
 
   "zones.title": "Places & alerts",
   "zones.empty": "No places yet.",

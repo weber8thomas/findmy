@@ -11,6 +11,8 @@ import { toast } from "../../lib/ui-state";
 import { localDeviceFor, localDeviceStore } from "../../reporter/storage";
 import { Empty, Field, PanelHeader, Section } from "../../ui/components";
 import { Icon } from "../../ui/icons";
+import { QrCode } from "../../ui/QrCode";
+import { owntracksConfigUrl, owntracksDeviceId, trackerId } from "./owntracks";
 import { ThisDevice } from "./ThisDevice";
 
 export function Viewers() {
@@ -108,13 +110,31 @@ function OwnTracksSetup({ me }: { me: User }) {
     },
   });
   const existing = devices?.filter((d) => d.kind === "owntracks") ?? [];
+  const url = `${location.origin}/api/owntracks`;
+  const configUrl =
+    created &&
+    owntracksConfigUrl({
+      url,
+      username: me.email,
+      password: created.token,
+      deviceId: owntracksDeviceId(me.display_name),
+      tid: trackerId(me.display_name),
+    });
   return (
     <Section title={t("me.owntracks")} testId="owntracks">
       <p className="muted small">{t("owntracks.explain")}</p>
-      {created ? (
+      {created && configUrl ? (
         <div className="credentials">
+          <div className="owntracks-qr">
+            <QrCode value={configUrl} label={t("owntracks.qrLabel")} testId="owntracks-qr" />
+            <p className="muted small">{t("owntracks.qr")}</p>
+            <a className="btn btn-block" href={configUrl} data-testid="owntracks-open">
+              {t("owntracks.open")}
+            </a>
+          </div>
+          <p className="muted small">{t("owntracks.manual")}</p>
           <Field label={t("owntracks.url")}>
-            <input readOnly value={`${location.origin}/api/owntracks`} onFocus={(e) => e.target.select()} />
+            <input readOnly value={url} onFocus={(e) => e.target.select()} />
           </Field>
           <Field label={t("owntracks.username")}>
             <input readOnly value={me.email} onFocus={(e) => e.target.select()} />

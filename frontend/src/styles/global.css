@@ -1119,6 +1119,20 @@ a.row:focus-visible {
 .credentials .field {
   margin: 8px 0;
 }
+.owntracks-qr {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  margin: 4px 0 14px;
+  text-align: center;
+}
+.qr {
+  width: min(240px, 100%);
+  height: auto;
+  border-radius: 12px;
+  /* Stays black on white in dark mode: scanners need the contrast. */
+  background: #fff;
+}
 
 /* ---------- loading ---------- */
 .splash {
