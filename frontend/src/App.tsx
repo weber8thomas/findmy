@@ -10,6 +10,8 @@ import { HistoryPanel } from "./features/devices/HistoryPanel";
 import { ItemsPanel } from "./features/items/ItemsPanel";
 import { MePanel } from "./features/me/MePanel";
 import { PeopleList, PersonDetail } from "./features/people/People";
+import { FindMySettings } from "./features/settings/FindMySettings";
+import { ICloudSettings } from "./features/settings/ICloudSettings";
 import { SettingsPanel } from "./features/settings/SettingsPanel";
 import { ZoneEditor, ZonesList } from "./features/zones/Zones";
 import { savedLocale, useI18n } from "./i18n";
@@ -67,6 +69,8 @@ export function App() {
           <Route path="/me/zones" element={<ZonesList />} />
           <Route path="/me/zones/:id" element={<ZoneEditor />} />
           <Route path="/settings" element={<SettingsPanel me={me} />} />
+          <Route path="/settings/icloud" element={<ICloudSettings />} />
+          <Route path="/settings/findmy" element={<FindMySettings />} />
           <Route path="/privacy" element={<PrivacyPanel />} />
           <Route path="*" element={<Navigate to="/devices" replace />} />
         </Route>

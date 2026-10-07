@@ -6,7 +6,9 @@ import { useI18n } from "../../i18n";
 import { toast } from "../../lib/ui-state";
 import { Field } from "../../ui/components";
 
-export function useProviderAccount(provider: "icloud" | "findmy") {
+export type AppleProvider = "icloud" | "findmy";
+
+export function useProviderAccount(provider: AppleProvider) {
   return useQuery({
     queryKey: ["provider", provider],
     queryFn: () => api<ProviderAccount>(`/providers/${provider}/account`),
@@ -14,7 +16,7 @@ export function useProviderAccount(provider: "icloud" | "findmy") {
 }
 
 /** Apple ID sign-in with optional two-factor step, shared by the iCloud and Find My providers. */
-export function AppleAccount({ provider }: { provider: "icloud" | "findmy" }) {
+export function AppleAccount({ provider }: { provider: AppleProvider }) {
   const { t, relTime } = useI18n();
   const qc = useQueryClient();
   const { data: account } = useProviderAccount(provider);

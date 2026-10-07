@@ -834,6 +834,10 @@ a.row:focus-visible {
   background: var(--tint-soft);
   color: var(--tint);
 }
+.banner-link {
+  color: inherit;
+  font-weight: 600;
+}
 .battery {
   display: inline-flex;
   align-items: center;
@@ -1191,6 +1195,27 @@ a.row:focus-visible {
 }
 .link-row.danger {
   color: var(--danger);
+}
+/* A second line under the label, e.g. an Apple account's state in Settings. */
+.link-row-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.link-row-sub {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 400;
+  overflow-wrap: anywhere;
+}
+.link-row-sub.is-danger {
+  color: var(--danger);
+}
+.link-row-chevron {
+  flex: none;
+  color: var(--muted);
 }
 .icon-picker {
   display: grid;

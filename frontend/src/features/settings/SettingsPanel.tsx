@@ -16,6 +16,7 @@ import { locationSources } from "../about/about";
 import { usePatchMe } from "../me/MePanel";
 import { owntracksConfigUrl, owntracksDeviceId, trackerId } from "../me/owntracks";
 import { ThisDevice } from "../me/ThisDevice";
+import { AppleSources } from "./AppleSources";
 
 /** Web Push for this browser; the notifications themselves are listed in Me. */
 function PushSettings({ me }: { me: User }) {
@@ -224,6 +225,7 @@ export function SettingsPanel({ me }: { me: User }) {
       <ThisDevice me={me} />
       <PushSettings me={me} />
       {config?.features.owntracks && <OwnTracksSetup me={me} />}
+      <AppleSources />
       <Section title={t("me.language")}>
         <LanguageSwitch value={locale} onChange={changeLocale} />
       </Section>

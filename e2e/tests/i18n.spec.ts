@@ -26,5 +26,9 @@ test("items tab explains that Apple providers are disabled by default", async ({
   const page = await ctx.newPage();
   await page.goto("/items");
   await expect(page.getByTestId("items-panel")).toContainText("disabled on this server");
+  // Nor any Apple source to set up in Settings.
+  await page.goto("/settings");
+  await expect(page.getByTestId("settings-panel")).toBeVisible();
+  await expect(page.getByTestId("apple-sources")).toHaveCount(0);
   await ctx.close();
 });
