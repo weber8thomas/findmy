@@ -680,15 +680,18 @@ a.row:focus-visible {
   flex-direction: column;
   gap: 1px;
 }
+/* A block, not a flex box: the ellipsis only applies to text in a block. */
 .row-title {
-  display: flex;
-  gap: 6px;
-  align-items: center;
+  display: block;
   font-size: 16px;
   font-weight: 600;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+.row-title > .chip {
+  margin-left: 6px;
+  vertical-align: 1px;
 }
 .row-sub {
   color: var(--muted);
