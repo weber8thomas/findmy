@@ -2,14 +2,14 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { api } from "../../api/client";
-import { keys, useConfig, useDevices, useMyLocation } from "../../api/queries";
+import { keys, useConfig, useDevices, useMyLocation, usePrefs, type Prefs } from "../../api/queries";
 import type { Device, User } from "../../api/types";
 import { useI18n, type Locale } from "../../i18n";
 import { currentSubscription, enablePush, pushSupport } from "../../lib/push";
 import { useStore } from "../../lib/store";
 import { toast } from "../../lib/ui-state";
 import { localDeviceFor, localDeviceStore } from "../../reporter/storage";
-import { Field, PanelHeader, Section } from "../../ui/components";
+import { Field, PanelHeader, Section, Toggle } from "../../ui/components";
 import { Icon } from "../../ui/icons";
 import { QrCode } from "../../ui/QrCode";
 import { locationSources } from "../about/about";
@@ -61,6 +61,30 @@ function PushSettings({ me }: { me: User }) {
           <Icon name="bell" /> {t("me.enableNotifications")}
         </button>
       )}
+    </Section>
+  );
+}
+
+/** Whether the people who see me hear of my battery running low: my choice, off by default. */
+function BatterySettings() {
+  const { t } = useI18n();
+  const qc = useQueryClient();
+  const { data: prefs } = usePrefs();
+  const save = useMutation({
+    mutationFn: (battery_alerts: boolean) => api<Prefs>("/me/prefs", { method: "PATCH", body: { battery_alerts } }),
+    onSuccess: (p) => qc.setQueryData(keys.prefs, p),
+    onError: () => toast(t("common.error"), undefined, "error"),
+  });
+  if (!prefs) return null;
+  return (
+    <Section title={t("settings.battery")} testId="battery-alerts">
+      <Toggle
+        label={t("settings.batteryAlerts")}
+        checked={save.isPending ? save.variables : prefs.battery_alerts}
+        onChange={(on) => save.mutate(on)}
+        testId="toggle-battery-alerts"
+      />
+      <p className="muted small">{t("settings.batteryAlertsHint")}</p>
     </Section>
   );
 }
@@ -250,6 +274,7 @@ export function SettingsPanel({ me }: { me: User }) {
       <PanelHeader title={t("settings.title")} back="/me" />
       <ThisDevice me={me} />
       <PushSettings me={me} />
+      <BatterySettings />
       <SourcesLink />
       {config?.features.owntracks && <OwnTracksSetup me={me} />}
       <AppleSources />

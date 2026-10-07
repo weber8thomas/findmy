@@ -71,6 +71,20 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
 
 
+class UserPrefs(Base):
+    """A person's choices. A table of its own: the schema is created, never altered, so a new
+    choice is a new column here only while the table is new, or a new table."""
+
+    __tablename__ = "user_prefs"
+
+    user_id: Mapped[str] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
+    )
+    # Tell the people who see me when the phone my location comes from runs low. Off unless
+    # chosen: without it, they never see my battery.
+    battery_alerts: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
 class AvatarSource(StrEnum):
     UPLOAD = "upload"
     SSO = "sso"

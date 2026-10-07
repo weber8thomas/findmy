@@ -20,6 +20,8 @@ MESSAGES: dict[str, dict[str, str]] = {
         "play_sound.body": "Someone is looking for this device. Tap to stop.",
         "lost_mode_on.title": "This device is lost",
         "lost_mode_on.body": "{message}",
+        "battery_low.title": "{who}: low battery",
+        "battery_low.body": "{device} is down to {level}%. {who}'s location may stop updating.",
     },
     "fr": {
         "zone_enter.title": "{who} est arrivé(e)",
@@ -38,6 +40,10 @@ MESSAGES: dict[str, dict[str, str]] = {
         "play_sound.body": "Quelqu'un cherche cet appareil. Touchez pour arrêter.",
         "lost_mode_on.title": "Cet appareil est perdu",
         "lost_mode_on.body": "{message}",
+        "battery_low.title": "{who} : batterie faible",
+        "battery_low.body": (
+            "{device} n'a plus que {level} %. Sa position risque de ne plus se mettre à jour."
+        ),
     },
 }
 

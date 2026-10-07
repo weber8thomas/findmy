@@ -3,8 +3,17 @@ from fastapi import APIRouter, File, HTTPException, Request, UploadFile, status
 from app import access
 from app.deps import DB, Ctx, CurrentUser, rate_limit
 from app.models import AvatarSource
-from app.schemas import MeUpdate, MyLocationOut, ShareOut, SourcesIn, SourcesOut, UserOut
-from app.services import avatars, sharing, sources
+from app.schemas import (
+    MeUpdate,
+    MyLocationOut,
+    PrefsOut,
+    PrefsUpdate,
+    ShareOut,
+    SourcesIn,
+    SourcesOut,
+    UserOut,
+)
+from app.services import avatars, battery, sharing, sources
 
 router = APIRouter(prefix="/me", tags=["me"])
 
@@ -72,3 +81,15 @@ async def set_my_sources(data: SourcesIn, user: CurrentUser, ctx: Ctx, db: DB):
     await db.commit()
     await sources.publish(ctx, db, user)
     return SourcesOut(device_ids=await sources.source_ids(db, user))
+
+
+@router.get("/prefs", response_model=PrefsOut)
+async def my_prefs(user: CurrentUser, db: DB):
+    return PrefsOut(battery_alerts=await battery.battery_alerts(db, user.id))
+
+
+@router.patch("/prefs", response_model=PrefsOut)
+async def update_my_prefs(data: PrefsUpdate, user: CurrentUser, db: DB):
+    if data.battery_alerts is not None:
+        await battery.set_battery_alerts(db, user.id, data.battery_alerts)
+    return PrefsOut(battery_alerts=await battery.battery_alerts(db, user.id))

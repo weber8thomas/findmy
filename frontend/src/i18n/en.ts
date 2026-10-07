@@ -285,6 +285,9 @@ const en = {
 
   "settings.title": "Settings",
   "settings.push": "Push notifications",
+  "settings.battery": "Low battery",
+  "settings.batteryAlerts": "Tell the people who see my location",
+  "settings.batteryAlertsHint": "When the battery of the device your location comes from drops below 15%, they get a notification, once. Without this, they never see your battery.",
   "settings.about": "About",
   "settings.version": "Version",
   "settings.revision": "Revision",
@@ -311,7 +314,7 @@ const en = {
   "privacy.stored.placesPhone": "If you use OwnTracks: your places are also sent to its app on your phone (never other people’s), so it can tell when you arrive or leave.",
   "privacy.stored.apple": "If you connect an Apple account: its session, encrypted.",
   "privacy.visible": "Who sees what",
-  "privacy.visible.share": "Only the people you share your location with see it: your current position, taken from one of your sources (Me › My location), and that device's name. No history, battery or commands, nor the list of your devices.",
+  "privacy.visible.share": "Only the people you share your location with see it: your current position, taken from one of your sources (Me › My location), and that device's name. No history, battery or commands, nor the list of your devices. One exception, if you turn it on (Settings › Low battery): an alert when your battery drops below 15%.",
   "privacy.visible.consent": "Sharing starts from you, the other person accepts it, and you can stop it at any time.",
   "privacy.visible.photo": "Your photo is only shown to the people you share with, in either direction, or invite.",
   "privacy.visible.admin": "Whoever runs this server can technically read what is stored on it: only use an Oukilé run by someone you trust.",

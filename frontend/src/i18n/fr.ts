@@ -286,6 +286,9 @@ const fr: Catalogue = {
 
   "settings.title": "Réglages",
   "settings.push": "Notifications push",
+  "settings.battery": "Batterie faible",
+  "settings.batteryAlerts": "Prévenir ceux qui voient ma position",
+  "settings.batteryAlertsHint": "Quand la batterie de l’appareil d’où vient votre position passe sous 15 %, ils reçoivent une notification, une fois. Sans cette option, ils ne voient jamais votre batterie.",
   "settings.about": "À propos",
   "settings.version": "Version",
   "settings.revision": "Révision",
@@ -312,7 +315,7 @@ const fr: Catalogue = {
   "privacy.stored.placesPhone": "Si vous utilisez OwnTracks : vos lieux sont aussi envoyés à son application sur votre téléphone (jamais ceux des autres), pour qu’elle sache quand vous arrivez ou partez.",
   "privacy.stored.apple": "Si vous connectez un compte Apple : sa session, chiffrée.",
   "privacy.visible": "Qui voit quoi",
-  "privacy.visible.share": "Seules les personnes avec qui vous partagez votre position la voient : votre position actuelle, prise sur l’une de vos sources (Moi › Ma position), et le nom de cet appareil. Ni historique, ni batterie, ni commandes, ni la liste de vos appareils.",
+  "privacy.visible.share": "Seules les personnes avec qui vous partagez votre position la voient : votre position actuelle, prise sur l’une de vos sources (Moi › Ma position), et le nom de cet appareil. Ni historique, ni batterie, ni commandes, ni la liste de vos appareils. Seule exception, si vous l’activez (Réglages › Batterie faible) : une alerte quand votre batterie passe sous 15 %.",
   "privacy.visible.consent": "Le partage part de vous, l’autre personne l’accepte, et vous pouvez l’arrêter à tout moment.",
   "privacy.visible.photo": "Votre photo n’est montrée qu’aux personnes avec qui vous partagez, dans un sens ou dans l’autre, ou que vous invitez.",
   "privacy.visible.admin": "La personne qui gère ce serveur peut techniquement lire ce qui y est conservé : n’utilisez qu’un Oukilé géré par quelqu’un de confiance.",

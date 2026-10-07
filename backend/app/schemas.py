@@ -65,6 +65,14 @@ class MeUpdate(BaseModel):
     primary_device_id: str | None = None
 
 
+class PrefsOut(BaseModel):
+    battery_alerts: bool
+
+
+class PrefsUpdate(BaseModel):
+    battery_alerts: bool | None = None
+
+
 class PublicUser(ORM):
     id: str
     email: str

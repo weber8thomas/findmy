@@ -64,3 +64,46 @@ test("privacy page readable signed out, linked from the sign-in page", async ({ 
   expect(manifest.shortcuts.map((s: { url: string }) => s.url)).toEqual(["/people", "/devices", "/items"]);
   await ctx.close();
 });
+
+test("low battery: the people who see me hear of it, only if I chose so", async ({ browser }) => {
+  const [aliceCtx, bobCtx] = [await openContext(browser), await openContext(browser)];
+  const alice = newAccount("Alice");
+  const bob = newAccount("Bob");
+  await signIn(aliceCtx, alice, "register");
+  await signIn(bobCtx, bob, "register");
+  const created = await aliceCtx.request.post("/api/devices", { data: { name: "iPhone", kind: "browser" } });
+  const { device_token } = await created.json();
+  const share = await aliceCtx.request.post("/api/shares", { data: { recipient_email: bob.email } });
+  expect(share.ok()).toBeTruthy();
+  const accepted = await bobCtx.request.post(`/api/shares/${(await share.json()).id}/accept`);
+  expect(accepted.ok()).toBeTruthy();
+  const battery = (level: number) =>
+    aliceCtx.request.post("/api/report/locations", {
+      data: { fixes: [{ ts: new Date().toISOString(), lat: 48.85, lon: 2.35, accuracy: 10 }], battery: { level, charging: false } },
+      headers: { Authorization: `Bearer ${device_token}` },
+    });
+
+  // Off by default: nothing said.
+  const page = await aliceCtx.newPage();
+  await page.goto("/settings");
+  const toggle = page.getByTestId("toggle-battery-alerts");
+  await expect(toggle).not.toBeChecked();
+  await battery(0.5);
+  await battery(0.1);
+  const bobPage = await bobCtx.newPage();
+  await bobPage.goto("/me");
+  await expect(bobPage.getByTestId("notifications")).toBeVisible();
+  await expect(bobPage.getByTestId("notification-item").filter({ hasText: "low battery" })).toHaveCount(0);
+
+  // Turned on, it stays on, and the next fall below 15% is told.
+  await toggle.click();
+  await expect(toggle).toBeChecked();
+  await page.reload();
+  await expect(page.getByTestId("toggle-battery-alerts")).toBeChecked();
+  await battery(0.6);
+  await battery(0.12);
+  await bobPage.reload();
+  await expect(bobPage.getByTestId("notification-item").filter({ hasText: "Alice: low battery" })).toContainText("iPhone is down to 12%");
+  await aliceCtx.close();
+  await bobCtx.close();
+});

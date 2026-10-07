@@ -28,6 +28,7 @@ export const keys = {
   zones: ["zones"] as const,
   zoneEvents: ["zoneEvents"] as const,
   notifications: ["notifications"] as const,
+  prefs: ["prefs"] as const,
 };
 
 export function useConfig() {
@@ -97,6 +98,12 @@ export function useMyLocation() {
 /** The devices my location is taken from, first choice first. */
 export function useSources() {
   return useQuery({ queryKey: keys.sources, queryFn: () => api<{ device_ids: string[] }>("/me/sources") });
+}
+
+export type Prefs = { battery_alerts: boolean };
+
+export function usePrefs() {
+  return useQuery({ queryKey: keys.prefs, queryFn: () => api<Prefs>("/me/prefs") });
 }
 
 export function useZones(enabled = true) {

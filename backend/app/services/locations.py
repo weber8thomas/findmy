@@ -15,7 +15,7 @@ from app.context import AppContext
 from app.models import Device, Location, User
 from app.providers.base import LocationFix
 from app.schemas import LocationOut
-from app.services import sources
+from app.services import battery, sources
 from app.services import zones as zones_service
 from app.services.devices import battery_out, fix_out
 
@@ -53,6 +53,7 @@ async def ingest(
     fix is enough to confirm an arrival or departure, as with sparse providers."""
     now = utcnow()
     accepted = _normalize(fixes, source, now)
+    battery_before = device.battery_level
 
     if accepted:
         rows = [
@@ -100,6 +101,7 @@ async def ingest(
 
     await publish_device_location(ctx, db, device)
     await zones_service.dispatch(ctx, db, device, zone_hits)
+    await battery.check(ctx, db, device, battery_before)
     return len(accepted)
 
 
