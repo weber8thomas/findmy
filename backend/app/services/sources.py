@@ -37,19 +37,14 @@ class Resolved:
     fix: FixOut
 
 
-def updated_at(fix: FixOut) -> datetime:
-    """When the position was last known to hold: a later check-in confirms it."""
-    return fix.seen_at or fix.ts
-
-
 def pick(devices: Sequence[Device], now: datetime) -> Resolved | None:
     """The first device (in priority order) with a fresh position, else the latest position."""
     located = [Resolved(d, f) for d in devices if (f := fix_out(d)) is not None]
     for r in located:
-        if now - updated_at(r.fix) <= FRESH:
+        if now - r.fix.ts <= FRESH:
             return r
     # max() keeps the first of equals: the higher priority on a tie.
-    return max(located, key=lambda r: updated_at(r.fix), default=None)
+    return max(located, key=lambda r: r.fix.ts, default=None)
 
 
 async def saved_ids(db: AsyncSession, user_id: str) -> list[str]:

@@ -122,7 +122,7 @@ def test_nothing_fresh_takes_the_most_recent(api, client, app):
     assert my_location(client, api, a)["device_name"] == "Phone"
 
 
-def test_a_check_in_keeps_a_source_fresh(api, client, app):
+def test_a_check_in_does_not_refresh_a_source(api, client, app):
     a = api.register("A")
     phone = api.device(a, "Phone")
     api.report(phone, 48.85, 2.35)
@@ -130,15 +130,15 @@ def test_a_check_in_keeps_a_source_fresh(api, client, app):
     tag = add_tag(app, client, a, "Wallet", 48.80, 2.30, ago(minutes=5))
     put_sources(client, api, a, [phone["id"], tag])
     assert my_location(client, api, a)["device_name"] == "Wallet"
-    # The phone has not moved but says it is still there.
+    # A ping without a new position proves nothing: OwnTracks sends one every 15 minutes with
+    # its last fix, even after moving less than its reporting threshold (500 m by default).
     r = client.post(
         "/api/report/locations",
         json={"fixes": []},
         headers={"Authorization": f"Bearer {phone['token']}"},
     )
     assert r.status_code == 202
-    loc = my_location(client, api, a)
-    assert loc["device_name"] == "Phone" and loc["location"]["seen_at"] is not None
+    assert my_location(client, api, a)["device_name"] == "Wallet"
 
 
 def test_sources_must_be_my_own_distinct_devices(api, client):

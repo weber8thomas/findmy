@@ -97,8 +97,6 @@ class FixOut(BaseModel):
     lon: float
     accuracy: float | None = None
     ts: datetime
-    # A phone checked in later without a new position: it still is there as far as it knows.
-    seen_at: datetime | None = None
 
 
 class LostModeOut(BaseModel):

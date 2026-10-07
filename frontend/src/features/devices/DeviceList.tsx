@@ -3,7 +3,7 @@ import { useDevices, useMe } from "../../api/queries";
 import type { Device } from "../../api/types";
 import { useI18n } from "../../i18n";
 import { listedInDevices } from "../../layout/tabs";
-import { haversineM, updatedAt } from "../../lib/geo";
+import { haversineM } from "../../lib/geo";
 import { useStore } from "../../lib/store";
 import { localDeviceFor, localDeviceStore } from "../../reporter/storage";
 import { reporterStatus } from "../../reporter/useReporter";
@@ -41,7 +41,7 @@ export function DeviceRow({
             : device.provider_info.missing_since
               ? t("devices.leftApple")
               : loc
-                ? t("devices.updated", { time: relTime(updatedAt(loc)) })
+                ? t("devices.updated", { time: relTime(loc.ts) })
                 : t("devices.noLocation")}
           {isReference && !isLocal && ` · ${t("devices.withYou")}`}
           {dist != null && ` · ${t("devices.distance", { distance: distance(dist) })}`}

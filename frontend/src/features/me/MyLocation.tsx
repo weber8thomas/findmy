@@ -4,7 +4,6 @@ import { api } from "../../api/client";
 import { keys, useDevices, useMyLocation, useSources } from "../../api/queries";
 import type { Device, User } from "../../api/types";
 import { useI18n } from "../../i18n";
-import { updatedAt } from "../../lib/geo";
 import { focusOn, patchMapUi, toast } from "../../lib/ui-state";
 import { Empty, PanelHeader, Section } from "../../ui/components";
 import { Avatar, DeviceGlyph, Icon } from "../../ui/icons";
@@ -67,7 +66,7 @@ function SourceItem({
         <span className="row-main">
           <span className="row-title">{name}</span>
           <span className="row-sub">
-            {t(`devices.kind.${device.kind}`)} · {loc ? t("devices.updated", { time: relTime(updatedAt(loc)) }) : t("devices.noLocation")}
+            {t(`devices.kind.${device.kind}`)} · {loc ? t("devices.updated", { time: relTime(loc.ts) }) : t("devices.noLocation")}
           </span>
         </span>
       </div>
@@ -184,7 +183,7 @@ export function MyLocationPanel({ me }: { me: User }) {
         <Avatar user={me} />
         <span className="row-main">
           <span className="row-title">{loc ? t("location.via", { device: mine?.device_name ?? "" }) : t("devices.noLocation")}</span>
-          <span className="row-sub">{loc ? relTime(updatedAt(loc)) : t("location.explain")}</span>
+          <span className="row-sub">{loc ? relTime(loc.ts) : t("location.explain")}</span>
         </span>
       </div>
       <Viewers />

@@ -81,27 +81,6 @@ def test_owntracks_is_the_phone(api, client):
     assert laptop["id"] in {d["id"] for d in devices}
 
 
-def test_owntracks_check_in_confirms_the_position(api, client):
-    a = api.register("A")
-    phone = api.device(a, "Phone", kind="owntracks")
-    auth = basic(a["email"], phone["token"])
-
-    def location():
-        return next(
-            d for d in client.get("/api/devices", headers=api.h(a)).json() if d["id"] == phone["id"]
-        )["location"]
-
-    now = int(time.time())
-    # The app's periodic ping sends its last fix, 30 minutes old: the phone is still there.
-    old = {"_type": "location", "lat": 1, "lon": 1, "tst": now - 1800}
-    assert client.post("/api/owntracks", json=old, headers=auth).status_code == 200
-    loc = location()
-    assert loc["seen_at"] is not None and loc["ts"] < loc["seen_at"]
-    # A fresh fix says it all.
-    assert client.post("/api/owntracks", json={**old, "tst": now}, headers=auth).status_code == 200
-    assert location()["seen_at"] is None
-
-
 def test_push_subscription_upsert_and_dead_cleanup(api, client, fake_push):
     a = api.register("A")
     sub = {"endpoint": "https://push.example/1", "keys": {"p256dh": "k", "auth": "x"}}

@@ -20,6 +20,9 @@ export function owntracksConfigUrl(s: OwnTracksSettings): string {
     deviceId: s.deviceId,
     tid: s.tid,
     monitoring: 1, // significant changes: battery friendly, the app's default
+    // The app's default is 500 m: coming home from 400 m away was never reported.
+    locatorDisplacement: 100,
+    locatorInterval: 60, // seconds, at most one position a minute on the move
   };
   const bytes = new TextEncoder().encode(JSON.stringify(config));
   const b64 = btoa(String.fromCharCode(...bytes));

@@ -3,8 +3,6 @@ export type Fix = {
   lon: number;
   accuracy: number | null;
   ts: string;
-  /** A phone checked in later without a new position: it still is there as far as it knows. */
-  seen_at?: string | null;
 };
 export type Battery = { level: number | null; charging: boolean | null; label: string | null };
 
