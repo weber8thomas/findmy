@@ -7,6 +7,18 @@ l'application l'affiche dans *Moi › Réglages › À propos*, avec la révisio
 
 ## [Non publié]
 
+## [0.4.1] - 2026-10-07
+
+### Corrigé
+
+- **Appareils Apple : plus de reconnexion à répétition.** Oukilé se connecte à iCloud comme
+  la page *Localiser des appareils* d'icloud.com, avec le seul mot de passe : de quoi
+  localiser, faire sonner et activer le mode Perdu, sans code de validation. Quand Apple
+  laisse expirer la session, Oukilé se reconnecte seul avec le mot de passe enregistré
+  (chiffré) ; une session qu'Apple a invalidée est oubliée et refaite. Un code n'est demandé
+  que si Apple refuse cette connexion. Avant, Apple redemandait un code dès que la session
+  web expirait, et le compte passait en « reconnexion requise ».
+
 ## [0.4.0] - 2026-10-07
 
 ### Modifié
@@ -164,7 +176,8 @@ Première version, sous le nom de Locus.
 - Fournisseurs Apple facultatifs, désactivés par défaut : iCloud et réseau Find My.
 - Docker Compose (Caddy, tunnel Cloudflare, serveur anisette) et tests Playwright.
 
-[Non publié]: https://github.com/weber8thomas/findmy/compare/v0.4.0...HEAD
+[Non publié]: https://github.com/weber8thomas/findmy/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/weber8thomas/findmy/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/weber8thomas/findmy/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/weber8thomas/findmy/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/weber8thomas/findmy/compare/v0.1.0...v0.2.0
