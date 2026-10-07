@@ -74,6 +74,28 @@ def item_name(source: Path, uid: str, beacon: dict, key: bytes) -> str:
     return " - ".join(p for p in parts if p) or uid
 
 
+def owned_beacons(source: Path) -> list[Path]:
+    """The item records; explains why there are none (glob would hide permission errors)."""
+    folder = source / "OwnedBeacons"
+    try:
+        names = os.listdir(folder)
+    except PermissionError:
+        sys.exit(
+            f"Operation not permitted on {folder}: macOS protects it. Give your terminal app "
+            "Full Disk Access (System Settings > Privacy & Security), restart it, and retry."
+        )
+    except FileNotFoundError:
+        try:
+            found = ", ".join(sorted(os.listdir(source))) or "nothing"
+        except OSError as e:
+            found = f"unreadable ({e.strerror})"
+        sys.exit(f"No {folder}. In {source}: {found}.")
+    records = sorted(folder / n for n in names if n.endswith(".record"))
+    if not records:
+        sys.exit(f"{folder} holds no .record file ({len(names)} entries).")
+    return records
+
+
 def safe(name: str) -> str:
     return re.sub(r"[^\w\- ]+", "", name, flags=re.UNICODE).strip() or "item"
 
@@ -86,12 +108,7 @@ def main() -> None:
     parser.add_argument("--key", help=argparse.SUPPRESS)  # hex, for tests
     args = parser.parse_args()
 
-    try:
-        records = sorted((args.source / "OwnedBeacons").glob("*.record"))
-    except PermissionError:
-        sys.exit("Operation not permitted: give your terminal Full Disk Access, then retry.")
-    if not records:
-        sys.exit(f"No item found in {args.source}/OwnedBeacons.")
+    records = owned_beacons(args.source)
     key = bytes.fromhex(args.key) if args.key else beaconstore_key()
 
     if not args.list:
