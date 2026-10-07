@@ -135,9 +135,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         h.setdefault("X-Content-Type-Options", "nosniff")
         h.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
         h.setdefault("Permissions-Policy", "geolocation=(self), camera=(), microphone=()")
+        # Other sites can neither embed our responses nor keep a handle on our window.
+        h.setdefault("Cross-Origin-Resource-Policy", "same-origin")
         if not request.url.path.startswith("/api/"):
             h.setdefault("Content-Security-Policy", _csp(request, settings))
             h.setdefault("X-Frame-Options", "DENY")
+            h.setdefault("Cross-Origin-Opener-Policy", "same-origin")
         else:
             h.setdefault("Cache-Control", "no-store")
         return response

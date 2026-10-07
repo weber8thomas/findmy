@@ -86,3 +86,4 @@ def test_security_headers(client):
     r = client.get("/api/health")
     assert r.headers["x-content-type-options"] == "nosniff"
     assert r.headers["cache-control"] == "no-store"
+    assert r.headers["cross-origin-resource-policy"] == "same-origin"

@@ -39,4 +39,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=20s \
 # One worker by design: live connections and rate limits are kept in memory.
 # Proxy headers are read by the app itself (TRUST_PROXY), not by uvicorn: trusting them
 # from any address would let clients forge their IP.
-CMD ["uvicorn", "--factory", "app.main:create_app", "--host", "0.0.0.0", "--port", "8000", "--no-proxy-headers"]
+CMD ["uvicorn", "--factory", "app.main:create_app", "--host", "0.0.0.0", "--port", "8000", "--no-proxy-headers", "--no-server-header"]
