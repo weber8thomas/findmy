@@ -6,7 +6,23 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 Locale = Literal["en", "fr"]
-DeviceIcon = Literal["phone", "tablet", "laptop", "desktop", "watch", "earbuds", "tag"]
+DeviceIcon = Literal[
+    "phone",
+    "tablet",
+    "laptop",
+    "desktop",
+    "watch",
+    "earbuds",
+    "tag",
+    # What a Find My network tag is attached to.
+    "key",
+    "car",
+    "backpack",
+    "wallet",
+    "suitcase",
+    "bike",
+    "pet",
+]
 
 
 class ORM(BaseModel):

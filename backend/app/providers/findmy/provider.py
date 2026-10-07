@@ -6,6 +6,8 @@ sparse and typically minutes to an hour old.
 
 from __future__ import annotations
 
+import re
+import unicodedata
 from typing import Any
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
@@ -23,6 +25,38 @@ from app.services import locations
 from app.services.devices import device_out
 
 MAX_UPLOAD = 256 * 1024
+
+# Words of an item's name (French or English, without accents) and the icon they suggest.
+NAME_ICONS = {
+    "cle": "key",
+    "clef": "key",
+    "key": "key",
+    "voiture": "car",
+    "car": "car",
+    "auto": "car",
+    "sac": "backpack",
+    "bag": "backpack",
+    "portefeuille": "wallet",
+    "wallet": "wallet",
+    "velo": "bike",
+    "bike": "bike",
+    "valise": "suitcase",
+    "suitcase": "suitcase",
+    "chien": "pet",
+    "chat": "pet",
+    "dog": "pet",
+    "cat": "pet",
+}
+
+
+def _icon_for_name(name: str) -> str:
+    """A first icon from the name ("Clés de Marco" -> key); the owner can change it."""
+    plain = unicodedata.normalize("NFKD", name.lower()).encode("ascii", "ignore").decode()
+    for word in re.findall(r"[a-z]+", plain):
+        icon = NAME_ICONS.get(word) or NAME_ICONS.get(word.removesuffix("s"))
+        if icon:
+            return icon
+    return "tag"
 
 
 class GenerateIn(BaseModel):
@@ -86,7 +120,7 @@ class FindMyProvider(AppleAccountProvider):
                 owner_id=user.id,
                 name=name.strip(),
                 kind=DeviceKind.FINDMY,
-                icon="tag",
+                icon=_icon_for_name(name),
                 token_hash=None,
                 provider_config={"item_type": item_type, **cfg},
                 secret_blob=ctx.box.encrypt_json(secret),

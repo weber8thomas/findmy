@@ -21,7 +21,22 @@ export type LostMode = {
 };
 
 export type DeviceKind = "browser" | "owntracks" | "findmy" | "icloud";
-export type DeviceIcon = "phone" | "tablet" | "laptop" | "desktop" | "watch" | "earbuds" | "tag";
+export type DeviceIcon =
+  | "phone"
+  | "tablet"
+  | "laptop"
+  | "desktop"
+  | "watch"
+  | "earbuds"
+  | "tag"
+  // What a Find My network tag is attached to.
+  | "key"
+  | "car"
+  | "backpack"
+  | "wallet"
+  | "suitcase"
+  | "bike"
+  | "pet";
 
 export type Device = {
   id: string;

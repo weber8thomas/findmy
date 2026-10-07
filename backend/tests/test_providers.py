@@ -13,6 +13,7 @@ from app.main import create_app
 from app.models import ProviderAccount
 from app.providers.apple_base import AppleAuthError
 from app.providers.findmy.client import RawReport
+from app.providers.findmy.provider import _icon_for_name
 from app.providers.icloud.client import ICloudSnapshot
 from tests.conftest import Api, FakePush
 
@@ -231,6 +232,44 @@ def test_findmy_items_and_poll(apple):
     assert hist["total"] == 2
     r = c.post(f"/api/devices/{tag['id']}/refresh", headers=api.h(a))
     assert r.status_code == 202
+
+
+@pytest.mark.parametrize(
+    ("name", "icon"),
+    [
+        ("Clés de Marco", "key"),
+        ("Keys", "key"),
+        ("Voiture", "car"),
+        ("Sac à dos", "backpack"),
+        ("Portefeuille", "wallet"),
+        ("Vélo", "bike"),
+        ("Valise rouge", "suitcase"),
+        ("Chien", "pet"),
+        ("Carte bleue", "tag"),  # "car" only as a whole word
+        ("Tag 3", "tag"),
+    ],
+)
+def test_item_icon_from_name(name, icon):
+    assert _icon_for_name(name) == icon
+
+
+def test_findmy_item_icon(apple):
+    c, api, _, _ = apple
+    a = api.register()
+    connect(api, a, "findmy")
+    keys = c.post("/api/items/generate", json={"name": "Clés de Marco"}, headers=api.h(a))
+    assert keys.json()["device"]["icon"] == "key"
+    car = c.post(
+        "/api/items",
+        data={"name": "Voiture", "type": "haystack", "private_key_b64": "K"},
+        headers=api.h(a),
+    ).json()
+    assert car["icon"] == "car"
+    r = c.patch(f"/api/devices/{car['id']}", json={"icon": "pet"}, headers=api.h(a))
+    assert r.status_code == 200 and r.json()["icon"] == "pet"
+    assert c.get(f"/api/devices/{car['id']}", headers=api.h(a)).json()["icon"] == "pet"
+    r = c.patch(f"/api/devices/{car['id']}", json={"icon": "spaceship"}, headers=api.h(a))
+    assert r.status_code == 422
 
 
 def test_poll_auth_failure_requires_reauth(apple):

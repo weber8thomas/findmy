@@ -10,6 +10,8 @@ import { focusOn, patchMapUi, toast } from "../../lib/ui-state";
 import { useStore } from "../../lib/store";
 import { localDeviceFor, localDeviceStore } from "../../reporter/storage";
 import { ActionButton, BatteryBadge, Empty, Field, PanelHeader, Section } from "../../ui/components";
+import { DeviceGlyph } from "../../ui/icons";
+import { ItemIconPicker } from "../items/ItemIconPicker";
 
 function CommandStatus({ cmd }: { cmd: Command | undefined }) {
   const { t } = useI18n();
@@ -88,6 +90,7 @@ export function DeviceDetail() {
   useStore(localDeviceStore);
   const [showLost, setShowLost] = useState(false);
   const [renaming, setRenaming] = useState(false);
+  const [pickingIcon, setPickingIcon] = useState(false);
   const device = devices?.find((d) => d.id === id);
   const local = localDeviceFor(me?.id);
 
@@ -116,6 +119,7 @@ export function DeviceDetail() {
   const patch = useMutation({
     mutationFn: (body: Record<string, unknown>) => api(`/devices/${id}`, { method: "PATCH", body }),
     onSuccess: () => qc.invalidateQueries({ queryKey: keys.devices }),
+    onError: (e) => toast(t("common.error"), e instanceof ApiError ? e.detail : undefined, "error"),
   });
   const setPrimary = useMutation({
     mutationFn: () => api("/me", { method: "PATCH", body: { primary_device_id: id } }),
@@ -142,7 +146,18 @@ export function DeviceDetail() {
 
   return (
     <div data-testid="device-detail">
-      <PanelHeader title={device.name} back="/devices" right={<BatteryBadge battery={device.battery} />} />
+      <PanelHeader
+        title={
+          <span className="detail-title">
+            <span className="row-avatar row-avatar-device">
+              <DeviceGlyph icon={device.icon} size={26} />
+            </span>
+            <span>{device.name}</span>
+          </span>
+        }
+        back="/devices"
+        right={<BatteryBadge battery={device.battery} />}
+      />
       <div className="detail-meta">
         <span className={`dot${device.online ? " on" : ""}`} />
         <span>{device.online ? t("devices.online") : t("devices.lastSeen", { time: relTime(device.last_seen_at) })}</span>
@@ -208,6 +223,23 @@ export function DeviceDetail() {
           <button className="link-row" onClick={() => setRenaming(true)}>
             {t("actions.rename")}
           </button>
+        )}
+        {/* Only tags: on iCloud devices the icon decides between the Devices and Items tabs. */}
+        {device.kind === "findmy" && (
+          <>
+            <button className="link-row" onClick={() => setPickingIcon((v) => !v)} aria-expanded={pickingIcon} data-testid="btn-item-icon">
+              {t("items.changeIcon")}
+            </button>
+            {pickingIcon && (
+              <ItemIconPicker
+                value={device.icon}
+                onPick={(icon) => {
+                  patch.mutate({ icon });
+                  setPickingIcon(false);
+                }}
+              />
+            )}
+          </>
         )}
         {!device.is_primary && (device.kind === "browser" || device.kind === "owntracks" || device.kind === "icloud") && (
           <button className="link-row" onClick={() => setPrimary.mutate()}>
