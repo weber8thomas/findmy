@@ -51,6 +51,7 @@ class UserOut(ORM):
     locale: str
     primary_device_id: str | None
     is_admin: bool
+    avatar_url: str | None = None
 
 
 class AuthOut(BaseModel):
@@ -68,6 +69,7 @@ class PublicUser(ORM):
     id: str
     email: str
     display_name: str
+    avatar_url: str | None = None
 
 
 # ---------- devices ----------

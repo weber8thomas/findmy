@@ -8,9 +8,11 @@ export type User = {
   locale: "en" | "fr";
   primary_device_id: string | null;
   is_admin: boolean;
+  /** Profile photo (same-origin, versioned); null: initials. Older servers omit it. */
+  avatar_url?: string | null;
 };
 
-export type PublicUser = { id: string; email: string; display_name: string };
+export type PublicUser = { id: string; email: string; display_name: string; avatar_url?: string | null };
 
 export type LostMode = {
   enabled: boolean;

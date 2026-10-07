@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import base64
 import hashlib
 import json
@@ -13,10 +14,14 @@ from urllib.parse import quote, urlencode
 import httpx
 
 from app.config import Settings
+from app.services.avatars import MAX_BYTES as PICTURE_MAX_BYTES
+from app.services.avatars import RASTER_TYPES
 
 METADATA_TTL_S = 3600
 # Tolerated clock difference with the provider when checking the ID token expiry.
 CLOCK_SKEW_S = 60
+# The whole download of a profile picture, at sign-in.
+PICTURE_TIMEOUT_S = 5
 
 
 class OidcError(Exception):
@@ -137,11 +142,61 @@ class OidcClient:
                 tokens["id_token"], issuer=meta["issuer"], client_id=client_id, nonce=nonce
             )
             access_token = tokens.get("access_token")
-            if not claims.get("email") and meta.get("userinfo_endpoint") and access_token:
-                r = await http.get(
-                    meta["userinfo_endpoint"], headers={"Authorization": f"Bearer {access_token}"}
-                )
-                info = r.json() if r.status_code == 200 else {}
-                if info.get("sub") == claims["sub"]:
+            # Some providers put the email or the picture in userinfo only.
+            missing = not claims.get("email") or not claims.get("picture")
+            if missing and meta.get("userinfo_endpoint") and access_token:
+                try:
+                    r = await http.get(
+                        meta["userinfo_endpoint"],
+                        headers={"Authorization": f"Bearer {access_token}"},
+                    )
+                    info = r.json() if r.status_code == 200 else {}
+                except (httpx.HTTPError, ValueError):
+                    if not claims.get("email"):
+                        raise
+                    info = {}  # only the picture was missing: sign in without it
+                if isinstance(info, dict) and info.get("sub") == claims["sub"]:
                     claims = {**info, **claims}
         return claims
+
+    async def picture(self, url: str) -> bytes:
+        """The image of a `picture` claim: an https URL or a base64 data: URI.
+
+        Size, time and scheme are bounded here; the caller checks it is a raster image.
+        """
+        if url.startswith("data:"):
+            header, _, payload = url[5:].partition(",")
+            media_type, _, encoding = header.partition(";")
+            if media_type.lower() not in RASTER_TYPES or encoding.lower() != "base64":
+                raise OidcError("picture: not a base64 raster image")
+            if len(payload) > PICTURE_MAX_BYTES * 4 // 3 + 4:
+                raise OidcError("picture: too large")
+            try:
+                return base64.b64decode(payload, validate=True)
+            except ValueError as e:
+                raise OidcError("picture: malformed data URI") from e
+
+        async def https_only(request: httpx.Request) -> None:
+            # Checked on every redirect too.
+            if request.url.scheme != "https":
+                raise OidcError("picture: https only")
+
+        data = bytearray()
+        async with (
+            asyncio.timeout(PICTURE_TIMEOUT_S),
+            httpx.AsyncClient(
+                timeout=PICTURE_TIMEOUT_S,
+                transport=self.transport,
+                follow_redirects=True,
+                max_redirects=3,
+                event_hooks={"request": [https_only]},
+            ) as http,
+            http.stream("GET", url) as r,
+        ):
+            if r.status_code != 200:
+                raise OidcError(f"picture: HTTP {r.status_code}")
+            async for chunk in r.aiter_bytes():
+                data += chunk
+                if len(data) > PICTURE_MAX_BYTES:
+                    raise OidcError("picture: too large")
+        return bytes(data)

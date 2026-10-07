@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { api } from "../../api/client";
 import { keys, useConfig, useDevices, useNotifications, useViewers } from "../../api/queries";
@@ -10,9 +10,10 @@ import { useStore } from "../../lib/store";
 import { toast } from "../../lib/ui-state";
 import { localDeviceFor, localDeviceStore } from "../../reporter/storage";
 import { Empty, Field, PanelHeader, Section } from "../../ui/components";
-import { Icon } from "../../ui/icons";
+import { Avatar, Icon } from "../../ui/icons";
 import { QrCode } from "../../ui/QrCode";
 import { owntracksConfigUrl, owntracksDeviceId, trackerId } from "./owntracks";
+import { squarePhoto } from "./photo";
 import { ThisDevice } from "./ThisDevice";
 
 export function Viewers() {
@@ -165,6 +166,58 @@ function OwnTracksSetup({ me }: { me: User }) {
   );
 }
 
+function ProfilePhoto({ me }: { me: User }) {
+  const { t } = useI18n();
+  const qc = useQueryClient();
+  const input = useRef<HTMLInputElement>(null);
+  const done = (u: User) => qc.setQueryData(keys.me, u);
+  const upload = useMutation({
+    mutationFn: async (file: File) => {
+      const form = new FormData();
+      form.append("file", await squarePhoto(file), "photo.jpg");
+      return api<User>("/me/avatar", { method: "PUT", body: form });
+    },
+    onSuccess: done,
+    onError: () => toast(t("me.photoError"), undefined, "error"),
+  });
+  const remove = useMutation({
+    mutationFn: () => api<User>("/me/avatar", { method: "DELETE" }),
+    onSuccess: done,
+    onError: () => toast(t("common.error"), undefined, "error"),
+  });
+  const busy = upload.isPending || remove.isPending;
+  return (
+    <Section title={t("me.photo")} testId="profile-photo">
+      <div className="photo-edit">
+        <Avatar user={me} size="large" />
+        <div className="row-buttons wrap">
+          <button className="btn btn-small" onClick={() => input.current?.click()} disabled={busy} data-testid="btn-photo-pick">
+            {me.avatar_url ? t("me.photoChange") : t("me.photoAdd")}
+          </button>
+          {me.avatar_url && (
+            <button className="btn btn-small" onClick={() => remove.mutate()} disabled={busy} data-testid="btn-photo-remove">
+              {t("me.photoRemove")}
+            </button>
+          )}
+        </div>
+        <input
+          ref={input}
+          type="file"
+          accept="image/*"
+          hidden
+          data-testid="photo-input"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            e.target.value = ""; // picking the same file again still triggers a change
+            if (file) upload.mutate(file);
+          }}
+        />
+      </div>
+      <p className="muted small">{t("me.photoHint")}</p>
+    </Section>
+  );
+}
+
 function LanguageSwitch({ value, onChange }: { value: Locale; onChange: (l: Locale) => void }) {
   const { t } = useI18n();
   return (
@@ -227,6 +280,7 @@ export function MePanel({ me }: { me: User }) {
       <Section title={t("me.language")}>
         <LanguageSwitch value={locale} onChange={changeLocale} />
       </Section>
+      <ProfilePhoto me={me} />
       <Section title={t("me.account")}>
         <form
           className="inline-form"

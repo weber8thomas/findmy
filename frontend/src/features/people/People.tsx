@@ -8,7 +8,7 @@ import { useI18n } from "../../i18n";
 import { directionsUrl } from "../../lib/geo";
 import { focusOn, patchMapUi, toast } from "../../lib/ui-state";
 import { ActionButton, Empty, Field, PanelHeader, Section } from "../../ui/components";
-import { avatarTone, initials } from "../../ui/icons";
+import { Avatar } from "../../ui/icons";
 
 function useInvalidatePeople() {
   const qc = useQueryClient();
@@ -94,7 +94,10 @@ function Invitations() {
     <Section title={t("people.invitations")} testId="invitations">
       {pending.map((s) => (
         <div key={s.id} className="invite">
-          <p>{t("people.invitesYou", { name: s.owner.display_name })}</p>
+          <div className="invite-from">
+            <Avatar user={s.owner} size="small" />
+            <p>{t("people.invitesYou", { name: s.owner.display_name })}</p>
+          </div>
           <div className="row-buttons">
             <button className="btn btn-primary" onClick={() => respond.mutate({ id: s.id, accept: true })} data-testid="invite-accept">
               {t("people.accept")}
@@ -122,7 +125,7 @@ function PersonRow({ person }: { person: Person }) {
           : t("people.notSharingWithYou");
   return (
     <Link to={`/people/${person.user.id}`} className="row" data-testid={`person-item-${person.user.id}`}>
-      <span className={`row-avatar avatar-person ${avatarTone(person.user.id)}`}>{initials(person.user.display_name)}</span>
+      <Avatar user={person.user} />
       <span className="row-main">
         <span className="row-title">{person.user.display_name}</span>
         <span className="row-sub">{sub}</span>
@@ -140,7 +143,7 @@ function MeRow() {
   if (!me || !phone) return null;
   return (
     <Link to={`/devices/${phone.id}`} className="row" data-testid="person-me">
-      <span className={`row-avatar avatar-person ${avatarTone(me.id)}`}>{initials(me.display_name)}</span>
+      <Avatar user={me} />
       <span className="row-main">
         <span className="row-title">{t("people.me")}</span>
         <span className="row-sub">
@@ -216,7 +219,15 @@ export function PersonDetail() {
 
   return (
     <div data-testid="person-detail">
-      <PanelHeader title={person.user.display_name} back="/people" />
+      <PanelHeader
+        title={
+          <span className="title-with-avatar">
+            <Avatar user={person.user} size="small" />
+            <span>{person.user.display_name}</span>
+          </span>
+        }
+        back="/people"
+      />
       {loc ? (
         <p className="coords" data-testid="person-coords">
           {loc.lat.toFixed(5)}, {loc.lon.toFixed(5)} <span className="muted">· {relTime(loc.ts)}</span>

@@ -1,4 +1,5 @@
-import type { DeviceIcon } from "../api/types";
+import { useState } from "react";
+import type { DeviceIcon, PublicUser } from "../api/types";
 
 // Simple line icons drawn for Oukilé (24×24, stroke = currentColor).
 const PATHS: Record<
@@ -95,4 +96,17 @@ export function avatarTone(id: string): string {
 export function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   return ((parts[0]?.[0] ?? "?") + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase();
+}
+
+type AvatarUser = Pick<PublicUser, "id" | "display_name" | "avatar_url">;
+
+/** A person's photo, or their initials on their colour when there is none or it does not load. */
+export function Avatar({ user, size }: { user: AvatarUser; size?: "large" | "small" }) {
+  const [failed, setFailed] = useState<string | null>(null);
+  const src = user.avatar_url && user.avatar_url !== failed ? user.avatar_url : null;
+  return (
+    <span className={`row-avatar avatar-person ${avatarTone(user.id)}${size ? ` avatar-${size}` : ""}`} data-testid="avatar">
+      {src ? <img className="avatar-img" src={src} alt="" decoding="async" onError={() => setFailed(src)} /> : initials(user.display_name)}
+    </span>
+  );
 }

@@ -39,9 +39,14 @@ function deviceIcon(d: Device, selected: boolean, local: boolean, offset: [numbe
 }
 
 function personIcon(p: Person, selected: boolean) {
+  // The photo covers the initials, which still show if it cannot be loaded (no inline onerror
+  // under the CSP). JSON quoting makes a CSS string, HTML escaping keeps it in the attribute.
+  const photo = p.user.avatar_url
+    ? `<span class="pin-photo" style="background-image:url(${escapeHtml(JSON.stringify(p.user.avatar_url))})"></span>`
+    : "";
   return L.divIcon({
     className: "pin-wrap",
-    html: `<div class="pin pin-person ${avatarTone(p.user.id)}${selected ? " is-selected" : ""}" data-testid="marker-person-${p.user.id}" title="${escapeHtml(p.user.display_name)}">${escapeHtml(initials(p.user.display_name))}</div>`,
+    html: `<div class="pin pin-person ${avatarTone(p.user.id)}${selected ? " is-selected" : ""}" data-testid="marker-person-${p.user.id}" title="${escapeHtml(p.user.display_name)}">${escapeHtml(initials(p.user.display_name))}${photo}</div>`,
     iconSize: [40, 40],
     iconAnchor: [20, 20],
   });
@@ -214,16 +219,25 @@ export function MapView({ tileUrl, attribution, devices, people, zones, localDev
       <DeviceLayer devices={devices} localDeviceId={localDeviceId} onOpen={(id) => navigate(`/devices/${id}`)} />
       {people.map((p) =>
         p.location ? (
-          <Marker
+          <PersonMarker
             key={p.user.id}
-            position={[p.location.lat, p.location.lon]}
-            icon={personIcon(p, ui.selected?.kind === "person" && ui.selected.id === p.user.id)}
-            eventHandlers={{ click: () => navigate(`/people/${p.user.id}`) }}
+            person={p}
+            selected={ui.selected?.kind === "person" && ui.selected.id === p.user.id}
+            onClick={() => navigate(`/people/${p.user.id}`)}
           />
         ) : null,
       )}
     </MapContainer>
   );
+}
+
+function PersonMarker({ person, selected, onClick }: { person: Person; selected: boolean; onClick: () => void }) {
+  const loc = person.location!;
+  const { id, display_name, avatar_url } = person.user;
+  // A new icon replaces the pin's HTML: only on changes, so the photo does not flicker.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const icon = useMemo(() => personIcon(person, selected), [id, display_name, avatar_url, selected]);
+  return <Marker position={[loc.lat, loc.lon]} icon={icon} eventHandlers={{ click: onClick }} />;
 }
 
 const NO_OFFSET: [number, number] = [0, 0];

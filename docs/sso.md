@@ -48,6 +48,15 @@ Sinon la page de connexion indique qu'aucun compte Oukilé ne correspond.
 Avec `PASSWORD_LOGIN=false`, le formulaire email / mot de passe disparaît : seule la
 connexion SSO reste. OwnTracks n'est pas concerné (il utilise le jeton de l'appareil).
 
+## Photo de profil
+
+Si le fournisseur envoie la claim standard `picture` (dans l'ID token ou via userinfo),
+Oukilé la télécharge à chaque connexion et en fait la photo de profil, sauf si la
+personne a choisi sa propre photo dans *Moi › Photo de profil*. Seules les images PNG,
+JPEG, WebP ou GIF de 300 Ko au plus sont prises, en `https://` (5 s maximum) ou en
+`data:` base64 ; un SVG est ignoré. En cas d'échec, la connexion se fait sans photo.
+Authentik n'envoie pas `picture` par défaut : il faut l'ajouter par un scope mapping.
+
 ## Sécurité
 
 - Flux « authorization code » avec PKCE (S256), `state` et `nonce` dans un cookie chiffré

@@ -1,6 +1,8 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Response
 
+from app import access
 from app.deps import DB, Ctx, CurrentUser, rate_limit
+from app.models import UserAvatar
 from app.schemas import PersonOut, ShareCreate, ShareOut, SharesOut
 from app.services import sharing
 
@@ -41,3 +43,19 @@ async def stop_share(share_id: str, user: CurrentUser, ctx: Ctx, db: DB):
     """Owner: stop sharing my location. Recipient: stop following this person."""
     share = await sharing.stop(ctx, db, user, share_id)
     return await sharing.share_out(db, share)
+
+
+@router.get("/users/{user_id}/avatar")
+async def user_avatar(user_id: str, user: CurrentUser, db: DB):
+    """A profile photo, for its owner and the people they share with (404 for anyone else)."""
+    if not await access.can_see_photo(db, user, user_id):
+        raise access.not_found()
+    photo = await db.get(UserAvatar, user_id)
+    if photo is None:
+        raise access.not_found()
+    # Private: the URL carries a version (?v=), so the browser may keep it until it changes.
+    return Response(
+        photo.data,
+        media_type=photo.content_type,
+        headers={"Cache-Control": "private, max-age=604800"},
+    )

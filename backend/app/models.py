@@ -71,6 +71,26 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
 
 
+class AvatarSource(StrEnum):
+    UPLOAD = "upload"
+    SSO = "sso"
+
+
+class UserAvatar(Base):
+    """A user's profile photo, uploaded or taken from the SSO provider (a table of its own:
+    the schema is only ever created, never migrated)."""
+
+    __tablename__ = "user_avatars"
+
+    user_id: Mapped[str] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
+    )
+    content_type: Mapped[str] = mapped_column(String(32))
+    data: Mapped[bytes] = mapped_column(LargeBinary)
+    source: Mapped[str] = mapped_column(String(8))
+    updated_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
+
+
 class OidcIdentity(Base):
     """An account at the SSO provider (issuer + subject) linked to a user."""
 

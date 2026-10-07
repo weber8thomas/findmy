@@ -235,6 +235,12 @@ const fr: Catalogue = {
   "me.owntracks": "Suivi en arrière-plan (OwnTracks)",
   "me.account": "Compte",
   "me.name": "Nom",
+  "me.photo": "Photo de profil",
+  "me.photoAdd": "Ajouter une photo",
+  "me.photoChange": "Changer",
+  "me.photoRemove": "Retirer",
+  "me.photoHint": "Visible seulement par vous et par les personnes avec qui vous partagez des positions.",
+  "me.photoError": "Cette image n’a pas pu être utilisée. Essayez une photo JPEG ou PNG.",
 
   "owntracks.explain": "Installez l’application gratuite OwnTracks (iOS/Android), choisissez le mode HTTP et utilisez ces réglages. Les positions sont alors envoyées même téléphone verrouillé.",
   "owntracks.create": "Créer des identifiants OwnTracks",
