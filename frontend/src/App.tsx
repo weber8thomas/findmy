@@ -11,6 +11,7 @@ import { ItemsPanel } from "./features/items/ItemsPanel";
 import { MePanel } from "./features/me/MePanel";
 import { MeDetail, MeHistory } from "./features/me/MeDetail";
 import { MySourcesPanel } from "./features/me/MyLocation";
+import { ProfileEdit } from "./features/me/ProfileEdit";
 import { PeopleList, PersonDetail } from "./features/people/People";
 import { FindMySettings } from "./features/settings/FindMySettings";
 import { ICloudSettings } from "./features/settings/ICloudSettings";
@@ -70,6 +71,7 @@ export function App() {
           <Route path="/devices/:id/history" element={<HistoryPanel />} />
           <Route path="/items" element={<ItemsPanel />} />
           <Route path="/me" element={<MePanel me={me} />} />
+          <Route path="/me/profile" element={<ProfileEdit me={me} />} />
           <Route path="/me/location" element={<MeDetail me={me} base="/me/location" back="/me" />} />
           <Route path="/me/location/history" element={<MeHistory back="/me/location" />} />
           <Route path="/me/zones" element={<ZonesList />} />

@@ -204,7 +204,6 @@ const fr: Catalogue = {
   "items.icon.pet": "Animal",
 
   "me.title": "Moi",
-  "me.profile": "Profil",
   "me.thisDevice": "Cet appareil",
   "me.register": "Utiliser ce navigateur comme appareil",
   "me.deviceName": "Nom de l’appareil",
@@ -247,6 +246,10 @@ const fr: Catalogue = {
   "me.zones": "Lieux et alertes",
   "me.owntracks": "Suivi en arrière-plan (OwnTracks)",
   "me.account": "Compte",
+  "me.edit": "Modifier",
+  "me.editProfile": "Modifier le profil",
+  "me.nameHint": "Le nom que voient les personnes avec qui vous partagez",
+  "me.photoRemoveConfirm": "Retirer la photo",
   "me.name": "Nom",
   "me.photo": "Photo de profil",
   "me.photoAdd": "Ajouter une photo",

@@ -10,7 +10,7 @@ test("Settings opens from Me and shows the version; privacy from the footer", as
   const page = await ctx.newPage();
   await page.goto("/me");
   // Me keeps the profile; the device and the language moved to Settings.
-  await expect(page.getByTestId("profile-photo")).toBeVisible();
+  await expect(page.getByTestId("profile")).toBeVisible();
   await expect(page.getByTestId("this-device")).toHaveCount(0);
   await expect(page.getByTestId("lang-fr")).toHaveCount(0);
 

@@ -678,6 +678,19 @@ button.row:focus-visible {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.profile-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 4px 0 12px;
+  padding: 14px 16px;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+.profile-name {
+  font-size: 19px;
+  font-weight: 600;
+}
 .photo-edit {
   display: flex;
   align-items: center;

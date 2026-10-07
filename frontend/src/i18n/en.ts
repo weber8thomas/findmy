@@ -203,7 +203,6 @@ const en = {
   "items.icon.pet": "Pet",
 
   "me.title": "Me",
-  "me.profile": "Profile",
   "me.thisDevice": "This device",
   "me.register": "Use this browser as a device",
   "me.deviceName": "Device name",
@@ -246,6 +245,10 @@ const en = {
   "me.zones": "Places & alerts",
   "me.owntracks": "Background tracking (OwnTracks)",
   "me.account": "Account",
+  "me.edit": "Edit",
+  "me.editProfile": "Edit profile",
+  "me.nameHint": "The name the people you share with see",
+  "me.photoRemoveConfirm": "Remove the photo",
   "me.name": "Name",
   "me.photo": "Profile photo",
   "me.photoAdd": "Add a photo",
