@@ -1,3 +1,5 @@
+import type { Fix } from "../api/types";
+
 const R = 6_371_008.8;
 
 export function haversineM(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -39,4 +41,9 @@ export function guessDeviceName(ua: string = navigator.userAgent): { name: strin
   if (/CrOS/i.test(ua)) return { name: "Chromebook", icon: "laptop" };
   if (/Linux/i.test(ua)) return { name: "Linux PC", icon: "desktop" };
   return { name: "Browser", icon: "desktop" };
+}
+
+/** When the position was last known to hold, for "updated … ago": a later check-in confirms it. */
+export function updatedAt(fix: Fix): string {
+  return fix.seen_at ?? fix.ts;
 }

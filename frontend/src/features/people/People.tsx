@@ -5,7 +5,7 @@ import { api, ApiError } from "../../api/client";
 import { keys, useDevices, useMe, usePeople, useShares } from "../../api/queries";
 import type { Person } from "../../api/types";
 import { useI18n } from "../../i18n";
-import { directionsUrl } from "../../lib/geo";
+import { directionsUrl, updatedAt } from "../../lib/geo";
 import { focusOn, patchMapUi, toast } from "../../lib/ui-state";
 import { ActionButton, Empty, Field, PanelHeader, Section } from "../../ui/components";
 import { Avatar } from "../../ui/icons";
@@ -115,7 +115,7 @@ function Invitations() {
 function PersonRow({ person }: { person: Person }) {
   const { t, relTime } = useI18n();
   const sub = person.location
-    ? `${person.device_name ?? ""} · ${relTime(person.location.ts)}`
+    ? `${person.device_name ?? ""} · ${relTime(updatedAt(person.location))}`
     : person.sharing_with_me?.status === "accepted"
       ? t("devices.noLocation")
       : person.i_share_with?.status === "pending"
@@ -147,7 +147,7 @@ function MeRow() {
       <span className="row-main">
         <span className="row-title">{t("people.me")}</span>
         <span className="row-sub">
-          {phone.location ? `${phone.name} · ${relTime(phone.location.ts)}` : t("devices.noLocation")}
+          {phone.location ? `${phone.name} · ${relTime(updatedAt(phone.location))}` : t("devices.noLocation")}
         </span>
       </span>
     </Link>
@@ -230,7 +230,7 @@ export function PersonDetail() {
       />
       {loc ? (
         <p className="coords" data-testid="person-coords">
-          {loc.lat.toFixed(5)}, {loc.lon.toFixed(5)} <span className="muted">· {relTime(loc.ts)}</span>
+          {loc.lat.toFixed(5)}, {loc.lon.toFixed(5)} <span className="muted">· {relTime(updatedAt(loc))}</span>
         </p>
       ) : (
         <p className="muted">{theirs?.status === "accepted" ? t("devices.noLocation") : t("people.notSharingWithYou")}</p>

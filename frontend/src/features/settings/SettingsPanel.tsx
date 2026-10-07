@@ -5,6 +5,7 @@ import { api } from "../../api/client";
 import { keys, useConfig, useDevices } from "../../api/queries";
 import type { Device, User } from "../../api/types";
 import { useI18n, type Locale } from "../../i18n";
+import { updatedAt } from "../../lib/geo";
 import { currentSubscription, enablePush, pushSupport } from "../../lib/push";
 import { useStore } from "../../lib/store";
 import { toast } from "../../lib/ui-state";
@@ -123,7 +124,7 @@ function OwnTracksSetup({ me }: { me: User }) {
         <>
           {phone && (
             <p className="muted small" data-testid="owntracks-phone">
-              {phone.name} · {phone.location ? t("devices.updated", { time: relTime(phone.location.ts) }) : t("devices.noLocation")}
+              {phone.name} · {phone.location ? t("devices.updated", { time: relTime(updatedAt(phone.location)) }) : t("devices.noLocation")}
             </p>
           )}
           <button className="btn btn-block" onClick={() => create.mutate()} disabled={create.isPending}>
