@@ -45,8 +45,12 @@ async def ingest(
     source: str,
     battery_level: float | None = None,
     battery_charging: bool | None = None,
+    region_event: bool = False,
 ) -> int:
-    """Store fixes, update the device's latest position, evaluate zones and fan out updates."""
+    """Store fixes, update the device's latest position, evaluate zones and fan out updates.
+
+    `region_event`: the device's own geofencing saw it cross a boundary (OwnTracks), so one
+    fix is enough to confirm an arrival or departure, as with sparse providers."""
     now = utcnow()
     accepted = _normalize(fixes, source, now)
 
@@ -90,7 +94,7 @@ async def ingest(
     device.last_seen_at = now
 
     zone_hits = await zones_service.evaluate(
-        ctx, db, device, newer, sparse=ctx.providers.is_sparse(device.kind)
+        ctx, db, device, newer, sparse=region_event or ctx.providers.is_sparse(device.kind)
     )
     await db.commit()
 

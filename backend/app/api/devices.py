@@ -10,6 +10,7 @@ from app import access
 from app.clock import utcnow
 from app.deps import DB, Ctx, CurrentUser, rate_limit
 from app.models import Command, Device, DeviceKind, User
+from app.providers import owntracks as owntracks_provider
 from app.providers.base import Capability, CommandError
 from app.schemas import (
     CommandIn,
@@ -64,6 +65,8 @@ async def create_device(data: DeviceCreate, user: CurrentUser, ctx: Ctx, db: DB)
     if device is None:
         device = Device(owner_id=user.id, kind=data.kind, provider_config={})
         db.add(device)
+    elif owntracks:
+        owntracks_provider.forget_sync(device)
     device.name = data.name.strip()
     device.icon = data.icon
     device.token_hash = hash_token(token)
@@ -110,6 +113,8 @@ async def rotate_token(device_id: str, user: CurrentUser, db: DB):
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "this device has no token")
     token = new_device_token()
     device.token_hash = hash_token(token)
+    if device.kind == DeviceKind.OWNTRACKS:
+        owntracks_provider.forget_sync(device)
     await db.commit()
     return TokenOut(device_token=token)
 
