@@ -132,6 +132,9 @@ class ICloudPyClient:
         api = await self._ensure_api()
 
         def _locate():
+            # pyicloud keeps one device list per session and never drops a device from it:
+            # start from an empty list so a device removed from the account goes away.
+            api.devices._devices.clear()
             api.devices.refresh(locate=True)
             return {s.icloud_id: s for s in (snapshot_from(d.data) for d in api.devices)}
 

@@ -9,11 +9,6 @@ import { reporterStatus } from "../../reporter/useReporter";
 import { BatteryBadge, Empty, PanelHeader } from "../../ui/components";
 import { DeviceGlyph } from "../../ui/icons";
 
-/** AirPods and the like: listed under Items, with the tags, not under Devices. */
-export function isAccessory(device: Device): boolean {
-  return device.icon === "earbuds";
-}
-
 export function DeviceRow({
   device,
   isLocal,
@@ -40,7 +35,13 @@ export function DeviceRow({
           {device.lost_mode.enabled && <span className="chip chip-danger">{t("devices.lost")}</span>}
         </span>
         <span className="row-sub">
-          {isLocal ? t("devices.thisDevice") : loc ? t("devices.updated", { time: relTime(loc.ts) }) : t("devices.noLocation")}
+          {isLocal
+            ? t("devices.thisDevice")
+            : device.provider_info.missing_since
+              ? t("devices.leftApple")
+              : loc
+                ? t("devices.updated", { time: relTime(loc.ts) })
+                : t("devices.noLocation")}
           {isReference && !isLocal && ` · ${t("devices.withYou")}`}
           {dist != null && ` · ${t("devices.distance", { distance: distance(dist) })}`}
         </span>
@@ -64,8 +65,8 @@ export function DeviceList() {
   const primary = devices?.find((d) => d.is_primary && d.location);
   const reference = status.lastFix || localDev?.location ? localDev : primary;
   const from = status.lastFix ?? localDev?.location ?? primary?.location ?? null;
-  // OwnTracks is the person's phone: it shows under People (as "Me"), not here.
-  const list = (devices ?? []).filter((d) => d.kind === "browser" || (d.kind === "icloud" && !isAccessory(d)));
+  // Every Apple device, AirPods included; OwnTracks is the person's phone: it shows under People (as "Me").
+  const list = (devices ?? []).filter((d) => d.kind === "browser" || d.kind === "icloud");
 
   return (
     <div data-testid="devices-panel">

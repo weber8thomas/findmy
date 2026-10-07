@@ -21,7 +21,7 @@ describe("item icon picker", () => {
     expect(html).toContain("Keys");
   });
 
-  it("keeps device icons out: earbuds would move a device between tabs", () => {
+  it("keeps device icons out: a tag is never AirPods or a phone", () => {
     expect(ITEM_ICONS).not.toContain("earbuds");
     expect(ITEM_ICONS).not.toContain("phone");
     expect(render("tag")).not.toContain("item-icon-earbuds");

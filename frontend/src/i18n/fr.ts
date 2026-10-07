@@ -66,6 +66,7 @@ const fr: Catalogue = {
   "devices.online": "En ligne",
   "devices.offline": "Hors ligne",
   "devices.noLocation": "Pas encore de position",
+  "devices.leftApple": "Retiré du compte Apple",
   "devices.lastSeen": "Vu {time}",
   "devices.updated": "Mis à jour {time}",
   "devices.accuracy": "±{meters} m",

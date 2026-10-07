@@ -10,7 +10,7 @@ from sqlalchemy import select, update
 
 from app.config import Settings
 from app.main import create_app
-from app.models import ProviderAccount
+from app.models import Device, ProviderAccount
 from app.providers.apple_base import AppleAuthError
 from app.providers.findmy.client import RawReport
 from app.providers.findmy.provider import _icon_for_name
@@ -381,6 +381,52 @@ def test_icloud_poll_tracks_every_device(apple):
     c.portal.call(due_now)
     run_poll(c, app, "icloud")
     assert len(c.get("/api/devices", headers=api.h(a)).json()) == 2
+
+
+def test_icloud_device_removed_from_account(apple):
+    c, api, fake, app = apple
+    a = api.register()
+    connect(api, a, "icloud")
+    ts = datetime.now(UTC) - timedelta(minutes=1)
+    iphone = ICloudSnapshot("abc", "iPhone", "iPhone 16", 48.85, 2.29, 12, ts, 0.8, True)
+    airpods = ICloudSnapshot("def", "AirPods", "AirPods Pro", None, None, None, None, None, None)
+    fake.snapshots = {"abc": iphone, "def": airpods}
+
+    async def poll(missing_for: timedelta | None = None):
+        async with app.state.ctx.sessionmaker() as db:
+            await db.execute(update(ProviderAccount).values(next_poll_at=None))
+            if missing_for is not None:
+                since = (datetime.now(UTC) - missing_for).isoformat()
+                for d in (await db.execute(select(Device))).scalars():
+                    if "missing_since" in (d.provider_config or {}):
+                        d.provider_config = {**d.provider_config, "missing_since": since}
+            await db.commit()
+        await app.state.ctx.providers.get("icloud").poll_once()
+
+    def devices():
+        return {d["name"]: d for d in c.get("/api/devices", headers=api.h(a)).json()}
+
+    c.portal.call(poll)
+    assert set(devices()) == {"iPhone", "AirPods"}
+    # Removed from the Apple account: flagged at once, kept while Apple may come back to it.
+    fake.snapshots = {"abc": iphone}
+    c.portal.call(poll)
+    assert "missing_since" in devices()["AirPods"]["provider_info"]
+    assert "missing_since" not in devices()["iPhone"]["provider_info"]
+    fake.snapshots = {"abc": iphone, "def": airpods}
+    c.portal.call(poll)
+    assert "missing_since" not in devices()["AirPods"]["provider_info"]
+    # Gone for good after an hour.
+    fake.snapshots = {"abc": iphone}
+    c.portal.call(poll)
+    c.portal.call(poll, timedelta(minutes=30))
+    assert "AirPods" in devices()
+    c.portal.call(poll, timedelta(hours=2))
+    assert set(devices()) == {"iPhone"}
+    # An empty answer removes nothing.
+    fake.snapshots = {}
+    c.portal.call(poll, timedelta(hours=2))
+    assert set(devices()) == {"iPhone"}
 
 
 def test_icloud_command_failure_restores_state(apple):

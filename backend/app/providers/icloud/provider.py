@@ -5,6 +5,7 @@ web API as icloud.com/find, with Apple's own play-sound and Lost Mode. Unofficia
 from __future__ import annotations
 
 import logging
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -13,6 +14,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.clock import utcnow
 from app.config import Settings
 from app.deps import DB, Ctx, CurrentUser, rate_limit
 from app.models import Command, CommandType, Device, DeviceKind, ProviderAccount, User
@@ -32,6 +34,8 @@ class TrackIn(BaseModel):
 
 
 PRIMARY_RANK = {"phone": 0, "laptop": 1, "desktop": 1, "tablet": 2, "watch": 3}
+# How long a device can be missing from the Apple account before Oukilé deletes it.
+GONE_AFTER = timedelta(hours=1)
 
 
 def _new_device(owner_id: str, snap: ic.ICloudSnapshot, name: str | None = None) -> Device:
@@ -80,6 +84,8 @@ class ICloudProvider(AppleAccountProvider):
         snapshots = await client.locate()  # type: ignore[attr-defined]
         if self.auto_track:
             devices = devices + await self._add_new_devices(db, account, snapshots, devices)
+        if snapshots:
+            devices = await self._drop_removed(db, account, snapshots, devices)
         for device in devices:
             snap = snapshots.get((device.provider_config or {}).get("icloud_device_id"))
             if snap is None or snap.lat is None or snap.lon is None or snap.ts is None:
@@ -127,6 +133,40 @@ class ICloudProvider(AppleAccountProvider):
                 )
         log.info("iCloud: now tracking %d new device(s)", len(added))
         return added
+
+    async def _drop_removed(
+        self,
+        db: AsyncSession,
+        account: ProviderAccount,
+        snapshots: dict[str, ic.ICloudSnapshot],
+        devices: list[Device],
+    ) -> list[Device]:
+        """A device removed from the Apple account leaves Oukilé too. It is flagged at once and
+        deleted after GONE_AFTER, as Apple can leave a device out of one answer."""
+        now = utcnow()
+        kept: list[Device] = []
+        for device in devices:
+            cfg = device.provider_config or {}
+            missing = cfg.get("missing_since")
+            if cfg.get("icloud_device_id") in snapshots:
+                if missing:
+                    device.provider_config = {k: v for k, v in cfg.items() if k != "missing_since"}
+                kept.append(device)
+            elif missing is None:
+                device.provider_config = {**cfg, "missing_since": now.isoformat()}
+                kept.append(device)
+            elif now - datetime.fromisoformat(missing) < GONE_AFTER:
+                kept.append(device)
+            else:
+                owner = await db.get(User, account.user_id)
+                if owner is not None and owner.primary_device_id == device.id:
+                    owner.primary_device_id = None
+                await db.delete(device)
+                self.ctx.hub.send_to_users(
+                    [account.user_id], "device.removed", {"device_id": device.id}
+                )
+                log.info("iCloud: %s is no longer on the Apple account, removed", device.id)
+        return kept
 
     async def refresh(self, device: Device) -> None:
         await self.request_refresh(device)

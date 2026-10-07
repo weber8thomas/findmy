@@ -65,6 +65,7 @@ const en = {
   "devices.online": "Online",
   "devices.offline": "Offline",
   "devices.noLocation": "No location yet",
+  "devices.leftApple": "Removed from the Apple account",
   "devices.lastSeen": "Seen {time}",
   "devices.updated": "Updated {time}",
   "devices.accuracy": "±{meters} m",

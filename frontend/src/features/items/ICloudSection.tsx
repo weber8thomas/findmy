@@ -4,7 +4,6 @@ import { keys, useDevices } from "../../api/queries";
 import type { ICloudDevice } from "../../api/types";
 import { useI18n } from "../../i18n";
 import { Section } from "../../ui/components";
-import { DeviceRow, isAccessory } from "../devices/DeviceList";
 import { AppleAccount, useProviderAccount } from "./AppleAccount";
 
 export function ICloudSection() {
@@ -19,11 +18,7 @@ export function ICloudSection() {
   });
   const { data: devices } = useDevices();
   const untracked = available?.filter((d) => !d.tracked_device_id) ?? [];
-  const inDevices =
-    available?.filter((d) => {
-      const tracked = devices?.find((x) => x.id === d.tracked_device_id);
-      return tracked && !isAccessory(tracked);
-    }).length ?? 0;
+  const inDevices = available?.filter((d) => devices?.some((x) => x.id === d.tracked_device_id)).length ?? 0;
   const trackAll = useMutation({
     mutationFn: async () => {
       for (const d of untracked) {
@@ -58,9 +53,7 @@ export function ICloudSection() {
       {connected && (
         <div className="list">
           {available?.map((d) => {
-            const tracked = devices?.find((x) => x.id === d.tracked_device_id);
-            if (tracked && !isAccessory(tracked)) return null; // listed under Devices
-            if (tracked) return <DeviceRow key={d.icloud_device_id} device={tracked} isLocal={false} from={null} />;
+            if (d.tracked_device_id) return null; // listed under Devices
             return (
               <div key={d.icloud_device_id} className="row">
                 <span className="row-main">

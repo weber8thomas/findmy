@@ -41,7 +41,7 @@ def is_online(ctx: AppContext, device: Device) -> bool:
 def device_out(ctx: AppContext, device: Device, owner: User) -> DeviceOut:
     info: dict = {}
     cfg = device.provider_config or {}
-    for key in ("tid", "item_type", "model", "adv_key_b64"):
+    for key in ("tid", "item_type", "model", "adv_key_b64", "missing_since"):
         if key in cfg:
             info[key] = cfg[key]
     return DeviceOut(
