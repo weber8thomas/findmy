@@ -9,6 +9,9 @@ Zitadel, Google… La page de connexion affiche alors **« Continuer avec Authen
    - Client type : **Confidential**
    - Redirect URI (strict) : `https://oukile.example.com/api/auth/oidc/callback`
    - Scopes : `openid`, `email`, `profile` (ceux par défaut)
+   - Grant types : au moins **Authorization Code**. Par l'API ou un blueprint, renseignez
+     `grant_types: [authorization_code]` : vide, Authentik refuse la connexion
+     (`invalid_request`, « Invalid grant_type for provider » dans ses logs).
 2. **Applications → Applications → Create** : nom « Oukilé », slug `oukile`, ce provider.
    Pour limiter l'accès à certaines personnes, liez un groupe à l'application
    (« Policy / Group / User Bindings »).
