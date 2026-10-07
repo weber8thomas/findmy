@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 
+from app import version
 from app.deps import Ctx
 
 router = APIRouter(tags=["public"])
@@ -15,6 +16,8 @@ async def config(ctx: Ctx):
     s = ctx.settings
     return {
         "app_name": "Oukilé",
+        "version": version.VERSION,
+        "revision": version.REVISION,
         "registration_open": s.allow_registration,
         "default_locale": s.default_locale,
         "auth": {
@@ -30,6 +33,8 @@ async def config(ctx: Ctx):
             "icloud": s.feature_icloud,
             "push": ctx.push is not None,
         },
+        # For the privacy page: how long the position history is kept.
+        "retention_days": s.location_retention_days,
         "map": {
             "tile_url": s.tile_url,
             "tile_url_dark": s.resolved_tile_url_dark,
