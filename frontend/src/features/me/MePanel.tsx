@@ -111,7 +111,10 @@ function OwnTracksSetup({ me }: { me: User }) {
       void qc.invalidateQueries({ queryKey: keys.me });
     },
   });
-  const phone = devices?.find((d) => d.kind === "owntracks");
+  // The one the server reuses: the latest position wins.
+  const phone = devices
+    ?.filter((d) => d.kind === "owntracks")
+    .sort((a, b) => (b.location?.ts ?? "").localeCompare(a.location?.ts ?? ""))[0];
   const url = `${location.origin}/api/owntracks`;
   const configUrl =
     created &&
