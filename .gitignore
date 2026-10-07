@@ -18,6 +18,16 @@ data/
 backend/data/
 .e2e-data/
 .env
+.env.*
+!.env.example
+*.db
+*.sqlite*
+*.otrc
+deploy/proxmox/deploy.env
+
+# Local tools
+.claude/
+.DS_Store
 
 # Test output
 e2e/test-results/
