@@ -16,7 +16,7 @@ web installable (PWA). Il fonctionne sur iPhone, Android, Windows, Mac et Linux.
 | **Mode perdu** | Message et numéro en plein écran sur l'appareil, persistant après rechargement (vrai verrouillage Apple avec le fournisseur iCloud) |
 | **Personnes** | Comptes multiples, partage de position avec invitation, durée (1 h, fin de journée, illimité), arrêt en un geste |
 | **Historique** | Tracé sur la carte (1 h / 24 h / 7 j), sous-échantillonné côté serveur, purge après 30 jours |
-| **Lieux et alertes** | Zones circulaires, alertes d'arrivée et de départ (hystérésis anti-faux positifs), dans l'appli et en Web Push |
+| **Lieux et alertes** | Zones circulaires placées par adresse, sur la carte ou à la position de l'appareil ; alertes d'arrivée et de départ (hystérésis anti-faux positifs), dans l'appli et en Web Push |
 | **Bilingue** | Français / anglais, mémorisé dans le compte |
 
 ### D'où viennent les positions
@@ -97,6 +97,10 @@ Versions : voir [CHANGELOG.md](CHANGELOG.md). Une nouvelle version change `versi
 - Fond de carte OpenFreeMap (vectoriel, gratuit, sans clé), clair ou sombre selon
   l'appareil : configurable via `TILE_URL` et `TILE_URL_DARK` (style MapLibre ou tuiles
   raster `{z}/{x}/{y}`).
+- Recherche d'adresse des lieux par OpenStreetMap Nominatim, que le serveur interroge à la
+  place de l'utilisateur (seul le texte tapé sort), au plus une fois par seconde et avec un
+  cache, comme le demande sa [politique d'usage](https://operations.osmfoundation.org/policies/nominatim/) :
+  `GEOCODER_URL` pour un autre serveur Nominatim, vide pour la désactiver.
 
 ## Licence
 
