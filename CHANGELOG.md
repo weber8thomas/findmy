@@ -7,6 +7,11 @@ l'application l'affiche dans *Moi › Réglages › À propos*, avec la révisio
 
 ## [Non publié]
 
+### Corrigé
+
+- Un objet ouvert depuis *Objets* y revient, et c'est l'onglet *Objets* qui reste en
+  surbrillance (pas *Appareils*).
+
 ## [0.2.0] - 2026-10-07
 
 ### Ajouté

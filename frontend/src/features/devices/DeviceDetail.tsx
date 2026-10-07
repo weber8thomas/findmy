@@ -5,6 +5,7 @@ import { api, ApiError } from "../../api/client";
 import { keys, useCommands, useDevices, useMe } from "../../api/queries";
 import type { Command, Device } from "../../api/types";
 import { useI18n } from "../../i18n";
+import { deviceTab } from "../../layout/tabs";
 import { directionsUrl } from "../../lib/geo";
 import { focusOn, patchMapUi, toast } from "../../lib/ui-state";
 import { useStore } from "../../lib/store";
@@ -133,7 +134,7 @@ export function DeviceDetail() {
     onSuccess: () => {
       if (local?.id === id) localDeviceStore.set(null);
       void qc.invalidateQueries({ queryKey: keys.devices });
-      navigate("/devices");
+      navigate(device ? deviceTab(device) : "/devices");
     },
   });
 
@@ -155,7 +156,7 @@ export function DeviceDetail() {
             <span>{device.name}</span>
           </span>
         }
-        back="/devices"
+        back={deviceTab(device)}
         right={<BatteryBadge battery={device.battery} />}
       />
       <div className="detail-meta">
