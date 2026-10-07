@@ -7,6 +7,18 @@ l'application l'affiche dans *Moi › Réglages › À propos*, avec la révisio
 
 ## [Non publié]
 
+## [0.4.0] - 2026-10-07
+
+### Modifié
+
+- **« Moi » comme un appareil** : toucher *Moi* dans *Personnes*, ou son visage sur la
+  carte, ouvre sa fiche dans l'onglet où l'on est : position, source utilisée, précision et
+  batterie, *Historique* (le tracé de la source utilisée) et *Actualiser* quand une source
+  peut être interrogée (iCloud, réseau Localiser). Le téléphone OwnTracks, qui n'est pas
+  listé dans *Appareils*, a enfin sa fiche ; elle dit qu'il envoie sa position de lui-même.
+- **Sources de ma position dans les Réglages** : choisir et ordonner les sources se fait
+  dans *Moi › Réglages › Sources de ma position*, plus sur la fiche *Moi*.
+
 ## [0.3.0] - 2026-10-07
 
 ### Ajouté
@@ -152,7 +164,8 @@ Première version, sous le nom de Locus.
 - Fournisseurs Apple facultatifs, désactivés par défaut : iCloud et réseau Find My.
 - Docker Compose (Caddy, tunnel Cloudflare, serveur anisette) et tests Playwright.
 
-[Non publié]: https://github.com/weber8thomas/findmy/compare/v0.3.0...HEAD
+[Non publié]: https://github.com/weber8thomas/findmy/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/weber8thomas/findmy/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/weber8thomas/findmy/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/weber8thomas/findmy/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/weber8thomas/findmy/releases/tag/v0.1.0
