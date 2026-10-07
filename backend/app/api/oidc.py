@@ -21,8 +21,9 @@ from app.api.auth import _start_session
 from app.context import AppContext
 from app.crypto import InvalidToken, SecretBox
 from app.deps import DB, Ctx, client_ip, rate_limit
-from app.models import OidcIdentity, User
+from app.models import AvatarSource, OidcIdentity, User, UserAvatar
 from app.security import hash_password
+from app.services import avatars
 from app.services.oidc import OidcClient, OidcError, pkce_pair
 
 log = logging.getLogger(__name__)
@@ -129,6 +130,24 @@ async def _find_or_create_user(
     return user
 
 
+async def _import_picture(db, client: OidcClient, user: User, claims: dict[str, Any]) -> None:
+    """The provider's `picture` becomes the user's photo (refreshed at each sign-in), unless
+    they uploaded their own. A failure is only logged: it never blocks the sign-in."""
+    picture, user_id = claims.get("picture"), user.id
+    if not isinstance(picture, str) or not picture:
+        return
+    try:
+        current = await db.get(UserAvatar, user_id)
+        if current is not None and current.source == AvatarSource.UPLOAD:
+            return
+        data = await client.picture(picture)
+        if await avatars.save(db, user_id, data, AvatarSource.SSO):
+            await db.commit()
+    except Exception as e:
+        await db.rollback()
+        log.warning("SSO picture of user %s not imported: %s", user_id, e)
+
+
 @router.get("/login")
 async def oidc_login(request: Request, ctx: Ctx):
     client: OidcClient | None = ctx.extras.get("oidc")
@@ -196,5 +215,6 @@ async def oidc_callback(
         return _fail("no_account")
     response = RedirectResponse("/", status_code=303)
     await _start_session(request, response, ctx, db, user, bearer=False)
+    await _import_picture(db, client, user, claims)
     response.delete_cookie(STATE_COOKIE, path=STATE_PATH)
     return response

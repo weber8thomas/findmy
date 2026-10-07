@@ -10,7 +10,8 @@ from app import access
 from app.clock import utcnow
 from app.context import AppContext
 from app.models import Device, Share, ShareStatus, User
-from app.schemas import PersonOut, PublicUser, ShareOut, SharesOut
+from app.schemas import PersonOut, ShareOut, SharesOut
+from app.services import avatars
 from app.services.devices import fix_out
 from app.services.notify import notify
 
@@ -28,8 +29,8 @@ async def share_out(db: AsyncSession, share: Share) -> ShareOut:
     recipient = await db.get(User, share.recipient_id)
     return ShareOut(
         id=share.id,
-        owner=PublicUser.model_validate(owner),
-        recipient=PublicUser.model_validate(recipient),
+        owner=await avatars.public_user(db, owner),
+        recipient=await avatars.public_user(db, recipient),
         status=share.status,
         expires_at=share.expires_at,
         created_at=share.created_at,
@@ -190,7 +191,7 @@ async def people(db: AsyncSession, user: User) -> list[PersonOut]:
                 device_name = dev.name
         out.append(
             PersonOut(
-                user=PublicUser.model_validate(other),
+                user=await avatars.public_user(db, other),
                 sharing_with_me=await share_out(db, with_me) if with_me else None,
                 i_share_with=await share_out(db, entry["i_share"]) if entry["i_share"] else None,
                 location=location,

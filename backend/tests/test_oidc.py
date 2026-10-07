@@ -9,6 +9,7 @@ from urllib.parse import parse_qs, urlparse
 import httpx
 import pytest
 
+from app.services.avatars import MAX_BYTES
 from app.services.oidc import OidcError, parse_id_token
 
 ISSUER = "https://idp.test/application/o/oukile/"
@@ -32,9 +33,13 @@ class FakeIdp:
         self.userinfo: dict = {}
         self.challenge = ""
         self.nonce = ""
+        # Profile pictures served from https://cdn.test/<path>.
+        self.pictures: dict[str, httpx.Response] = {}
 
     def handler(self, request: httpx.Request) -> httpx.Response:
         path = request.url.path
+        if request.url.host == "cdn.test":
+            return self.pictures.get(path, httpx.Response(404))
         if path.endswith("/.well-known/openid-configuration"):
             return httpx.Response(
                 200,
@@ -222,3 +227,102 @@ def test_parse_id_token_checks_claims():
             parse(**changes)
     with pytest.raises(OidcError):
         parse_id_token("not-a-jwt", issuer=ISSUER, client_id=CLIENT_ID, nonce="n")
+
+
+PNG = base64.b64decode(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
+)
+JPEG = b"\xff\xd8\xff\xe0\x00\x10JFIF\x00" + b"\x00" * 64 + b"\xff\xd9"
+
+
+def sso_again(client, idp: FakeIdp) -> dict:
+    """Sign in once more; the signed-in user."""
+    client.cookies.clear()
+    idp.nonce = ""
+    assert sso(client, idp).headers["location"] == "/"
+    return client.get("/api/auth/me").json()
+
+
+def test_sso_picture_becomes_the_photo_and_follows_the_provider(client, idp):
+    idp.pictures["/alice.png"] = httpx.Response(200, content=PNG)
+    idp.claims["picture"] = "https://cdn.test/alice.png"
+    assert sso(client, idp).headers["location"] == "/"
+    me = client.get("/api/auth/me").json()
+    assert me["avatar_url"]
+    img = client.get(me["avatar_url"])
+    assert (img.content, img.headers["content-type"]) == (PNG, "image/png")
+
+    # The same picture keeps its version: browsers keep their copy.
+    assert sso_again(client, idp)["avatar_url"] == me["avatar_url"]
+
+    # Changed at the provider: refreshed at the next sign-in.
+    idp.pictures["/alice.png"] = httpx.Response(200, content=JPEG)
+    me2 = sso_again(client, idp)
+    assert me2["avatar_url"] != me["avatar_url"]
+    assert client.get(me2["avatar_url"]).headers["content-type"] == "image/jpeg"
+
+
+def test_sso_picture_does_not_replace_an_uploaded_photo(client, idp):
+    idp.pictures["/alice.png"] = httpx.Response(200, content=PNG)
+    idp.claims["picture"] = "https://cdn.test/alice.png"
+    sso(client, idp)
+    r = client.put("/api/me/avatar", files={"file": ("me.jpg", JPEG, "image/jpeg")})
+    assert r.status_code == 200
+    me = sso_again(client, idp)
+    assert me["avatar_url"] == r.json()["avatar_url"]
+    assert client.get(me["avatar_url"]).content == JPEG
+
+
+def test_sso_picture_from_userinfo_as_a_data_uri(client, idp):
+    idp.claims = {"sub": "u-6", "email": "dana@example.com"}
+    idp.userinfo = {"picture": f"data:image/png;base64,{base64.b64encode(PNG).decode()}"}
+    assert sso(client, idp).headers["location"] == "/"
+    me = client.get("/api/auth/me").json()
+    assert client.get(me["avatar_url"]).content == PNG
+
+
+def test_a_bad_sso_picture_never_blocks_sign_in(app, client, idp):
+    svg = b'<svg xmlns="http://www.w3.org/2000/svg"/>'
+    idp.pictures = {
+        "/big.png": httpx.Response(200, content=b"\x89PNG\r\n\x1a\n" + b"\x00" * MAX_BYTES),
+        "/avatar.svg": httpx.Response(200, content=svg, headers={"content-type": "image/png"}),
+        "/error.png": httpx.Response(500),
+        "/to-http.png": httpx.Response(302, headers={"location": "http://cdn.test/a.png"}),
+        "/a.png": httpx.Response(200, content=PNG),
+    }
+    for picture in (
+        "https://cdn.test/big.png",
+        "https://cdn.test/avatar.svg",
+        "https://cdn.test/error.png",
+        "https://cdn.test/missing.png",
+        "https://cdn.test/to-http.png",
+        "http://cdn.test/a.png",
+        "ftp://cdn.test/a.png",
+        f"data:image/svg+xml;base64,{base64.b64encode(svg).decode()}",
+        "data:image/png;base64,not base64!",
+        "data:image/png,rawbytes",
+        "not a url",
+    ):
+        idp.claims["picture"] = picture
+        assert sso_again(client, idp)["avatar_url"] is None, picture
+
+    # The picture's server is down.
+    def cdn_down(request: httpx.Request) -> httpx.Response:
+        if request.url.host == "cdn.test":
+            raise httpx.ConnectError("connection refused")
+        return idp.handler(request)
+
+    app.state.ctx.extras["oidc"].transport = httpx.MockTransport(cdn_down)
+    idp.claims["picture"] = "https://cdn.test/a.png"
+    assert sso_again(client, idp)["avatar_url"] is None
+
+
+def test_userinfo_failure_only_costs_the_picture(app, client, idp):
+    def no_userinfo(request: httpx.Request) -> httpx.Response:
+        if request.url.path.endswith("/userinfo/"):
+            raise httpx.ConnectError("connection refused")
+        return idp.handler(request)
+
+    app.state.ctx.extras["oidc"].transport = httpx.MockTransport(no_userinfo)
+    assert sso(client, idp).headers["location"] == "/"
+    assert client.get("/api/auth/me").json()["avatar_url"] is None

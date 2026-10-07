@@ -19,6 +19,7 @@ from app.security import (
     new_session_token,
     verify_password,
 )
+from app.services import avatars
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -57,7 +58,7 @@ async def _start_session(
     )
     await db.commit()
     _set_cookie(response, ctx, token)
-    return AuthOut(user=UserOut.model_validate(user), token=token if bearer else None)
+    return AuthOut(user=await avatars.user_out(db, user), token=token if bearer else None)
 
 
 @router.post("/register", response_model=AuthOut, status_code=201)
@@ -112,5 +113,5 @@ async def logout(
 
 
 @router.get("/me", response_model=UserOut)
-async def me(user: CurrentUser):
-    return user
+async def me(user: CurrentUser, db: DB):
+    return await avatars.user_out(db, user)

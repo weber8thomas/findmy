@@ -225,6 +225,12 @@ const en = {
   "me.owntracks": "Background tracking (OwnTracks)",
   "me.account": "Account",
   "me.name": "Name",
+  "me.photo": "Profile photo",
+  "me.photoAdd": "Add a photo",
+  "me.photoChange": "Change",
+  "me.photoRemove": "Remove",
+  "me.photoHint": "Only you and the people you share locations with can see it.",
+  "me.photoError": "This image could not be used. Try a JPEG or PNG photo.",
 
   "owntracks.explain": "Install the free OwnTracks app (iOS/Android), set Mode to HTTP and use these settings. Positions are then sent even when the phone is locked.",
   "owntracks.create": "Create OwnTracks credentials",

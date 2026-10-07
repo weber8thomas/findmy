@@ -11,7 +11,9 @@ Oukilé manipule des positions de personnes : des données sensibles. Choix de c
   position est visible par…*).
 - **Moindre accès.** Une personne avec qui vous partagez ne voit que la **dernière
   position de votre appareil principal** : ni historique, ni batterie, ni commandes.
-  Toute ressource non autorisée renvoie un 404.
+  Toute ressource non autorisée renvoie un 404. Une photo de profil n'est visible que par
+  les personnes avec qui un partage est en cours, dans un sens ou dans l'autre (et par
+  celle que vous invitez).
 - **Rétention.** L'historique est purgé après `LOCATION_RETENTION_DAYS` jours (30 par défaut).
 - **Secrets.** Mots de passe hachés (Argon2) ; jetons de session et d'appareil stockés
   hachés (SHA-256) ; secrets Apple chiffrés (Fernet).

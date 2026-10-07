@@ -3,6 +3,8 @@
 - An owner sees and controls all of their devices.
 - A user who receives an accepted, unexpired share sees only the sharer's *primary* device
   location (no history, no battery, no commands).
+- A profile photo is seen by its owner, by both sides of an accepted, unexpired share, and
+  by whoever a pending invitation is addressed to (not by the inviter before acceptance).
 - Anything else is reported as 404, never 403, so ids cannot be probed.
 """
 
@@ -60,6 +62,27 @@ async def device_viewers(db: AsyncSession, device: Device) -> tuple[str, list[st
     if owner is not None and owner.primary_device_id == device.id:
         recipients = await recipient_ids_of(db, owner.id)
     return device.owner_id, recipients
+
+
+async def can_see_photo(db: AsyncSession, user: User, owner_id: str) -> bool:
+    """Whether `user` may see the profile photo of `owner_id`."""
+    if owner_id == user.id:
+        return True
+    now = utcnow()
+    between = or_(
+        and_(Share.owner_id == owner_id, Share.recipient_id == user.id),
+        and_(Share.owner_id == user.id, Share.recipient_id == owner_id),
+    )
+    invited_by_owner = and_(
+        Share.owner_id == owner_id,
+        Share.recipient_id == user.id,
+        Share.status == ShareStatus.PENDING,
+        or_(Share.expires_at.is_(None), Share.expires_at > now),
+    )
+    row = await db.execute(
+        select(Share.id).where(or_(and_(between, active_share_clause(now)), invited_by_owner))
+    )
+    return row.first() is not None
 
 
 async def can_see_device(db: AsyncSession, user: User, device: Device) -> bool:

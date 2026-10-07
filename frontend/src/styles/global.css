@@ -604,6 +604,38 @@ a.row:focus-visible {
   background: var(--online);
   border: 2.5px solid var(--surface);
 }
+/* A profile photo fills the avatar, over the person's colour while it loads. */
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.avatar-small {
+  width: 30px;
+  height: 30px;
+  font-size: 12px;
+}
+.avatar-large {
+  width: 72px;
+  height: 72px;
+  font-size: 26px;
+}
+.title-with-avatar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.title-with-avatar > span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.photo-edit {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
 .row-avatar-zone {
   background: color-mix(in srgb, var(--zone) 14%, transparent);
   color: var(--zone);
@@ -877,6 +909,11 @@ a.row:focus-visible {
 }
 .invite p {
   margin: 0;
+}
+.invite-from {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 .kv {
   margin: 0 0 8px;
@@ -1202,9 +1239,18 @@ a.row:focus-visible {
   box-shadow: 0 0 0 3px var(--tint-fill), 0 8px 20px rgb(0 0 0 / 0.28);
 }
 .pin-person {
+  position: relative;
   border: 3px solid #fff;
   color: #fff;
   text-shadow: 0 1px 1px rgb(0 0 0 / 0.15);
+}
+/* Over the initials: if the photo does not load, they show through. */
+.pin-photo {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
 }
 .pin-person.is-selected {
   box-shadow: 0 0 0 3px var(--tint-fill), 0 8px 20px rgb(0 0 0 / 0.28);
