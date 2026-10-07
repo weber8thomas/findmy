@@ -15,7 +15,7 @@ const GRIP = ".sheet-handle, .panel-header";
  * The page over the map, on a phone. It stays where it's let go: low on just its title, over the
  * whole map, or anywhere between. Close to the title, half way or the top, it lands on them, and a
  * flick carries it to the next one. It moves by its handle and title bar, and by the page itself
- * pulled down from its top (or pushed up, when it has nothing to scroll).
+ * pushed up when it has nothing to scroll.
  */
 export function BottomSheet({ children }: { children: ReactNode }) {
   const { t } = useI18n();
@@ -87,8 +87,9 @@ export function BottomSheet({ children }: { children: ReactNode }) {
     },
   }));
 
-  // The page itself: pulled down from its top, or pushed up when it has nothing to scroll, it
-  // moves the sheet instead. Touch events, since only they can keep the page from scrolling.
+  // The page itself, pushed up when it has nothing to scroll, raises the sheet. (Pulled down from
+  // its top, it refreshes: see PullToRefresh.) Touch events, since only they can keep the page
+  // from scrolling.
   useEffect(() => {
     const el = self.current!;
     let x0 = 0;
@@ -108,10 +109,9 @@ export function BottomSheet({ children }: { children: ReactNode }) {
         const dx = p.clientX - x0;
         if (dy === 0 && dx === 0) return;
         const page = el.querySelector<HTMLElement>(".panel-scroll");
-        const atTop = !page || page.scrollTop <= 0;
         const still = !page || page.scrollHeight <= page.clientHeight + 1;
         // Decided on the first move: past it, the browser has started scrolling.
-        if (Math.abs(dy) < Math.abs(dx) || !((dy > 0 && atTop) || (dy < 0 && still))) return void (drag.current = null);
+        if (Math.abs(dy) < Math.abs(dx) || !(dy < 0 && still)) return void (drag.current = null);
         d.moved = true;
       }
       e.preventDefault();

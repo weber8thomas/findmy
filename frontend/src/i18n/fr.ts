@@ -16,6 +16,7 @@ const fr: Catalogue = {
   "common.now": "maintenant",
   "common.unknown": "inconnu",
   "common.optional": "facultatif",
+  "common.refreshing": "Actualisation…",
   "common.offlineBanner": "Connexion perdue — reconnexion…",
 
   "tabs.people": "Personnes",

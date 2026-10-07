@@ -13,6 +13,7 @@ import { localDeviceFor, localDeviceStore } from "../reporter/storage";
 import { reporterStatus } from "../reporter/useReporter";
 import { Icon, type IconName } from "../ui/icons";
 import { BottomSheet } from "./BottomSheet";
+import { PullToRefresh } from "./PullToRefresh";
 import { activeTab } from "./tabs";
 
 function useMediaQuery(query: string) {
@@ -120,6 +121,7 @@ export function Shell({ me }: { me: User }) {
   const panel = (
     <>
       {!mobile && <TabBar />}
+      <PullToRefresh scroller={scroller} />
       <div className="panel-scroll" ref={scroller}>
         <div className="panel-content">
           <Outlet />

@@ -15,6 +15,7 @@ const en = {
   "common.now": "now",
   "common.unknown": "unknown",
   "common.optional": "optional",
+  "common.refreshing": "Refreshing…",
   "common.offlineBanner": "Connection lost — reconnecting…",
 
   "tabs.people": "People",

@@ -70,21 +70,31 @@ test("the sheet stays where it's let go, from its title to over the whole map", 
   await drag(10, 200, false);
   await expect(sheet).toHaveAttribute("data-snap", "half");
 
-  // The page itself pulled down from its top (a finger, not a mouse) lowers the sheet.
+  // The page itself pulled down from its top (a finger, not a mouse) refreshes, the sheet stays.
   before = await settled();
   const cdp = await context.newCDPSession(page);
   const finger = (type: string, y?: number) =>
     cdp.send("Input.dispatchTouchEvent", { type, touchPoints: y == null ? [] : [{ x, y }] });
+  const ptr = page.getByTestId("pull-to-refresh");
   const y0 = before + 140;
   await finger("touchStart", y0);
-  for (let i = 1; i <= 10; i++) await finger("touchMove", y0 + i * 15);
-  await page.waitForTimeout(200);
+  for (let i = 1; i <= 6; i++) await finger("touchMove", y0 + i * 10);
+  await expect(ptr).toHaveAttribute("data-state", "pulling");
+  await finger("touchEnd"); // not far enough: nothing
+  await expect(ptr).toHaveAttribute("data-state", "idle");
+  await finger("touchStart", y0);
+  for (let i = 1; i <= 10; i++) await finger("touchMove", y0 + i * 18);
+  await expect(ptr).toHaveAttribute("data-state", "ready");
+  const refetched = page.waitForRequest((r) => r.url().endsWith("/api/people"));
   await finger("touchEnd");
-  await expect(sheet).toHaveAttribute("data-snap", "free");
-  expect(Math.abs((await settled()) - (before + 150))).toBeLessThan(3);
+  await expect(ptr).toHaveAttribute("data-state", "busy");
+  await refetched;
+  await expect(ptr).toHaveAttribute("data-state", "idle");
+  await expect(sheet).toHaveAttribute("data-snap", "half");
+  expect(Math.abs((await settled()) - before)).toBeLessThan(1);
 
   // Down near the tab bar it lands on its title, still showing; a tap on the handle raises it.
-  await drag(before + 160, tabbar.y - 60);
+  await drag(before + 10, tabbar.y - 60);
   await expect(sheet).toHaveAttribute("data-snap", "peek");
   const peek = (await sheet.boundingBox())!;
   expect(Math.round(peek.height)).toBe(80);
