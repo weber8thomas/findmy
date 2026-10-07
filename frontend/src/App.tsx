@@ -25,7 +25,13 @@ export function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [me?.locale]);
 
-  if (isLoading) return <div className="splash">{t("common.loading")}</div>;
+  if (isLoading)
+    return (
+      <div className="splash" role="status">
+        <img src="/icons/icon.svg" alt="" width={64} height={64} />
+        {t("common.loading")}
+      </div>
+    );
 
   if (!me) {
     return (

@@ -6,9 +6,10 @@ import { useNavigate } from "react-router";
 import type { Device, LocationPoint, Person, Zone } from "../api/types";
 import { useStore } from "../lib/store";
 import { mapUi } from "../lib/ui-state";
-import { deviceGlyphSvg, initials } from "../ui/icons";
+import { avatarTone, deviceGlyphSvg, initials } from "../ui/icons";
 
-const ACCENT = "#6366f1";
+const ACCENT = "#0a66e8";
+const ZONE = "#8e44d6";
 
 type Props = {
   tileUrl: string;
@@ -40,7 +41,7 @@ function deviceIcon(d: Device, selected: boolean, local: boolean, offset: [numbe
 function personIcon(p: Person, selected: boolean) {
   return L.divIcon({
     className: "pin-wrap",
-    html: `<div class="pin pin-person${selected ? " is-selected" : ""}" data-testid="marker-person-${p.user.id}" title="${escapeHtml(p.user.display_name)}">${escapeHtml(initials(p.user.display_name))}</div>`,
+    html: `<div class="pin pin-person ${avatarTone(p.user.id)}${selected ? " is-selected" : ""}" data-testid="marker-person-${p.user.id}" title="${escapeHtml(p.user.display_name)}">${escapeHtml(initials(p.user.display_name))}</div>`,
     iconSize: [40, 40],
     iconAnchor: [20, 20],
   });
@@ -172,7 +173,7 @@ function HistoryLayer({ points }: { points: LocationPoint[] }) {
           center={[p.lat, p.lon]}
           radius={i === points.length - 1 ? 7 : 4}
           className="history-point"
-          pathOptions={{ color: "#fff", weight: 1.5, fillColor: i === 0 ? "#16a34a" : ACCENT, fillOpacity: 1 }}
+          pathOptions={{ color: "#fff", weight: 1.5, fillColor: i === 0 ? "#30b350" : ACCENT, fillOpacity: 1 }}
         >
           <Tooltip>{new Date(p.ts).toLocaleString()}</Tooltip>
         </CircleMarker>
@@ -198,8 +199,9 @@ export function MapView({ tileUrl, attribution, devices, people, zones, localDev
       <Controller points={points} />
 
       {zones.map((z) => (
-        <Circle key={z.id} center={[z.lat, z.lon]} radius={z.radius_m} pathOptions={{ color: "#8b5cf6", weight: 1.5, fillOpacity: 0.08, dashArray: "6 6" }}>
-          <Tooltip direction="center" permanent className="zone-label">
+        <Circle key={z.id} center={[z.lat, z.lon]} radius={z.radius_m} pathOptions={{ color: ZONE, weight: 2, fillOpacity: 0.08, dashArray: "6 6" }}>
+          {/* Below the centre, so a device at home does not hide the place's name. */}
+          <Tooltip direction="center" offset={[0, 32]} permanent className="zone-label">
             {z.name}
           </Tooltip>
         </Circle>

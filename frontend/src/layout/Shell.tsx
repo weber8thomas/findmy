@@ -28,6 +28,7 @@ const useIsMobile = () => useMediaQuery("(max-width: 899px)");
 const SNAPS = [0.18, 0.5, 0.88];
 
 function BottomSheet({ children }: { children: ReactNode }) {
+  const { t } = useI18n();
   const [snap, setSnap] = useState(1);
   const [dragH, setDragH] = useState<number | null>(null);
   const start = useRef<{ y: number; h: number } | null>(null);
@@ -46,7 +47,7 @@ function BottomSheet({ children }: { children: ReactNode }) {
       <div
         className="sheet-handle"
         role="slider"
-        aria-label="Resize panel"
+        aria-label={t("a11y.resizePanel")}
         aria-valuenow={snap}
         onPointerDown={(e) => {
           (e.target as HTMLElement).setPointerCapture(e.pointerId);
@@ -88,7 +89,7 @@ function TabBar() {
     { to: "/me", label: t("tabs.me"), icon: "me", badge: unread },
   ];
   return (
-    <nav className="tabbar" aria-label="Main">
+    <nav className="tabbar" aria-label={t("a11y.mainNav")}>
       {tabs.map((tab) => (
         <NavLink key={tab.to} to={tab.to} className={({ isActive }) => `tab${isActive ? " active" : ""}`} data-testid={`tab-${tab.to.slice(1)}`}>
           <Icon name={tab.icon} size={22} />
