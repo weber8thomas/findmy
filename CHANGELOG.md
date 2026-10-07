@@ -7,6 +7,8 @@ l'application l'affiche dans *Moi › Réglages › À propos*, avec la révisio
 
 ## [Non publié]
 
+## [0.3.0] - 2026-10-07
+
 ### Ajouté
 
 - **Lieux par adresse** : l'éditeur de lieu a un champ *Adresse* (« Stephansplatz 1,
@@ -40,6 +42,18 @@ l'application l'affiche dans *Moi › Réglages › À propos*, avec la révisio
   visages (le vôtre et celui des personnes qui partagent avec vous), *Appareils* les
   appareils, *Objets* les objets, *Moi* et les Réglages votre visage seul. Changer
   d'onglet recadre la carte en douceur ; toucher son visage ouvre *Ma position*.
+- **Vos lieux sur toutes les cartes** : leur cercle et leur nom s'affichent sur chaque
+  onglet, sans changer le cadrage ; seules les pages *Lieux et alertes* les cadrent et
+  colorent leur disque.
+- **Carte de nuit lisible** : en mode sombre, la carte du jour est dessinée en couleurs de
+  nuit, comme dans *Plans* : terre gris foncé, eau bleue, parcs verts, bâtiments, rues plus
+  claires que le fond et points d'intérêt. Le style sombre d'OpenFreeMap, presque noir, ne
+  montrait ni l'eau, ni les parcs, ni les bâtiments. `TILE_URL_DARK` non défini vaut
+  désormais `TILE_URL`.
+- **Sources de la carte dans un ⓘ** : la mention OpenFreeMap / OpenStreetMap s'affiche en
+  entier à l'ouverture, se replie au premier contact avec la carte ou après 5 s (comme le
+  permettent les règles d'attribution d'OpenStreetMap) et se rouvre d'un toucher. Sur
+  téléphone, elle suit le bord du panneau au lieu de rester cachée dessous.
 
 - **Comptes Apple dans les Réglages** : l'onglet *Objets* ne fait plus que lister les
   AirTags et balises, comme dans *Localiser*. Les comptes Apple se connectent et se
@@ -138,6 +152,7 @@ Première version, sous le nom de Locus.
 - Fournisseurs Apple facultatifs, désactivés par défaut : iCloud et réseau Find My.
 - Docker Compose (Caddy, tunnel Cloudflare, serveur anisette) et tests Playwright.
 
-[Non publié]: https://github.com/weber8thomas/findmy/compare/v0.2.0...HEAD
+[Non publié]: https://github.com/weber8thomas/findmy/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/weber8thomas/findmy/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/weber8thomas/findmy/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/weber8thomas/findmy/releases/tag/v0.1.0
