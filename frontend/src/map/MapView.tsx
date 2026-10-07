@@ -4,8 +4,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Circle, CircleMarker, MapContainer, Marker, Polyline, TileLayer, Tooltip, useMap, useMapEvents } from "react-leaflet";
 import { useNavigate } from "react-router";
 import type { Device, LocationPoint, Person, Zone } from "../api/types";
+import { useI18n } from "../i18n";
 import { useStore } from "../lib/store";
-import { mapUi } from "../lib/ui-state";
+import { pointAtTap } from "../lib/trace";
+import { mapUi, patchMapUi } from "../lib/ui-state";
 import { avatarTone, deviceGlyphSvg, initials } from "../ui/icons";
 
 const ACCENT = "#0a66e8";
@@ -101,10 +103,19 @@ function flyToVisible(map: L.Map, lat: number, lon: number, zoom: number) {
   map.flyTo(map.unproject(target, zoom), zoom, { duration: 0.6 });
 }
 
+/** Pan just enough for the point to show in the visible part of the map, keeping the zoom. */
+function panIntoView(map: L.Map, lat: number, lon: number) {
+  const c = coveredArea(map);
+  // A sheet pulled up high leaves little map: keep a band to pan into.
+  const bottom = Math.max(0, Math.min(c.bottom + 24, map.getSize().y - 120));
+  map.panInside([lat, lon], { paddingTopLeft: [c.left + 24, 72], paddingBottomRight: [24, bottom] });
+}
+
 function Controller({ points }: { points: [number, number][] }) {
   const map = useMap();
   const ui = useStore(mapUi);
   const didFit = useRef(false);
+  const historyPoint = ui.history?.find((p) => p.ts === ui.historyAt);
 
   useEffect(() => {
     if (ui.focus) flyToVisible(map, ui.focus.lat, ui.focus.lon, ui.focus.zoom ?? Math.max(map.getZoom(), 15));
@@ -120,6 +131,11 @@ function Controller({ points }: { points: [number, number][] }) {
     if (!ui.history?.length) return;
     map.fitBounds(L.latLngBounds(ui.history.map((p) => [p.lat, p.lon] as [number, number])), fitOptions(map, 17));
   }, [ui.history, map]);
+
+  // Follow the picked moment while scrubbing, without losing the zoom chosen on the trace.
+  useEffect(() => {
+    if (historyPoint) panIntoView(map, historyPoint.lat, historyPoint.lon);
+  }, [historyPoint, map]);
 
   useMapEvents({
     click(e) {
@@ -167,8 +183,32 @@ function VectorLayer({ styleUrl, attribution }: { styleUrl: string; attribution:
   return null;
 }
 
-function HistoryLayer({ points }: { points: LocationPoint[] }) {
+/** How close (px) a tap must land to the trace to pick one of its points: about a fingertip. */
+const TAP_TOLERANCE = 24;
+
+const PICK_ICON = L.divIcon({
+  className: "pin-wrap",
+  html: '<div class="history-pick" data-testid="history-pick"></div>',
+  iconSize: [22, 22],
+  iconAnchor: [11, 11],
+});
+
+function HistoryLayer({ points, pickedTs }: { points: LocationPoint[]; pickedTs: string | null }) {
+  const map = useMap();
+  const { dateTime } = useI18n();
+  // Points are a few pixels wide: take any tap near the trace, and clear the pick elsewhere.
+  useMapEvents({
+    click(e) {
+      const i = pointAtTap(
+        points.map((p) => map.latLngToContainerPoint([p.lat, p.lon])),
+        e.containerPoint,
+        TAP_TOLERANCE,
+      );
+      patchMapUi({ historyAt: i >= 0 ? points[i].ts : null });
+    },
+  });
   const line = points.map((p) => [p.lat, p.lon] as [number, number]);
+  const picked = points.find((p) => p.ts === pickedTs);
   return (
     <>
       <Polyline positions={line} pathOptions={{ color: ACCENT, weight: 4, opacity: 0.8 }} />
@@ -179,10 +219,18 @@ function HistoryLayer({ points }: { points: LocationPoint[] }) {
           radius={i === points.length - 1 ? 7 : 4}
           className="history-point"
           pathOptions={{ color: "#fff", weight: 1.5, fillColor: i === 0 ? "#30b350" : ACCENT, fillOpacity: 1 }}
-        >
-          <Tooltip>{new Date(p.ts).toLocaleString()}</Tooltip>
-        </CircleMarker>
+        />
       ))}
+      {picked && (
+        <Marker position={[picked.lat, picked.lon]} icon={PICK_ICON} interactive={false} keyboard={false} zIndexOffset={2000}>
+          <Tooltip permanent direction="top" offset={[0, -14]} className="history-label">
+            <span data-testid="history-label">
+              <strong>{dateTime(picked.ts)}</strong>
+              {picked.accuracy != null && <span className="history-label-accuracy"> · ±{Math.round(picked.accuracy)} m</span>}
+            </span>
+          </Tooltip>
+        </Marker>
+      )}
     </>
   );
 }
@@ -214,7 +262,7 @@ export function MapView({ tileUrl, attribution, devices, people, zones, localDev
       {ui.draftZone && (
         <Circle center={[ui.draftZone.lat, ui.draftZone.lon]} radius={ui.draftZone.radius_m} pathOptions={{ color: "#f59e0b", weight: 2, fillOpacity: 0.15 }} />
       )}
-      {ui.history && ui.history.length > 0 && <HistoryLayer points={ui.history} />}
+      {ui.history && ui.history.length > 0 && <HistoryLayer points={ui.history} pickedTs={ui.historyAt} />}
 
       <DeviceLayer devices={devices} localDeviceId={localDeviceId} onOpen={(id) => navigate(`/devices/${id}`)} />
       {people.map((p) =>

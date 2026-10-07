@@ -1,3 +1,4 @@
+import type { Locator } from "@playwright/test";
 import { deviceIdFromList, expect, newAccount, openContext, registerThisDevice, signIn, test } from "../fixtures";
 
 const EIFFEL = { latitude: 48.8584, longitude: 2.2945 };
@@ -70,7 +71,7 @@ test("live location, play sound and lost mode between two browsers", async ({ br
   await viewerCtx.close();
 });
 
-test("history shows past positions", async ({ browser }) => {
+test("history shows past positions and where the device was at a picked moment", async ({ browser }) => {
   const acc = newAccount("Hist");
   const ctx = await openContext(browser);
   await signIn(ctx, acc, "register");
@@ -93,5 +94,44 @@ test("history shows past positions", async ({ browser }) => {
   await page.getByTestId("btn-history").click();
   await expect(page.getByTestId("history-count")).toContainText("12 positions");
   await expect(page.locator("path.history-point")).toHaveCount(12);
+
+  // Pick a moment: the panel and a ring on the map show where the device was then.
+  const slider = page.getByTestId("history-slider");
+  const label = page.getByTestId("history-label");
+  const timeOf = (i: number) =>
+    page.evaluate((ts) => new Intl.DateTimeFormat("en", { dateStyle: "medium", timeStyle: "short" }).format(new Date(ts)), fixes[i].ts);
+  await expect(page.getByTestId("history-picked")).toContainText("Slide to see");
+  await expect(page.getByTestId("history-pick")).toHaveCount(0);
+  await page.getByTestId("history-older").click();
+  await expect(slider).toHaveValue("11");
+  await expect(label).toContainText(await timeOf(11));
+  await expect(label).toContainText("±8 m");
+
+  await slider.focus();
+  await page.keyboard.press("Home");
+  await expect(slider).toHaveValue("0");
+  await expect(page.getByTestId("history-picked")).toContainText(await timeOf(0));
+  await expect.poll(() => distance(page.getByTestId("history-pick"), page.locator("path.history-point").first())).toBeLessThan(3);
+
+  // Clicking a point of the trace on the map picks it.
+  await page.locator("path.history-point").nth(4).click();
+  await expect(slider).toHaveValue("4");
+  await expect(label).toContainText(await timeOf(4));
+  await expect(page.getByTestId("history-picked")).toContainText(await timeOf(4));
+
+  // So does a time in the list (newest first).
+  await page.locator(".timeline button").nth(2).click();
+  await expect(slider).toHaveValue("9");
+
+  // A click away from the trace clears it.
+  await page.mouse.click(1150, 400);
+  await expect(page.getByTestId("history-pick")).toHaveCount(0);
+  await expect(page.getByTestId("history-picked")).toContainText("Slide to see");
   await ctx.close();
 });
+
+async function distance(a: Locator, b: Locator): Promise<number> {
+  const [ba, bb] = [await a.boundingBox(), await b.boundingBox()];
+  if (!ba || !bb) return Infinity;
+  return Math.hypot(ba.x + ba.width / 2 - (bb.x + bb.width / 2), ba.y + ba.height / 2 - (bb.y + bb.height / 2));
+}
