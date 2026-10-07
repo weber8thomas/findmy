@@ -71,19 +71,22 @@ test("live location, play sound and lost mode between two browsers", async ({ br
   await viewerCtx.close();
 });
 
-test("history shows past positions and where the device was at a picked moment", async ({ browser }) => {
+test("history tells the stops and moves, and where the device was at a picked moment", async ({ browser }) => {
   const acc = newAccount("Hist");
   const ctx = await openContext(browser);
   await signIn(ctx, acc, "register");
   const res = await ctx.request.post("/api/devices", { data: { name: "Bike", kind: "browser", icon: "tag" } });
   const { device, device_token } = await res.json();
+  const zone = await ctx.request.post("/api/zones", { data: { name: "Home", lat: 48.85, lon: 2.35, radius_m: 100 } });
+  expect(zone.ok(), await zone.text()).toBeTruthy();
+  // Home for half an hour, 1.1 km north in 25 minutes, there since.
   const now = Date.now();
-  const fixes = Array.from({ length: 12 }, (_, i) => ({
-    ts: new Date(now - (12 - i) * 5 * 60_000).toISOString(),
-    lat: 48.85 + i * 0.001,
-    lon: 2.35,
-    accuracy: 8,
-  }));
+  const fix = (minutesAgo: number, lat: number) => ({ ts: new Date(now - minutesAgo * 60_000).toISOString(), lat, lon: 2.35, accuracy: 8 });
+  const fixes = [
+    ...[95, 85, 75, 65].map((m) => fix(m, 48.85)),
+    ...[60, 55, 50, 45].map((m, k) => fix(m, 48.85 + (k + 1) * 0.002)),
+    ...[40, 30, 20, 10].map((m) => fix(m, 48.86)),
+  ];
   const report = await ctx.request.post("/api/report/locations", {
     data: { fixes },
     headers: { Authorization: `Bearer ${device_token}` },
@@ -93,7 +96,18 @@ test("history shows past positions and where the device was at a picked moment",
   await page.goto(`/devices/${device.id}`);
   await page.getByTestId("btn-history").click();
   await expect(page.getByTestId("history-count")).toContainText("12 positions");
+  await expect(page.getByTestId("history-summary")).toContainText("1.1 km");
+  await expect(page.getByTestId("history-summary")).toContainText("2 stops");
   await expect(page.locator("path.history-point")).toHaveCount(12);
+
+  // The journey: numbered stops, named after the place they are at, and the move between them.
+  await expect(page.getByTestId("journey-stop-1")).toContainText("Home");
+  await expect(page.getByTestId("journey-stop-1")).toContainText("30 min");
+  await expect(page.getByTestId("journey-move")).toContainText("Move · 1.1 km · 25 min");
+  await expect(page.getByTestId("journey-stop-2")).toContainText(/Stop\s*since\s.*\s·\s40\smin/);
+  await expect(page.getByTestId("history-stop-1")).toBeVisible();
+  await expect(page.getByTestId("history-stop-2")).toBeVisible();
+  await expect(page.locator(".history-arrow").first()).toBeAttached();
 
   // Pick a moment: the panel and a ring on the map show where the device was then.
   const slider = page.getByTestId("history-slider");
@@ -119,7 +133,8 @@ test("history shows past positions and where the device was at a picked moment",
   await expect(label).toContainText(await timeOf(4));
   await expect(page.getByTestId("history-picked")).toContainText(await timeOf(4));
 
-  // So does a time in the list (newest first).
+  // So does a time in the list of all positions (folded, newest first).
+  await page.getByTestId("history-all").locator("summary").click();
   await page.locator(".timeline button").nth(2).click();
   await expect(slider).toHaveValue("9");
 
@@ -127,6 +142,15 @@ test("history shows past positions and where the device was at a picked moment",
   await page.mouse.click(1150, 400);
   await expect(page.getByTestId("history-pick")).toHaveCount(0);
   await expect(page.getByTestId("history-picked")).toContainText("Slide to see");
+
+  // A stop's number on the map, or its row, picks when it began.
+  await page.getByTestId("history-stop-1").click();
+  await expect(slider).toHaveValue("0");
+  await expect(page.getByTestId("journey-stop-1").getByRole("button")).toHaveAttribute("aria-current", "true");
+  await page.getByTestId("journey-stop-2").click();
+  await expect(slider).toHaveValue("8");
+  await expect(label).toContainText(await timeOf(8));
+  await expect(page.getByTestId("journey-stop-2").getByRole("button")).toHaveAttribute("aria-current", "true");
   await ctx.close();
 });
 

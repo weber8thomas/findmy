@@ -993,6 +993,133 @@ button.row:focus-visible {
   margin: 0;
   cursor: pointer;
 }
+/* History: "12 positions · 3.2 km · 2 stops", and what the trace's colours mean. */
+.history-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 6px;
+  margin: 14px 4px 4px;
+  font-size: 14px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.history-summary > span + span::before {
+  content: "·";
+  margin-right: 6px;
+}
+.history-legend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 4px;
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.history-legend-bar {
+  flex: 1;
+  min-width: 40px;
+  height: 6px;
+  border-radius: 3px;
+}
+/* Stops (numbered like on the map) and the moves between them, in time order. */
+.journey {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 6px 0;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+.journey button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 6px 14px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+/* Not on touch screens, where a tapped row would stay grey. */
+@media (hover: hover) {
+  .journey button:hover {
+    background: var(--fill);
+  }
+}
+.journey button:active {
+  background: var(--fill-strong);
+}
+.journey .is-current > button {
+  background: var(--tint-soft);
+}
+.journey-badge {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border: 3px solid;
+  border-radius: 50%;
+  background: var(--surface);
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.journey-stop.is-current .journey-badge {
+  box-shadow: 0 0 0 3px var(--tint-ring);
+}
+.journey-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.journey-text strong {
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.journey-text .muted {
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+/* A move: lighter, on the line that joins two stops. */
+.journey-move button {
+  min-height: 34px;
+  padding-block: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+.journey-connector {
+  flex: none;
+  align-self: stretch;
+  width: 4px;
+  margin: 0 12px;
+  border-radius: 2px;
+}
+.journey-day {
+  padding: 10px 14px 4px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.history-all {
+  margin: 0 0 8px;
+}
+.history-all > summary {
+  padding: 8px 4px;
+  color: var(--tint);
+  font-size: 14px;
+  cursor: pointer;
+}
 .btn-icon:disabled {
   opacity: 0.4;
   cursor: default;
@@ -1754,6 +1881,52 @@ button.row:focus-visible {
 }
 .history-label-accuracy {
   color: var(--muted);
+}
+/* A stop of the history: its number, ringed with the colour of its time on the trace. */
+.history-stop {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border: 3px solid var(--tint-fill);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--text);
+  font: 700 12px/1 var(--font-display);
+  font-variant-numeric: tabular-nums;
+  box-shadow: var(--shadow-pin);
+  cursor: pointer;
+}
+/* Stops at one place: their numbers side by side. */
+.history-stops {
+  display: flex;
+}
+.history-stops .history-stop + .history-stop {
+  margin-left: -5px;
+}
+.history-stop.is-more {
+  border-color: var(--border);
+  color: var(--muted);
+  font-size: 10px;
+}
+/* The direction of travel, along the moves. */
+.history-arrow {
+  display: block;
+  overflow: visible;
+}
+.history-arrow path {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.history-arrow path.history-arrow-halo {
+  stroke: rgb(0 0 0 / 0.35);
+  stroke-width: 4.4;
+}
+.map.is-night .history-casing {
+  stroke: #0b0c0e;
 }
 
 /* ---------- device-side overlays ---------- */
