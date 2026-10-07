@@ -160,7 +160,13 @@ export function DeviceDetail() {
       />
       <div className="detail-meta">
         <span className={`dot${device.online ? " on" : ""}`} />
-        <span>{device.online ? t("devices.online") : t("devices.lastSeen", { time: relTime(device.last_seen_at) })}</span>
+        <span>
+          {device.online
+            ? t("devices.online")
+            : device.last_seen_at
+              ? t("devices.lastSeen", { time: relTime(device.last_seen_at) })
+              : t("devices.neverSeen")}
+        </span>
         <span className="muted">· {t(`devices.kind.${device.kind}`)}</span>
         {device.is_primary && <span className="chip">{t("devices.primary")}</span>}
       </div>

@@ -67,6 +67,7 @@ const en = {
   "devices.noLocation": "No location yet",
   "devices.leftApple": "Removed from the Apple account",
   "devices.lastSeen": "Seen {time}",
+  "devices.neverSeen": "Never seen",
   "devices.updated": "Updated {time}",
   "devices.accuracy": "±{meters} m",
   "devices.battery": "Battery {percent}%",

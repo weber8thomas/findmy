@@ -68,6 +68,7 @@ const fr: Catalogue = {
   "devices.noLocation": "Pas encore de position",
   "devices.leftApple": "Retiré du compte Apple",
   "devices.lastSeen": "Vu {time}",
+  "devices.neverSeen": "Jamais vu",
   "devices.updated": "Mis à jour {time}",
   "devices.accuracy": "±{meters} m",
   "devices.battery": "Batterie {percent} %",
