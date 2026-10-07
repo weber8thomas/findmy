@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { api, ApiError } from "../../api/client";
-import { keys, useDevices, useMe, usePeople, useShares } from "../../api/queries";
+import { keys, useMe, useMyLocation, usePeople, useShares } from "../../api/queries";
 import type { Person } from "../../api/types";
 import { useI18n } from "../../i18n";
 import { directionsUrl, updatedAt } from "../../lib/geo";
@@ -134,20 +134,21 @@ function PersonRow({ person }: { person: Person }) {
   );
 }
 
-/** You, as the people you share with see you: your primary device (your phone). */
+/** You, as the people you share with see you: the first fresh of your sources, else the latest. */
 function MeRow() {
   const { t, relTime } = useI18n();
   const { data: me } = useMe();
-  const { data: devices } = useDevices();
-  const phone = devices?.find((d) => d.is_primary);
-  if (!me || !phone) return null;
+  const { data: mine } = useMyLocation();
+  // No device yet, so nothing to show.
+  if (!me?.primary_device_id) return null;
+  const loc = mine?.location;
   return (
-    <Link to={`/devices/${phone.id}`} className="row" data-testid="person-me">
+    <Link to="/me/location" className="row" data-testid="person-me">
       <Avatar user={me} />
       <span className="row-main">
         <span className="row-title">{t("people.me")}</span>
         <span className="row-sub">
-          {phone.location ? `${phone.name} · ${relTime(updatedAt(phone.location))}` : t("devices.noLocation")}
+          {loc ? `${t("location.via", { device: mine?.device_name ?? "" })} · ${relTime(updatedAt(loc))}` : t("devices.noLocation")}
         </span>
       </span>
     </Link>

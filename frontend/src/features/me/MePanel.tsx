@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { Link } from "react-router";
 import { api } from "../../api/client";
-import { keys, useNotifications, useViewers } from "../../api/queries";
+import { keys, useMyLocation, useNotifications, useViewers } from "../../api/queries";
 import type { User } from "../../api/types";
 import { useI18n } from "../../i18n";
 import { toast } from "../../lib/ui-state";
@@ -132,6 +132,24 @@ function Profile({ me }: { me: User }) {
   );
 }
 
+/** Where people see me, and from which device: its page orders the sources. */
+function MyLocationRow() {
+  const { t } = useI18n();
+  const { data: mine } = useMyLocation();
+  return (
+    <Link to="/me/location" className="link-row" data-testid="link-location">
+      <Icon name="pin" />
+      <span className="link-row-text">
+        {t("location.title")}
+        <span className="link-row-sub">
+          {mine?.device_name ? t("location.via", { device: mine.device_name }) : t("devices.noLocation")}
+        </span>
+      </span>
+      <Icon name="chevron" className="icon-flip link-row-chevron" />
+    </Link>
+  );
+}
+
 export function MePanel({ me }: { me: User }) {
   const { t } = useI18n();
   return (
@@ -147,6 +165,7 @@ export function MePanel({ me }: { me: User }) {
       <Profile me={me} />
       <Viewers />
       <Section>
+        <MyLocationRow />
         <Link to="/me/zones" className="link-row" data-testid="link-zones">
           <Icon name="zone" /> {t("me.zones")}
         </Link>

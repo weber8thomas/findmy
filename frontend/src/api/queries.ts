@@ -6,6 +6,7 @@ import type {
   Command,
   Device,
   LocationPoint,
+  MyLocation,
   Person,
   Share,
   User,
@@ -22,6 +23,8 @@ export const keys = {
   people: ["people"] as const,
   shares: ["shares"] as const,
   viewers: ["viewers"] as const,
+  myLocation: ["myLocation"] as const,
+  sources: ["sources"] as const,
   zones: ["zones"] as const,
   zoneEvents: ["zoneEvents"] as const,
   notifications: ["notifications"] as const,
@@ -84,6 +87,16 @@ export function useShares() {
 
 export function useViewers() {
   return useQuery({ queryKey: keys.viewers, queryFn: () => api<Share[]>("/me/viewers") });
+}
+
+/** My location as the people I share with see it (pushed live as `me.location`). */
+export function useMyLocation() {
+  return useQuery({ queryKey: keys.myLocation, queryFn: () => api<MyLocation>("/me/location") });
+}
+
+/** The devices my location is taken from, first choice first. */
+export function useSources() {
+  return useQuery({ queryKey: keys.sources, queryFn: () => api<{ device_ids: string[] }>("/me/sources") });
 }
 
 export function useZones(enabled = true) {

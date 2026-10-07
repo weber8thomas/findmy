@@ -9,6 +9,7 @@ import { DeviceList } from "./features/devices/DeviceList";
 import { HistoryPanel } from "./features/devices/HistoryPanel";
 import { ItemsPanel } from "./features/items/ItemsPanel";
 import { MePanel } from "./features/me/MePanel";
+import { MyLocationPanel } from "./features/me/MyLocation";
 import { PeopleList, PersonDetail } from "./features/people/People";
 import { FindMySettings } from "./features/settings/FindMySettings";
 import { ICloudSettings } from "./features/settings/ICloudSettings";
@@ -66,6 +67,7 @@ export function App() {
           <Route path="/devices/:id/history" element={<HistoryPanel />} />
           <Route path="/items" element={<ItemsPanel />} />
           <Route path="/me" element={<MePanel me={me} />} />
+          <Route path="/me/location" element={<MyLocationPanel me={me} />} />
           <Route path="/me/zones" element={<ZonesList />} />
           <Route path="/me/zones/:id" element={<ZoneEditor />} />
           <Route path="/settings" element={<SettingsPanel me={me} />} />

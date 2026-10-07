@@ -5,7 +5,7 @@ import { toast } from "../lib/ui-state";
 import { useStore } from "../lib/store";
 import { localDeviceStore } from "../reporter/storage";
 import { keys } from "./queries";
-import type { Command, Device, Person } from "./types";
+import type { Command, Device, MyLocation, Person } from "./types";
 import { RealtimeClient, type WsMessage } from "./ws";
 
 type Ctx = { client: RealtimeClient | null; connected: boolean };
@@ -38,11 +38,16 @@ export function applyMessage(qc: QueryClient, msg: WsMessage) {
       break;
     case "device.removed":
       qc.setQueryData<Device[]>(keys.devices, (list) => list?.filter((d) => d.id !== data.device_id));
+      // It may have been one of my sources.
+      void qc.invalidateQueries({ queryKey: keys.sources });
       break;
     case "person.location":
       qc.setQueryData<Person[]>(keys.people, (list) =>
         list?.map((p) => (p.user.id === data.user_id ? { ...p, location: data.location, device_name: data.device_name } : p)),
       );
+      break;
+    case "me.location":
+      qc.setQueryData<MyLocation>(keys.myLocation, data);
       break;
     case "share.updated":
       void qc.invalidateQueries({ queryKey: keys.people });

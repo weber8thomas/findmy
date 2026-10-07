@@ -221,12 +221,19 @@ textarea {
   max-height: calc(100% - var(--tabbar-h) - 20px);
 }
 .sheet-handle {
+  position: relative;
   flex: none;
   height: 22px;
   display: grid;
   place-items: center;
   touch-action: none;
   cursor: grab;
+}
+/* A 40 px grab area: the band just above the sheet takes the finger too. */
+.sheet-handle::before {
+  content: "";
+  position: absolute;
+  inset: -18px 0 0;
 }
 .sheet-handle span {
   width: 36px;
@@ -1031,6 +1038,97 @@ a.row:focus-visible {
   margin: 0 0 8px;
 }
 
+/* ---------- my location ---------- */
+.my-location {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 4px 0 10px;
+  padding: 12px 16px;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+/* The sources in priority order: what a source is on top, its controls under it. */
+.sources {
+  list-style: none;
+  margin: 8px -16px 0;
+  padding: 0;
+}
+.sources:empty {
+  display: none;
+}
+.source {
+  padding: 10px 16px;
+}
+.source + .source {
+  border-top: 0.5px solid var(--separator);
+}
+.source-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.source-rank {
+  flex: none;
+  width: 16px;
+  color: var(--muted);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+.source-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin: 6px 0 0 26px;
+}
+.source-bar .chip {
+  margin-right: auto;
+}
+.source-buttons {
+  display: flex;
+  gap: 4px;
+}
+.source-btn {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--fill);
+  color: var(--tint);
+  cursor: pointer;
+}
+.source-btn:hover:not(:disabled) {
+  background: var(--fill-strong);
+}
+.source-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.source-btn.danger {
+  color: var(--danger);
+}
+.icon-up {
+  transform: rotate(90deg);
+}
+.icon-down {
+  transform: rotate(-90deg);
+}
+.chip-success {
+  background: color-mix(in srgb, var(--online) 16%, transparent);
+  color: var(--success);
+}
+.source-add {
+  margin: 12px 0 6px;
+}
+
 /* ---------- settings & privacy ---------- */
 .about-app {
   display: flex;
@@ -1288,7 +1386,8 @@ a.row:focus-visible {
 .field input:not([type="checkbox"]):not([type="range"]),
 .field select,
 .field textarea,
-.inline-form input {
+.inline-form input,
+.inline-form select {
   width: 100%;
   min-height: 44px;
   padding: 10px 12px;
@@ -1302,7 +1401,8 @@ a.row:focus-visible {
 .field input:not([type="checkbox"]):not([type="range"]):focus,
 .field select:focus,
 .field textarea:focus,
-.inline-form input:focus {
+.inline-form input:focus,
+.inline-form select:focus {
   outline: none;
   border-color: var(--tint);
   box-shadow: 0 0 0 3px var(--tint-ring);
@@ -1341,6 +1441,11 @@ a.row:focus-visible {
 }
 .inline-form .btn {
   min-height: 44px;
+}
+/* A select is as wide as its longest option: let it shrink beside the button. */
+.inline-form select {
+  flex: 1;
+  min-width: 0;
 }
 .toggle-row {
   display: flex;

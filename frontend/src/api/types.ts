@@ -104,6 +104,9 @@ export type Person = {
   device_name: string | null;
 };
 
+/** Where the people I share with see me: the first fresh of my sources, else the latest. */
+export type MyLocation = { location: Fix | null; device_id: string | null; device_name: string | null };
+
 export type Zone = {
   id: string;
   name: string;
