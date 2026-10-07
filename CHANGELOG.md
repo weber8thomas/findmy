@@ -7,6 +7,15 @@ l'application l'affiche dans *Moi › Réglages › À propos*, avec la révisio
 
 ## [Non publié]
 
+## [0.8.1] - 2026-10-07
+
+### Modifié
+
+- **Déploiement** : `deploy/proxmox/deploy.sh` lit l'hôte, le CT et les dossiers dans
+  `deploy/proxmox/deploy.env`, gardé hors de git (modèle : `deploy.env.example`).
+- Git ignore les fichiers locaux : `.claude/`, bases SQLite, exports OwnTracks, autres
+  fichiers `.env`, `.DS_Store`.
+
 ## [0.8.0] - 2026-10-07
 
 ### Ajouté
@@ -252,7 +261,8 @@ Première version, sous le nom de Locus.
 - Fournisseurs Apple facultatifs, désactivés par défaut : iCloud et réseau Find My.
 - Docker Compose (Caddy, tunnel Cloudflare, serveur anisette) et tests Playwright.
 
-[Non publié]: https://github.com/weber8thomas/findmy/compare/v0.8.0...HEAD
+[Non publié]: https://github.com/weber8thomas/findmy/compare/v0.8.1...HEAD
+[0.8.1]: https://github.com/weber8thomas/findmy/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/weber8thomas/findmy/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/weber8thomas/findmy/compare/v0.6.1...v0.7.0
 [0.6.1]: https://github.com/weber8thomas/findmy/compare/v0.6.0...v0.6.1

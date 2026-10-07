@@ -1,6 +1,6 @@
 [project]
 name = "locus"
-version = "0.8.0"
+version = "0.8.1"
 description = "Oukilé: self-hosted, web-based device and people finder"
 requires-python = ">=3.13"
 dependencies = [
