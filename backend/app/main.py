@@ -114,8 +114,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             await ctx.drain()
             await engine.dispose()
 
+    # The API description is a map for attackers too: only when asked for (API_DOCS=true).
+    docs = settings.api_docs
     app = FastAPI(
-        title="Oukilé", lifespan=lifespan, docs_url="/api/docs", openapi_url="/api/openapi.json"
+        title="Oukilé",
+        lifespan=lifespan,
+        docs_url="/api/docs" if docs else None,
+        openapi_url="/api/openapi.json" if docs else None,
+        redoc_url=None,
     )
     app.state.ctx = ctx
 

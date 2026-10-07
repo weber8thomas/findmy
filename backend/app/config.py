@@ -38,6 +38,8 @@ class Settings(BaseSettings):
     trust_proxy: bool = False
     rate_limit_enabled: bool = True
     session_days: int = 30
+    # Interactive API documentation at /api/docs.
+    api_docs: bool = False
     # false: sign in only through SSO (no email/password form, no sign-up form).
     password_login: bool = True
 

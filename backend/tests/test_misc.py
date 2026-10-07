@@ -2,8 +2,11 @@ import base64
 import time
 
 import pytest
+from fastapi.testclient import TestClient
 
+from app.config import Settings
 from app.crypto import InvalidToken, SecretBox
+from app.main import create_app
 
 
 def basic(email: str, token: str) -> dict:
@@ -80,6 +83,15 @@ def test_secret_box_roundtrip_and_tamper():
         SecretBox("k2").decrypt(blob)
     with pytest.raises(InvalidToken):
         box.decrypt(blob[:-2] + b"AA")
+
+
+def test_api_docs_off_by_default(client, tmp_path):
+    assert client.get("/api/openapi.json").status_code == 404
+    assert client.get("/api/docs").status_code == 404
+    assert client.get("/redoc").status_code == 404
+    on = create_app(Settings(data_dir=tmp_path / "docs", api_docs=True, _env_file=None))
+    with TestClient(on) as c:
+        assert c.get("/api/openapi.json").status_code == 200
 
 
 def test_security_headers(client):
