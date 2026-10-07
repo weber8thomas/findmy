@@ -148,7 +148,7 @@ class ICloudProvider(AppleAccountProvider):
                         device.lost_message or "This device has been lost. Please call me.",
                     )
                 # LOST_MODE_OFF: the iCloud API has no "stop" call; Apple's Lost Mode ends when
-                # the device is unlocked with its passcode. We only clear Locus' flag.
+                # the device is unlocked with its passcode. We only clear Oukilé's flag.
             except AppleAuthError as e:
                 await self.mark_reauth(db, account, str(e))
                 raise CommandError(str(e)) from e

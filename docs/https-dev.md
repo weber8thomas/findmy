@@ -49,12 +49,12 @@ Caddy obtient automatiquement un certificat Let's Encrypt.
 Les tests Playwright simulent la géolocalisation dans Chromium. À vérifier à la main
 sur de vrais appareils :
 
-1. **iPhone (Safari)** : ouvrez Locus, *Partager › Sur l'écran d'accueil*, ouvrez l'icône.
+1. **iPhone (Safari)** : ouvrez Oukilé, *Partager › Sur l'écran d'accueil*, ouvrez l'icône.
    Dans *Moi*, « Utiliser ce navigateur comme appareil », acceptez la localisation.
 2. Depuis un autre appareil, « Faire sonner » : le son joue et l'écran plein s'affiche.
 3. Verrouillez l'iPhone : le partage se met en pause (limitation d'iOS). Activez les
    notifications dans *Moi* puis relancez « Faire sonner » : une notification push arrive ;
-   la toucher ouvre Locus et lance le son.
+   la toucher ouvre Oukilé et lance le son.
 4. **Android (Chrome)** : mêmes étapes ; vérifiez la vibration et le niveau de batterie.
 5. **OwnTracks** : créez des identifiants dans *Moi*, configurez l'application en mode
    HTTP, verrouillez le téléphone et marchez : les positions continuent d'arriver.

@@ -9,7 +9,7 @@ en Bluetooth les balises qui passent près d'eux et envoient leur position, chif
 serveurs d'Apple. Seul le propriétaire de la clé privée de la balise peut déchiffrer ces
 positions.
 
-Locus s'appuie sur la bibliothèque open source
+Oukilé s'appuie sur la bibliothèque open source
 [FindMy.py](https://github.com/malmeloo/FindMy.py) (MIT) pour :
 
 - se connecter avec un identifiant Apple (double authentification comprise) ;
@@ -20,7 +20,7 @@ Deux sortes de balises sont prises en charge :
 
 | Type | Ce qu'il faut |
 |---|---|
-| **Balise DIY OpenHaystack** (ESP32, nRF51/52…) | Dans Locus : *Générer une clé de balise DIY*. Flashez la **clé d'annonce** affichée avec le firmware [OpenHaystack](https://github.com/seemoo-lab/openhaystack) ou [macless-haystack](https://github.com/dchristl/macless-haystack). La clé privée reste sur le serveur. Vous pouvez aussi importer une clé privée existante. |
+| **Balise DIY OpenHaystack** (ESP32, nRF51/52…) | Dans Oukilé : *Générer une clé de balise DIY*. Flashez la **clé d'annonce** affichée avec le firmware [OpenHaystack](https://github.com/seemoo-lab/openhaystack) ou [macless-haystack](https://github.com/dchristl/macless-haystack). La clé privée reste sur le serveur. Vous pouvez aussi importer une clé privée existante. |
 | **AirTag officiel** | Le fichier `.plist` de l'accessoire, extrait d'un Mac où l'AirTag est associé. Depuis macOS 14, ces fichiers sont chiffrés : suivez la [documentation de FindMy.py](https://docs.mikealmel.ooo/FindMy.py/) pour récupérer la clé et les déchiffrer. Le fichier « key alignment » est facultatif mais accélère la première recherche. |
 
 ## Délai des positions
@@ -29,7 +29,7 @@ Les positions **ne sont pas en temps réel** :
 
 - une position n'existe que si un appareil Apple passe près de la balise ;
 - les iPhone qui la captent l'envoient par lots ;
-- Locus interroge Apple toutes les `FINDMY_POLL_INTERVAL_S` secondes (300 par défaut, 120 minimum), et le bouton **Actualiser** déclenche une interrogation immédiate.
+- Oukilé interroge Apple toutes les `FINDMY_POLL_INTERVAL_S` secondes (300 par défaut, 120 minimum), et le bouton **Actualiser** déclenche une interrogation immédiate.
 
 Il faut donc compter **de quelques minutes à plus d'une heure** selon le passage
 autour de la balise. Les zones (géorepérage) confirment un changement dès le premier

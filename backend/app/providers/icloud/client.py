@@ -139,7 +139,7 @@ class ICloudPyClient:
 
     async def play_sound(self, icloud_id: str) -> None:
         api = await self._ensure_api()
-        await self._call(lambda: api.devices[icloud_id].play_sound("Locus"))
+        await self._call(lambda: api.devices[icloud_id].play_sound("Oukilé"))
 
     async def lost_mode(self, icloud_id: str, phone: str, message: str) -> None:
         api = await self._ensure_api()

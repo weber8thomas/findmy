@@ -59,7 +59,7 @@ async def unsubscribe(data: PushUnsubscribeIn, user: CurrentUser, db: DB):
 async def test_push(user: CurrentUser, ctx: Ctx, db: DB):
     _require_push(ctx)
     rate_limit(ctx, "push-test", user.id, 5, 60)
-    title = "Locus"
+    title = "Oukilé"
     body = "Les notifications fonctionnent." if user.locale == "fr" else "Notifications work."
     sent = await ctx.push.send_to_user(
         db, user.id, {"kind": "test", "title": title, "body": body, "tag": "test", "url": "/me"}

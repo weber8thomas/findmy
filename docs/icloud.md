@@ -4,19 +4,19 @@
 
 ## Ce que ça fait
 
-Locus utilise [pyicloud](https://github.com/timlaing/pyicloud), qui parle à la même API
+Oukilé utilise [pyicloud](https://github.com/timlaing/pyicloud), qui parle à la même API
 privée que **icloud.com/find**. Une fois votre compte Apple connecté dans l'onglet
 **Objets → Appareils iCloud**, choisissez les appareils à **suivre**. Ils apparaissent
 ensuite dans l'onglet **Appareils**, avec :
 
 - une position mise à jour **toutes les 1 à 2 minutes** (`ICLOUD_POLL_INTERVAL_S`, 120 s
-  par défaut, 60 s minimum), même quand l'appareil est verrouillé et sans que Locus y
+  par défaut, 60 s minimum), même quand l'appareil est verrouillé et sans qu'Oukilé y
   soit ouvert. Le bouton **Actualiser** demande une position immédiatement ;
 - la **sonnerie native** d'Apple (fonctionne même en mode silencieux) ;
 - le **mode Perdu natif** : l'appareil est **réellement verrouillé** et affiche votre
   message et votre numéro. Une confirmation est demandée. L'API iCloud ne permet pas de
   désactiver le mode Perdu : il prend fin quand l'appareil est déverrouillé avec son code.
-  « Désactiver » dans Locus retire seulement l'indication.
+  « Désactiver » dans Oukilé retire seulement l'indication.
 
 Les AirTags ne sont **pas** visibles par cette API : utilisez le
 [fournisseur réseau Find My](findmy-network.md).
@@ -30,7 +30,7 @@ ICLOUD_POLL_INTERVAL_S=120
 
 La connexion demande l'identifiant Apple, le mot de passe, puis le code de double
 authentification reçu sur un appareil de confiance (ou par SMS). La session est ensuite
-marquée « de confiance » ; Apple redemande un code environ tous les deux mois. Locus
+marquée « de confiance » ; Apple redemande un code environ tous les deux mois. Oukilé
 passe alors le compte en *reconnexion requise* et vous envoie une notification.
 
 ## Risques — à lire

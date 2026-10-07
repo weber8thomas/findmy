@@ -1,10 +1,10 @@
-# Locus
+# Oukilé
 
 **Retrouvez vos appareils et vos proches depuis n'importe quel navigateur.**
 Prototype autohébergé inspiré de *Localiser* (Find My) d'Apple, sous forme d'application
 web installable (PWA). Il fonctionne sur iPhone, Android, Windows, Mac et Linux.
 
-> Locus n'est ni affilié à Apple ni approuvé par Apple. Il n'utilise ni leur nom, ni leurs
+> Oukilé n'est ni affilié à Apple ni approuvé par Apple. Il n'utilise ni leur nom, ni leurs
 > icônes, ni leurs sons.
 
 ## Fonctionnalités
@@ -23,7 +23,7 @@ web installable (PWA). Il fonctionne sur iPhone, Android, Windows, Mac et Linux.
 
 | Source | Délai | Remarques |
 |---|---|---|
-| **L'application web elle-même** | 1–5 s, en direct | Uniquement quand Locus est ouvert (limite des navigateurs, surtout sur iOS) |
+| **L'application web elle-même** | 1–5 s, en direct | Uniquement quand Oukilé est ouvert (limite des navigateurs, surtout sur iOS) |
 | **OwnTracks** (appli native gratuite) | 30 s à quelques minutes | Fonctionne en arrière-plan, téléphone verrouillé |
 | **iCloud** *(optionnel, non officiel)* | ~1–2 min | iPhone, iPad, Mac sans rien installer ; sonnerie et mode Perdu natifs. [docs/icloud.md](docs/icloud.md) |
 | **Réseau Find My** *(optionnel, non officiel)* | minutes à 1 h+ | AirTags et balises DIY OpenHaystack. [docs/findmy-network.md](docs/findmy-network.md) |

@@ -1,7 +1,7 @@
 import type { Catalogue } from "./en";
 
 const fr: Catalogue = {
-  "app.name": "Locus",
+  "app.name": "Oukilé",
   "common.cancel": "Annuler",
   "common.save": "Enregistrer",
   "common.delete": "Supprimer",
@@ -38,7 +38,7 @@ const fr: Catalogue = {
   "auth.tagline": "Retrouvez vos appareils et vos proches, depuis n’importe quel navigateur.",
 
   "devices.title": "Appareils",
-  "devices.empty": "Aucun appareil. Ouvrez Locus sur un téléphone ou un ordinateur et activez le partage de position dans « Moi ».",
+  "devices.empty": "Aucun appareil. Ouvrez Oukilé sur un téléphone ou un ordinateur et activez le partage de position dans « Moi ».",
   "devices.thisDevice": "Cet appareil",
   "devices.online": "En ligne",
   "devices.offline": "Hors ligne",
@@ -77,9 +77,9 @@ const fr: Catalogue = {
   "command.lostOff": "Mode perdu désactivé",
 
   "lost.title": "Mode perdu",
-  "lost.explain": "Affiche en plein écran un message et votre numéro sur l’appareil dès que Locus y est ouvert.",
+  "lost.explain": "Affiche en plein écran un message et votre numéro sur l’appareil dès qu’Oukilé y est ouvert.",
   "lost.explainNative": "Verrouille l’appareil avec le mode Perdu d’Apple et affiche votre message et votre numéro.",
-  "lost.disableNative": "Le mode Perdu d’Apple prend fin quand l’appareil est déverrouillé avec son code. Ceci retire seulement l’indication dans Locus.",
+  "lost.disableNative": "Le mode Perdu d’Apple prend fin quand l’appareil est déverrouillé avec son code. Ceci retire seulement l’indication dans Oukilé.",
   "lost.message": "Message",
   "lost.messagePlaceholder": "Cet appareil a été perdu. Merci de m’appeler.",
   "lost.phone": "Numéro de téléphone",
@@ -172,7 +172,7 @@ const fr: Catalogue = {
   "me.status.idle": "Pas de partage",
   "me.status.starting": "En attente d’une première position…",
   "me.status.active": "Partage en cours",
-  "me.status.paused": "En pause pendant que Locus est en arrière-plan",
+  "me.status.paused": "En pause pendant qu’Oukilé est en arrière-plan",
   "me.status.denied": "Autorisation de localisation refusée",
   "me.status.unavailable": "Localisation indisponible",
   "me.status.error": "Erreur",
@@ -183,7 +183,7 @@ const fr: Catalogue = {
   "me.permissionHelp.ios": "Sur iPhone : Réglages › Confidentialité et sécurité › Service de localisation › Sites web Safari › Lorsque l’app est active.",
   "me.permissionHelp.android": "Sur Android : touchez le cadenas dans la barre d’adresse › Autorisations › Position.",
   "me.permissionHelp.desktop": "Cliquez sur l’icône à gauche de la barre d’adresse pour autoriser la localisation.",
-  "me.backgroundWarning": "Les navigateurs arrêtent le partage quand Locus est fermé ou en arrière-plan. Pour un suivi en arrière-plan, utilisez l’application OwnTracks.",
+  "me.backgroundWarning": "Les navigateurs arrêtent le partage quand Oukilé est fermé ou en arrière-plan. Pour un suivi en arrière-plan, utilisez l’application OwnTracks.",
   "me.unregister": "Oublier cet appareil",
   "me.unregisterConfirm": "Arrêter le partage et supprimer cet appareil ?",
   "me.notifications": "Notifications",
@@ -191,7 +191,7 @@ const fr: Catalogue = {
   "me.notificationsOn": "Les notifications sont activées",
   "me.notificationsDenied": "Les notifications sont bloquées dans les réglages du navigateur",
   "me.notificationsUnsupported": "Ce navigateur ne prend pas en charge les notifications push ici.",
-  "me.iosInstall": "Sur iPhone, ajoutez d’abord Locus à l’écran d’accueil (Partager › Sur l’écran d’accueil), puis ouvrez-le depuis l’icône.",
+  "me.iosInstall": "Sur iPhone, ajoutez d’abord Oukilé à l’écran d’accueil (Partager › Sur l’écran d’accueil), puis ouvrez-le depuis l’icône.",
   "me.testNotification": "Envoyer un test",
   "me.language": "Langue",
   "me.zones": "Lieux et alertes",

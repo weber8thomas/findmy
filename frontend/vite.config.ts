@@ -17,8 +17,8 @@ export default defineConfig({
         globPatterns: ["**/*.{js,css,html,svg,png,webmanifest}"],
       },
       manifest: {
-        name: "Locus",
-        short_name: "Locus",
+        name: "Oukilé",
+        short_name: "Oukilé",
         description: "Find your devices and people, from any browser.",
         start_url: "/",
         scope: "/",

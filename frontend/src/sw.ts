@@ -25,14 +25,14 @@ self.addEventListener("push", (event) => {
   try {
     payload = event.data?.json() ?? {};
   } catch {
-    payload = { title: "Locus", body: event.data?.text() };
+    payload = { title: "Oukilé", body: event.data?.text() };
   }
   event.waitUntil(
     (async () => {
       // Let an open app react immediately (e.g. play the sound).
       const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
       windows.forEach((c) => c.postMessage({ type: "push", payload }));
-      await self.registration.showNotification(payload.title ?? "Locus", {
+      await self.registration.showNotification(payload.title ?? "Oukilé", {
         body: payload.body,
         tag: payload.tag,
         icon: "/icons/icon-192.png",

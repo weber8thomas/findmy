@@ -14,7 +14,7 @@ async def health():
 async def config(ctx: Ctx):
     s = ctx.settings
     return {
-        "app_name": "Locus",
+        "app_name": "Oukilé",
         "registration_open": s.allow_registration,
         "providers": ctx.providers.kinds(),
         "features": {

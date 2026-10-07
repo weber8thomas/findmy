@@ -109,7 +109,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             await engine.dispose()
 
     app = FastAPI(
-        title="Locus", lifespan=lifespan, docs_url="/api/docs", openapi_url="/api/openapi.json"
+        title="Oukilé", lifespan=lifespan, docs_url="/api/docs", openapi_url="/api/openapi.json"
     )
     app.state.ctx = ctx
 
