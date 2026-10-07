@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, Outlet, useLocation } from "react-router";
 import { useRealtime } from "../api/realtime";
-import { useConfig, useDevices, useNotifications, usePeople, useViewers, useZones } from "../api/queries";
+import { useConfig, useDevices, useNotifications, useViewers } from "../api/queries";
 import type { User } from "../api/types";
 import { DeviceRuntime } from "../device-runtime/DeviceRuntime";
 import { AppFooter } from "../features/about/AppFooter";
 import { useI18n } from "../i18n";
 import { useStore } from "../lib/store";
-import { focusOn, toasts } from "../lib/ui-state";
-import { MapView } from "../map/MapView";
+import { toasts } from "../lib/ui-state";
+import { MapButtons, TabMap } from "../map/TabMap";
 import { localDeviceFor, localDeviceStore } from "../reporter/storage";
 import { reporterStatus } from "../reporter/useReporter";
 import { Icon, type IconName } from "../ui/icons";
@@ -127,28 +127,6 @@ function Toasts() {
   );
 }
 
-function MapButtons({ localDeviceId }: { localDeviceId: string | null }) {
-  const { t } = useI18n();
-  const status = useStore(reporterStatus);
-  const { data: devices } = useDevices();
-  const locate = () => {
-    const fix = status.lastFix ?? devices?.find((d) => d.id === localDeviceId)?.location;
-    if (fix) focusOn(fix.lat, fix.lon, 16);
-    else
-      navigator.geolocation?.getCurrentPosition(
-        (p) => focusOn(p.coords.latitude, p.coords.longitude, 16),
-        () => undefined,
-      );
-  };
-  return (
-    <div className="map-buttons">
-      <button className="map-btn" onClick={locate} title={t("map.locateMe")} aria-label={t("map.locateMe")}>
-        <Icon name="locate" />
-      </button>
-    </div>
-  );
-}
-
 /** Always-visible reminder that this browser is sharing its location, and with whom. */
 function SharingIndicator() {
   const { t } = useI18n();
@@ -173,12 +151,16 @@ export function Shell({ me }: { me: User }) {
   const dark = useMediaQuery("(prefers-color-scheme: dark)");
   const { connected, client } = useRealtime();
   const { data: config } = useConfig();
-  const { data: devices = [] } = useDevices();
-  const { data: people = [] } = usePeople();
-  const { data: zones = [] } = useZones();
   useStore(localDeviceStore);
   const local = localDeviceFor(me.id);
   const [showOffline, setShowOffline] = useState(false);
+  const { pathname } = useLocation();
+  const scroller = useRef<HTMLDivElement>(null);
+
+  // A new page starts at its top, not where the previous one was scrolled to.
+  useEffect(() => {
+    scroller.current?.scrollTo({ top: 0 });
+  }, [pathname]);
 
   // Only show the banner if the socket stays down for a bit.
   useEffect(() => {
@@ -190,7 +172,7 @@ export function Shell({ me }: { me: User }) {
   const panel = (
     <>
       {!mobile && <TabBar />}
-      <div className="panel-scroll">
+      <div className="panel-scroll" ref={scroller}>
         <div className="panel-content">
           <Outlet />
         </div>
@@ -204,12 +186,10 @@ export function Shell({ me }: { me: User }) {
   return (
     <div className={`shell ${mobile ? "is-mobile" : "is-desktop"}`}>
       {config && (
-        <MapView
+        <TabMap
+          me={me}
           tileUrl={dark ? config.map.tile_url_dark : config.map.tile_url}
           attribution={config.map.attribution}
-          devices={devices}
-          people={people}
-          zones={zones}
           localDeviceId={local?.id ?? null}
         />
       )}

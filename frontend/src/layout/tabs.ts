@@ -5,6 +5,12 @@ export function deviceTab(device: Pick<Device, "kind">): "/devices" | "/items" {
   return device.kind === "findmy" ? "/items" : "/devices";
 }
 
+/** What the Devices tab lists: browsers and every Apple device, AirPods included. The OwnTracks
+ * phone is the person: it shows under People (as "Me"). */
+export function listedInDevices(device: Pick<Device, "kind">): boolean {
+  return device.kind === "browser" || device.kind === "icloud";
+}
+
 // Pages reached from a tab without living under its path (Settings is opened from Me).
 const ALSO: Record<string, string> = { "/settings": "/me", "/privacy": "/me" };
 

@@ -2,6 +2,7 @@ import { Link } from "react-router";
 import { useDevices, useMe } from "../../api/queries";
 import type { Device } from "../../api/types";
 import { useI18n } from "../../i18n";
+import { listedInDevices } from "../../layout/tabs";
 import { haversineM, updatedAt } from "../../lib/geo";
 import { useStore } from "../../lib/store";
 import { localDeviceFor, localDeviceStore } from "../../reporter/storage";
@@ -65,8 +66,7 @@ export function DeviceList() {
   const primary = devices?.find((d) => d.is_primary && d.location);
   const reference = status.lastFix || localDev?.location ? localDev : primary;
   const from = status.lastFix ?? localDev?.location ?? primary?.location ?? null;
-  // Every Apple device, AirPods included; OwnTracks is the person's phone: it shows under People (as "Me").
-  const list = (devices ?? []).filter((d) => d.kind === "browser" || d.kind === "icloud");
+  const list = (devices ?? []).filter(listedInDevices);
 
   return (
     <div data-testid="devices-panel">

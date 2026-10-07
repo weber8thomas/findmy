@@ -7,7 +7,21 @@ l'application l'affiche dans *Moi › Réglages › À propos*, avec la révisio
 
 ## [Non publié]
 
+### Ajouté
+
+- **Ma position, de plusieurs appareils** : dans *Moi › Ma position*, on choisit jusqu'à
+  cinq de ses appareils ou objets, par ordre de priorité (un téléphone, puis un objet…).
+  La première source à jour (moins de 30 min) donne la position, sinon la plus récente.
+  Les personnes avec qui on partage voient cette position et le nom de l'appareil, en
+  direct, jamais la liste. La ligne *Moi* de *Personnes* dit d'où vient la position. Les
+  alertes de lieux suivent seulement la première source.
+
 ### Modifié
+
+- **La carte suit l'onglet**, comme dans *Localiser* : *Personnes* ne montre que les
+  visages (le vôtre et celui des personnes qui partagent avec vous), *Appareils* les
+  appareils, *Objets* les objets, *Moi* et les Réglages votre visage seul. Changer
+  d'onglet recadre la carte en douceur ; toucher son visage ouvre *Ma position*.
 
 - **Comptes Apple dans les Réglages** : l'onglet *Objets* ne fait plus que lister les
   AirTags et balises, comme dans *Localiser*. Les comptes Apple se connectent et se

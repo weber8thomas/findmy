@@ -3,7 +3,7 @@ import "leaflet/dist/leaflet.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Circle, CircleMarker, MapContainer, Marker, Polyline, TileLayer, Tooltip, useMap, useMapEvents } from "react-leaflet";
 import { useNavigate } from "react-router";
-import type { Device, LocationPoint, Person, Zone } from "../api/types";
+import type { Device, Fix, LocationPoint, PublicUser, Zone } from "../api/types";
 import { useI18n } from "../i18n";
 import { useStore } from "../lib/store";
 import { pointAtTap } from "../lib/trace";
@@ -13,13 +13,22 @@ import { avatarTone, deviceGlyphSvg, initials } from "../ui/icons";
 const ACCENT = "#0a66e8";
 const ZONE = "#8e44d6";
 
+/** A person on the map: their photo or initials where they are. */
+export type Face = { user: Pick<PublicUser, "id" | "display_name" | "avatar_url">; location: Fix; isMe?: boolean };
+
 type Props = {
   tileUrl: string;
   attribution: string;
   devices: Device[];
-  people: Person[];
+  faces: Face[];
   zones: Zone[];
   localDeviceId: string | null;
+  /** The tab shown: the map frames what it shows again when it changes. */
+  tab: string;
+  /** The page focuses its own subject (a device, a person): no framing on arrival. */
+  detail: boolean;
+  /** Everything to show has loaded: frame only then, so late arrivals are not left out. */
+  ready: boolean;
 };
 
 function escapeHtml(s: string): string {
@@ -40,24 +49,30 @@ function deviceIcon(d: Device, selected: boolean, local: boolean, offset: [numbe
   });
 }
 
-function personIcon(p: Person, selected: boolean) {
+const FACE = 40;
+
+function faceIcon({ user, isMe }: Face, selected: boolean, offset: [number, number]) {
   // The photo covers the initials, which still show if it cannot be loaded (no inline onerror
   // under the CSP). JSON quoting makes a CSS string, HTML escaping keeps it in the attribute.
-  const photo = p.user.avatar_url
-    ? `<span class="pin-photo" style="background-image:url(${escapeHtml(JSON.stringify(p.user.avatar_url))})"></span>`
+  const photo = user.avatar_url
+    ? `<span class="pin-photo" style="background-image:url(${escapeHtml(JSON.stringify(user.avatar_url))})"></span>`
     : "";
+  const cls = ["pin", "pin-person", avatarTone(user.id), isMe ? "is-me" : "", selected ? "is-selected" : ""].filter(Boolean).join(" ");
+  const testId = isMe ? "marker-me" : `marker-person-${user.id}`;
   return L.divIcon({
     className: "pin-wrap",
-    html: `<div class="pin pin-person ${avatarTone(p.user.id)}${selected ? " is-selected" : ""}" data-testid="marker-person-${p.user.id}" title="${escapeHtml(p.user.display_name)}">${escapeHtml(initials(p.user.display_name))}${photo}</div>`,
-    iconSize: [40, 40],
-    iconAnchor: [20, 20],
+    html: `<div class="${cls}" data-testid="${testId}" title="${escapeHtml(user.display_name)}">${escapeHtml(initials(user.display_name))}${photo}</div>`,
+    iconSize: [FACE, FACE],
+    iconAnchor: [FACE / 2 - offset[0], FACE / 2 - offset[1]],
   });
 }
 
+type Placed = { id: string; location: { lat: number; lon: number } | null };
+
 /** Pixel offsets that fan out markers overlapping on screen at the current zoom, so none hides another. */
-function spreadOffsets(devices: Device[], project: (lat: number, lon: number) => L.Point): Map<string, [number, number]> {
+function spreadOffsets(items: Placed[], project: (lat: number, lon: number) => L.Point): Map<string, [number, number]> {
   const clusters: { members: { id: string; p: L.Point }[]; center: L.Point }[] = [];
-  for (const d of devices) {
+  for (const d of items) {
     if (!d.location) continue;
     const p = project(d.location.lat, d.location.lon);
     const hit = clusters.find((c) => c.center.distanceTo(p) < PIN);
@@ -111,21 +126,27 @@ function panIntoView(map: L.Map, lat: number, lon: number) {
   map.panInside([lat, lon], { paddingTopLeft: [c.left + 24, 72], paddingBottomRight: [24, bottom] });
 }
 
-function Controller({ points }: { points: [number, number][] }) {
+function Controller({ points, tab, detail, ready }: { points: [number, number][]; tab: string; detail: boolean; ready: boolean }) {
   const map = useMap();
   const ui = useStore(mapUi);
-  const didFit = useRef(false);
+  const framed = useRef<string | null>(null);
   const historyPoint = ui.history?.find((p) => p.ts === ui.historyAt);
 
   useEffect(() => {
     if (ui.focus) flyToVisible(map, ui.focus.lat, ui.focus.lon, ui.focus.zoom ?? Math.max(map.getZoom(), 15));
   }, [ui.focus, map]);
 
+  // Each tab frames what it shows: at once on opening, gently on a tab switch. Live updates never
+  // move the map, and a page about one thing (a device, a person) focuses on it itself.
   useEffect(() => {
-    if (didFit.current || points.length === 0) return;
-    didFit.current = true;
-    map.fitBounds(L.latLngBounds(points), fitOptions(map, 18));
-  }, [points, map]);
+    if (!ready || points.length === 0 || framed.current === tab) return;
+    const first = framed.current === null;
+    framed.current = tab;
+    if (detail) return;
+    const bounds = L.latLngBounds(points);
+    if (first) map.fitBounds(bounds, fitOptions(map, 18));
+    else map.flyToBounds(bounds, { ...fitOptions(map, 16), duration: 0.6 });
+  }, [points, tab, detail, ready, map]);
 
   useEffect(() => {
     if (!ui.history?.length) return;
@@ -235,21 +256,23 @@ function HistoryLayer({ points, pickedTs }: { points: LocationPoint[]; pickedTs:
   );
 }
 
-export function MapView({ tileUrl, attribution, devices, people, zones, localDeviceId }: Props) {
+export function MapView({ tileUrl, attribution, devices, faces, zones, localDeviceId, tab, detail, ready }: Props) {
   const ui = useStore(mapUi);
   const navigate = useNavigate();
 
+  // What the tab frames: only what it shows.
   const points = useMemo(() => {
     const pts: [number, number][] = [];
     devices.forEach((d) => d.location && pts.push([d.location.lat, d.location.lon]));
-    people.forEach((p) => p.location && pts.push([p.location.lat, p.location.lon]));
+    faces.forEach((f) => pts.push([f.location.lat, f.location.lon]));
+    zones.forEach((z) => pts.push([z.lat, z.lon]));
     return pts;
-  }, [devices, people]);
+  }, [devices, faces, zones]);
 
   return (
     <MapContainer center={[46.6, 2.4]} zoom={5} maxZoom={19} zoomControl={false} className="map" worldCopyJump>
       <BaseLayer key={tileUrl} url={tileUrl} attribution={attribution} />
-      <Controller points={points} />
+      <Controller points={points} tab={tab} detail={detail} ready={ready} />
 
       {zones.map((z) => (
         <Circle key={z.id} center={[z.lat, z.lon]} radius={z.radius_m} pathOptions={{ color: ZONE, weight: 2, fillOpacity: 0.08, dashArray: "6 6" }}>
@@ -265,37 +288,61 @@ export function MapView({ tileUrl, attribution, devices, people, zones, localDev
       {ui.history && ui.history.length > 0 && <HistoryLayer points={ui.history} pickedTs={ui.historyAt} />}
 
       <DeviceLayer devices={devices} localDeviceId={localDeviceId} onOpen={(id) => navigate(`/devices/${id}`)} />
-      {people.map((p) =>
-        p.location ? (
-          <PersonMarker
-            key={p.user.id}
-            person={p}
-            selected={ui.selected?.kind === "person" && ui.selected.id === p.user.id}
-            onClick={() => navigate(`/people/${p.user.id}`)}
-          />
-        ) : null,
-      )}
+      {/* Mine opens where my location is set; someone else's, their page. */}
+      <FaceLayer faces={faces} onOpen={(f) => navigate(f.isMe ? "/me/location" : `/people/${f.user.id}`)} />
     </MapContainer>
   );
 }
 
-function PersonMarker({ person, selected, onClick }: { person: Person; selected: boolean; onClick: () => void }) {
-  const loc = person.location!;
-  const { id, display_name, avatar_url } = person.user;
-  // A new icon replaces the pin's HTML: only on changes, so the photo does not flicker.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const icon = useMemo(() => personIcon(person, selected), [id, display_name, avatar_url, selected]);
-  return <Marker position={[loc.lat, loc.lon]} icon={icon} eventHandlers={{ click: onClick }} />;
-}
-
 const NO_OFFSET: [number, number] = [0, 0];
 
-function DeviceLayer({ devices, localDeviceId, onOpen }: { devices: Device[]; localDeviceId: string | null; onOpen: (id: string) => void }) {
+/** Offsets that keep markers at the same place apart, recomputed on zoom. */
+function useSpread(items: Placed[]) {
   const map = useMap();
-  const ui = useStore(mapUi);
   const [zoom, setZoom] = useState(() => map.getZoom());
-  useMapEvents({ zoomend: () => setZoom(map.getZoom()) });
-  const offsets = useMemo(() => spreadOffsets(devices, (lat, lon) => map.project([lat, lon], zoom)), [devices, zoom, map]);
+  // Subscribed once: re-subscribing on each render missed the zoom of a fit made meanwhile.
+  const handlers = useMemo(() => ({ zoomend: () => setZoom(map.getZoom()) }), [map]);
+  useMapEvents(handlers);
+  // A fit made in the same commit as new markers, before this layer subscribed.
+  useEffect(() => setZoom(map.getZoom()), [items, map]);
+  return useMemo(() => spreadOffsets(items, (lat, lon) => map.project([lat, lon], zoom)), [items, zoom, map]);
+}
+
+function FaceLayer({ faces, onOpen }: { faces: Face[]; onOpen: (face: Face) => void }) {
+  const ui = useStore(mapUi);
+  const placed = useMemo(() => faces.map((f) => ({ id: f.user.id, location: f.location })), [faces]);
+  const offsets = useSpread(placed);
+  return (
+    <>
+      {faces.map((f) => (
+        <FaceMarker
+          key={f.user.id}
+          face={f}
+          selected={ui.selected?.kind === "person" && ui.selected.id === f.user.id}
+          offset={offsets.get(f.user.id) ?? NO_OFFSET}
+          onClick={() => onOpen(f)}
+        />
+      ))}
+    </>
+  );
+}
+
+function FaceMarker({ face, selected, offset, onClick }: { face: Face; selected: boolean; offset: [number, number]; onClick: () => void }) {
+  const { lat, lon } = face.location;
+  const { id, display_name, avatar_url } = face.user;
+  const [dx, dy] = offset;
+  // A new icon replaces the pin's HTML: only on changes, so the photo does not flicker.
+  const icon = useMemo(
+    () => faceIcon(face, selected, [dx, dy]),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [id, display_name, avatar_url, face.isMe, selected, dx, dy],
+  );
+  return <Marker position={[lat, lon]} icon={icon} eventHandlers={{ click: onClick }} zIndexOffset={selected ? 1000 : 0} />;
+}
+
+function DeviceLayer({ devices, localDeviceId, onOpen }: { devices: Device[]; localDeviceId: string | null; onOpen: (id: string) => void }) {
+  const ui = useStore(mapUi);
+  const offsets = useSpread(devices);
   return (
     <>
       {devices.map((d) =>
