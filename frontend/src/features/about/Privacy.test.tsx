@@ -13,7 +13,8 @@ const BASE: AppConfig = {
   revision: "6aace8e",
   registration_open: true,
   providers: ["browser", "owntracks"],
-  features: { owntracks: true, findmy: false, icloud: false, push: true },
+  features: { owntracks: true, findmy: false, icloud: false, push: true, geocode: true },
+  geocoder_host: "nominatim.openstreetmap.org",
   map: {
     tile_url: "https://tiles.openfreemap.org/styles/liberty",
     tile_url_dark: "https://tiles.openfreemap.org/styles/dark",
@@ -42,6 +43,7 @@ describe("privacy page", () => {
     expect(html).toContain("deleted after 30 days");
     expect(html).toContain("loads the map from tiles.openfreemap.org");
     expect(html).toContain("push service");
+    expect(html).toContain("sends the text you typed to nominatim.openstreetmap.org for you: your IP address is not passed on.");
     // Apple and SSO only when this server uses them.
     expect(html).not.toContain("Apple account");
     expect(html).not.toContain("asks Apple");
@@ -52,7 +54,8 @@ describe("privacy page", () => {
     const html = render({
       ...BASE,
       retention_days: 7,
-      features: { ...BASE.features, icloud: true, push: false },
+      features: { ...BASE.features, icloud: true, push: false, geocode: false },
+      geocoder_host: null,
       auth: { password: true, oidc: { name: "Authentik", login_url: "/api/auth/oidc/login" } },
     });
     expect(html).toContain("deleted after 7 days");
@@ -60,12 +63,14 @@ describe("privacy page", () => {
     expect(html).toContain("asks Apple");
     expect(html).toContain("Authentik, if you use it to sign in.");
     expect(html).not.toContain("push service");
+    expect(html).not.toContain("look up an address");
   });
 
   it("in French, readable signed out with a way back to sign in", () => {
     const html = render(BASE, "fr", true);
     expect(html).toContain("Confidentialité");
     expect(html).toContain("effacé au bout de 30 jours");
+    expect(html).toContain("transmet le texte tapé à nominatim.openstreetmap.org à votre place");
     expect(html).toMatch(/<a [^>]*href="\/login"/);
     expect(html).toContain("Oukilé 0.2.0 (6aace8e)");
     // Already on the privacy page: the footer does not link to itself.

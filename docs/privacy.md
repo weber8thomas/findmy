@@ -17,6 +17,11 @@ Oukilé manipule des positions de personnes : des données sensibles. Choix de c
   les personnes avec qui un partage est en cours, dans un sens ou dans l'autre (et par
   celle que vous invitez).
 - **Rétention.** L'historique est purgé après `LOCATION_RETENTION_DAYS` jours (30 par défaut).
+- **Recherche d'adresse.** Pour placer un lieu par son adresse, le serveur interroge
+  OpenStreetMap Nominatim (ou le service de `GEOCODER_URL`) à la place de l'utilisateur : seuls
+  le texte tapé et la langue de l'application en sortent, ni l'adresse IP, ni le compte. Les
+  réponses restent en mémoire 24 h au plus, sans lien avec le compte. La recherche n'a lieu
+  que sur demande, jamais pendant la frappe. `GEOCODER_URL` vide la désactive.
 - **Secrets.** Mots de passe hachés (Argon2) ; jetons de session et d'appareil stockés
   hachés (SHA-256) ; secrets Apple chiffrés (Fernet).
 - **Pas de chiffrement de bout en bout.** L'administrateur du serveur peut lire toutes les
@@ -28,9 +33,9 @@ Oukilé manipule des positions de personnes : des données sensibles. Choix de c
 **Dans l'application.** La page *Confidentialité* (`/privacy`, lisible sans compte, liée
 depuis la page de connexion et le pied de chaque panneau) résume ces points en français
 et en anglais, avec la durée de rétention et les services tiers réellement utilisés par
-le serveur (fond de carte, Apple si iCloud ou le réseau Find My est activé, service push
-du navigateur, fournisseur SSO). Le site demande aussi à ne pas être indexé (`robots.txt`,
-`X-Robots-Tag`, balise `robots`).
+le serveur (fond de carte, recherche d'adresse, Apple si iCloud ou le réseau Find My est
+activé, service push du navigateur, fournisseur SSO). Le site demande aussi à ne pas être
+indexé (`robots.txt`, `X-Robots-Tag`, balise `robots`).
 
 **Interdit :** utiliser Oukilé, OwnTracks ou des balises DIY pour suivre quelqu'un à son
 insu. C'est illégal dans la plupart des pays (en France : atteinte à la vie privée, art.

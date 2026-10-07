@@ -16,6 +16,7 @@ export function PrivacyContent() {
   const hosts = mapHosts(config?.map);
   const days = config?.retention_days;
   const sso = config?.auth?.oidc?.name;
+  const geocoder = config?.features.geocode ? config.geocoder_host : null;
   return (
     <div className="privacy" data-testid="privacy">
       <p className="privacy-intro">{t("privacy.intro")}</p>
@@ -42,6 +43,7 @@ export function PrivacyContent() {
       <Section title={t("privacy.others")}>
         <ul className="privacy-list">
           {hosts.length > 0 && <li>{t("privacy.others.map", { hosts: hosts.join(", ") })}</li>}
+          {geocoder && <li data-testid="privacy-geocode">{t("privacy.others.geocode", { host: geocoder })}</li>}
           {apple && <li>{t("privacy.others.apple")}</li>}
           {config?.features.push && <li>{t("privacy.others.push")}</li>}
           {sso && <li>{t("privacy.others.sso", { name: sso })}</li>}

@@ -117,6 +117,9 @@ export type Zone = {
   created_at: string;
 };
 
+/** An address search result (GET /geocode). */
+export type Place = { label: string; lat: number; lon: number };
+
 export type ZoneEvent = {
   id: string;
   zone_id: string;
@@ -146,7 +149,10 @@ export type AppConfig = {
   /** Language of the sign-in page (DEFAULT_LOCALE); null: the browser's. */
   default_locale?: "en" | "fr" | null;
   providers: string[];
-  features: { owntracks: boolean; findmy: boolean; icloud: boolean; push: boolean };
+  /** `geocode`: address search for places (GEOCODER_URL). Older servers omit it. */
+  features: { owntracks: boolean; findmy: boolean; icloud: boolean; push: boolean; geocode?: boolean };
+  /** For the privacy page: where typed addresses are sent; null when address search is off. */
+  geocoder_host?: string | null;
   map: { tile_url: string; tile_url_dark: string; attribution: string };
   vapid_public_key: string | null;
   /** Days the position history is kept (LOCATION_RETENTION_DAYS). */

@@ -2,14 +2,16 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { api, ApiError } from "../../api/client";
-import { keys, useDevices, useMe, usePeople, useZoneEvents, useZones } from "../../api/queries";
-import type { Zone } from "../../api/types";
+import { keys, useConfig, useDevices, useMe, usePeople, useZoneEvents, useZones } from "../../api/queries";
+import type { Place, Zone } from "../../api/types";
 import { useI18n } from "../../i18n";
 import { useStore } from "../../lib/store";
 import { focusOn, patchMapUi, toast } from "../../lib/ui-state";
 import { reporterStatus } from "../../reporter/useReporter";
 import { Empty, Field, PanelHeader, Section, Toggle } from "../../ui/components";
 import { Icon } from "../../ui/icons";
+import { splitLabel, zoomForRadius } from "./address";
+import { AddressSearch } from "./AddressSearch";
 
 export function ZonesList() {
   const { t, relTime, distance } = useI18n();
@@ -67,11 +69,14 @@ export function ZoneEditor() {
   const { data: zones } = useZones();
   const { data: devices } = useDevices();
   const { data: people } = usePeople();
+  const { data: config } = useConfig();
   const status = useStore(reporterStatus);
   const existing = zones?.find((z) => z.id === id);
 
   const [name, setName] = useState("");
   const [center, setCenter] = useState<{ lat: number; lon: number } | null>(null);
+  // The address the center was found at, until it is placed some other way.
+  const [address, setAddress] = useState<string | null>(null);
   const [radius, setRadius] = useState(200);
   const [enter, setEnter] = useState(true);
   const [exit, setExit] = useState(true);
@@ -91,7 +96,12 @@ export function ZoneEditor() {
 
   // Map clicks place the center while the editor is open.
   useEffect(() => {
-    patchMapUi({ pick: (lat, lon) => setCenter({ lat, lon }) });
+    patchMapUi({
+      pick: (lat, lon) => {
+        setCenter({ lat, lon });
+        setAddress(null);
+      },
+    });
     return () => patchMapUi({ pick: null, draftZone: null });
   }, []);
   useEffect(() => {
@@ -119,6 +129,19 @@ export function ZoneEditor() {
     },
   });
 
+  // Placed from elsewhere than the map: the map moves to show the zone circle there.
+  const place = (lat: number, lon: number, label: string | null = null) => {
+    setCenter({ lat, lon });
+    setAddress(label);
+    focusOn(lat, lon, zoomForRadius(radius, lat));
+  };
+  const pickAddress = (found: Place) => {
+    place(found.lat, found.lon, found.label);
+    if (!name.trim()) setName(splitLabel(found.label).title.slice(0, 80));
+  };
+
+  const placed = address ? splitLabel(address) : null;
+
   const myPosition =
     status.lastFix ?? devices?.find((d) => d.id === me?.primary_device_id)?.location ?? null;
   const watched = (devices?.length ?? 0) + (people?.filter((p) => p.location).length ?? 0);
@@ -135,11 +158,24 @@ export function ZoneEditor() {
         <Field label={t("zones.name")}>
           <input value={name} onChange={(e) => setName(e.target.value)} required maxLength={80} name="zone-name" />
         </Field>
+        {config?.features.geocode && <AddressSearch onPick={pickAddress} />}
         <p className={`banner${center ? "" : " banner-info"}`} data-testid="zone-center">
-          {center ? `${center.lat.toFixed(5)}, ${center.lon.toFixed(5)}` : t("zones.pickOnMap")}
+          {center && placed ? (
+            <>
+              <span className="zone-place" data-testid="zone-place">
+                <strong>{placed.title}</strong>
+                {placed.detail && `, ${placed.detail}`}
+              </span>
+              <span className="zone-coords">{`${center.lat.toFixed(5)}, ${center.lon.toFixed(5)}`}</span>
+            </>
+          ) : center ? (
+            `${center.lat.toFixed(5)}, ${center.lon.toFixed(5)}`
+          ) : (
+            t("zones.pickOnMap")
+          )}
         </p>
         {myPosition && (
-          <button type="button" className="btn btn-block" onClick={() => setCenter({ lat: myPosition.lat, lon: myPosition.lon })} data-testid="zone-use-position">
+          <button type="button" className="btn btn-block" onClick={() => place(myPosition.lat, myPosition.lon)} data-testid="zone-use-position">
             {t("zones.useMyPosition")}
           </button>
         )}
