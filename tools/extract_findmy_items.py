@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import platform
 import plistlib
 import re
 import subprocess
@@ -33,7 +34,12 @@ from pathlib import Path
 
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
-SOURCE = Path.home() / "Library" / "com.apple.icloud.searchpartyd"
+# macOS 15+ keeps the records in searchpartyd's group container; macOS 14 and older here.
+SOURCES = [
+    Path.home()
+    / "Library/Group Containers/group.com.apple.icloud.searchpartyuseragent/Library/Storage",
+    Path.home() / "Library" / "com.apple.icloud.searchpartyd",
+]
 
 
 def beaconstore_key() -> bytes:
@@ -45,6 +51,12 @@ def beaconstore_key() -> bytes:
     out = subprocess.run(cmd, capture_output=True, text=True).stdout
     m = re.search(r'"gena"<blob>=0x([0-9A-Fa-f]+)', out)
     if not m:
+        if int(platform.mac_ver()[0].split(".")[0] or 0) >= 26:
+            sys.exit(
+                "macOS 26 keeps the BeaconStore key for Apple's own processes: it cannot be read "
+                "here (see docs/findmy-network.md). A Mac on macOS 14 or 15 with the same Apple "
+                "account can run this script."
+            )
         sys.exit("No BeaconStore key in the keychain (access refused, or Find My never ran here).")
     return bytes.fromhex(m.group(1))
 
@@ -104,10 +116,12 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--out", type=Path, default=Path.home() / "oukile-items")
     parser.add_argument("--list", action="store_true", help="list the items, write nothing")
-    parser.add_argument("--source", type=Path, default=SOURCE, help=argparse.SUPPRESS)
+    parser.add_argument("--source", type=Path, help=argparse.SUPPRESS)
     parser.add_argument("--key", help=argparse.SUPPRESS)  # hex, for tests
     args = parser.parse_args()
 
+    if args.source is None:
+        args.source = next((p for p in SOURCES if p.exists()), SOURCES[0])
     records = owned_beacons(args.source)
     key = bytes.fromhex(args.key) if args.key else beaconstore_key()
 

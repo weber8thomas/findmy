@@ -38,6 +38,11 @@ uv run tools/extract_findmy_items.py           # écrit ~/oukile-items/<objet>.p
   (pas « Toujours autoriser »).
 - « Operation not permitted » : donnez l'**accès complet au disque** au Terminal (Réglages
   Système › Confidentialité et sécurité), puis retirez-le après.
+- **macOS 26 (Tahoe)** réserve la clé « BeaconStore » aux processus d'Apple : le script ne
+  peut plus la lire. Il reste à le lancer sur un Mac en macOS 14 ou 15 connecté au même
+  compte Apple. Les autres méthodes connues demandent soit de désactiver SIP et AMFI, soit
+  de donner le mot de passe Apple et le code d'un appareil à un outil tiers qui rejoint le
+  trousseau iCloud comme nouvel appareil de confiance : déconseillé pour un compte principal.
 - Dans Oukilé : **Objets › Balises du réseau Localiser › Importer un AirTag (.plist)**, avec
   `<objet>.plist` et, s'il existe, `<objet> - alignment.plist`.
 - Ces fichiers contiennent la **clé privée** de chaque objet : quiconque les possède peut le
