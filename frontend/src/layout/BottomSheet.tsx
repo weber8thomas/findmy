@@ -63,24 +63,23 @@ export function BottomSheet({ children }: { children: ReactNode }) {
     };
   }, [height]);
 
+  // Times are the events' own (`timeStamp`): when the finger moved, even if a busy page handles it late.
   const [gesture] = useState(() => ({
-    begin(kind: Drag["kind"], id: number, y: number) {
+    begin(kind: Drag["kind"], id: number, y: number, t: number) {
       const h = live.current.height;
-      drag.current = { kind, id, y, h, last: h, moved: false, samples: [{ y, t: performance.now() }] };
+      drag.current = { kind, id, y, h, last: h, moved: false, samples: [{ y, t }] };
     },
-    move(y: number) {
+    move(y: number, now: number) {
       const d = drag.current!;
-      const now = performance.now();
       d.samples = [...d.samples.filter((s) => now - s.t < 80), { y, t: now }];
       d.last = clampHeight(d.h + d.y - y, live.current.room);
       setDragH(d.last);
     },
-    end() {
+    end(now: number) {
       const d = drag.current;
       drag.current = null;
       if (!d?.moved) return;
       // The speed over the last moments before letting go: a finger held still has none.
-      const now = performance.now();
       const recent = d.samples.filter((s) => now - s.t < 80);
       const v = recent.length < 2 ? 0 : (recent[0].y - recent[recent.length - 1].y) / Math.max(now - recent[0].t, 16);
       setRest(settle(d.last, v, live.current.room));
@@ -97,7 +96,7 @@ export function BottomSheet({ children }: { children: ReactNode }) {
       const target = e.target as HTMLElement;
       if (e.touches.length !== 1 || target.closest(`${GRIP}, ${OWN_GESTURES}`)) return;
       x0 = e.touches[0].clientX;
-      gesture.begin("touch", e.touches[0].identifier, e.touches[0].clientY);
+      gesture.begin("touch", e.touches[0].identifier, e.touches[0].clientY, e.timeStamp);
     };
     const move = (e: TouchEvent) => {
       const d = drag.current;
@@ -116,10 +115,10 @@ export function BottomSheet({ children }: { children: ReactNode }) {
         d.moved = true;
       }
       e.preventDefault();
-      gesture.move(p.clientY);
+      gesture.move(p.clientY, e.timeStamp);
     };
-    const end = () => {
-      if (drag.current?.kind === "touch") gesture.end();
+    const end = (e: TouchEvent) => {
+      if (drag.current?.kind === "touch") gesture.end(e.timeStamp);
     };
     el.addEventListener("touchstart", start, { passive: true });
     el.addEventListener("touchmove", move, { passive: false });
@@ -143,26 +142,36 @@ export function BottomSheet({ children }: { children: ReactNode }) {
         style={{ height }}
         data-testid="bottom-sheet"
         data-snap={snap}
-        // The handle and the title bar: a pointer, mouse or finger (they don't scroll).
+        // The handle and the title bar: a pointer, mouse or finger (they don't scroll). Followed on
+        // the whole window: a quick mouse is off the handle before the sheet moves.
         onPointerDown={(e) => {
           justDragged.current = false;
           const target = e.target as HTMLElement;
           if (!e.isPrimary || !target.closest(GRIP) || target.closest(OWN_GESTURES)) return;
-          gesture.begin("pointer", e.pointerId, e.clientY);
+          const id = e.pointerId;
+          gesture.begin("pointer", id, e.clientY, e.timeStamp);
+          const move = (ev: PointerEvent) => {
+            const d = drag.current;
+            if (d?.kind !== "pointer" || d.id !== ev.pointerId) return;
+            if (!d.moved) {
+              if (Math.abs(ev.clientY - d.y) < 4) return;
+              d.moved = justDragged.current = true;
+              // Captured only now: a tap still clicks the button it's on.
+              self.current?.setPointerCapture(ev.pointerId);
+            }
+            gesture.move(ev.clientY, ev.timeStamp);
+          };
+          const end = (ev: PointerEvent) => {
+            if (ev.pointerId !== id) return;
+            window.removeEventListener("pointermove", move);
+            window.removeEventListener("pointerup", end);
+            window.removeEventListener("pointercancel", end);
+            if (drag.current?.kind === "pointer" && drag.current.id === id) gesture.end(ev.timeStamp);
+          };
+          window.addEventListener("pointermove", move);
+          window.addEventListener("pointerup", end);
+          window.addEventListener("pointercancel", end);
         }}
-        onPointerMove={(e) => {
-          const d = drag.current;
-          if (d?.kind !== "pointer" || d.id !== e.pointerId) return;
-          if (!d.moved) {
-            if (Math.abs(e.clientY - d.y) < 4) return;
-            d.moved = justDragged.current = true;
-            // Captured only now: a tap still clicks the button it's on.
-            self.current?.setPointerCapture(e.pointerId);
-          }
-          gesture.move(e.clientY);
-        }}
-        onPointerUp={(e) => drag.current?.kind === "pointer" && drag.current.id === e.pointerId && gesture.end()}
-        onPointerCancel={(e) => drag.current?.kind === "pointer" && drag.current.id === e.pointerId && gesture.end()}
         onClickCapture={(e) => {
           if (!justDragged.current) return;
           justDragged.current = false;

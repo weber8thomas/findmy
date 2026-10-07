@@ -101,7 +101,7 @@ test("the sheet stays where it's let go, from its title to over the whole map", 
   });
   expect(report.status()).toBe(202);
   await page.getByTestId("tab-devices").click();
-  await drag((await top()) + 10, 20);
+  await drag((await settled()) + 10, 20);
   await expect(sheet).toHaveAttribute("data-snap", "full");
   await page.getByTestId(`device-item-${device.id}`).click();
   await expect(page).toHaveURL(new RegExp(`/devices/${device.id}$`));
