@@ -100,14 +100,18 @@ function spreadOffsets(items: Placed[], project: (lat: number, lon: number) => L
   return out;
 }
 
-/** Space covered by the side panel (desktop) or the bottom sheet + tab bar (mobile). */
+/** Space covered by the side panel (desktop) or the bottom sheet + tab bar (mobile). A sheet
+ * pulled up over the whole map still leaves a band to frame in, or the framing has no room. */
 function coveredArea(map: L.Map): { left: number; bottom: number } {
   const root = map.getContainer().closest(".shell");
   const panel = root?.querySelector<HTMLElement>(".panel");
   if (panel) return { left: panel.offsetLeft + panel.offsetWidth, bottom: 0 };
   const sheet = root?.querySelector<HTMLElement>(".sheet");
   const tabbar = root?.querySelector<HTMLElement>(".tabbar");
-  return { left: 0, bottom: (sheet?.offsetHeight ?? 0) + (tabbar?.offsetHeight ?? 0) };
+  // The height the sheet is going to, not where its transition is.
+  const sheetH = sheet ? parseFloat(sheet.style.height) || sheet.offsetHeight : 0;
+  const bottom = sheetH + (tabbar?.offsetHeight ?? 0);
+  return { left: 0, bottom: Math.max(0, Math.min(bottom, map.getSize().y - 200)) };
 }
 
 function fitOptions(map: L.Map, maxZoom: number): L.FitBoundsOptions {

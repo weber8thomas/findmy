@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, Outlet, useLocation } from "react-router";
 import { useRealtime } from "../api/realtime";
 import { useConfig, useDevices, useNotifications, useViewers } from "../api/queries";
@@ -12,6 +12,7 @@ import { MapButtons, TabMap } from "../map/TabMap";
 import { localDeviceFor, localDeviceStore } from "../reporter/storage";
 import { reporterStatus } from "../reporter/useReporter";
 import { Icon, type IconName } from "../ui/icons";
+import { BottomSheet } from "./BottomSheet";
 import { activeTab } from "./tabs";
 
 function useMediaQuery(query: string) {
@@ -27,69 +28,6 @@ function useMediaQuery(query: string) {
 
 // Tablets get the side panel in both orientations, like Find My on iPad (an 11" iPad is 834px wide).
 const useIsMobile = () => useMediaQuery("(max-width: 767px)");
-
-const SNAPS = [0.18, 0.5, 0.88];
-
-function BottomSheet({ children }: { children: ReactNode }) {
-  const { t } = useI18n();
-  const [snap, setSnap] = useState(1);
-  const [dragH, setDragH] = useState<number | null>(null);
-  const start = useRef<{ y: number; h: number } | null>(null);
-  const self = useRef<HTMLElement>(null);
-  const location = useLocation();
-
-  // Opening a detail view raises the sheet so actions are visible.
-  useEffect(() => {
-    setSnap((s) => (s === 0 ? 1 : s));
-  }, [location.pathname]);
-
-  const vh = window.innerHeight;
-  const height = dragH ?? SNAPS[snap] * vh;
-
-  // The map's corner controls (its credits) sit just above the sheet, wherever it is.
-  useEffect(() => {
-    const shell = self.current?.parentElement;
-    shell?.style.setProperty("--sheet-h", `${height}px`);
-    return () => {
-      shell?.style.removeProperty("--sheet-h");
-    };
-  }, [height]);
-
-  return (
-    <section ref={self} className="sheet" style={{ height }} data-testid="bottom-sheet" data-snap={snap}>
-      <div
-        className="sheet-handle"
-        role="slider"
-        aria-label={t("a11y.resizePanel")}
-        aria-valuenow={snap}
-        onPointerDown={(e) => {
-          (e.target as HTMLElement).setPointerCapture(e.pointerId);
-          start.current = { y: e.clientY, h: height };
-        }}
-        onPointerMove={(e) => {
-          if (!start.current) return;
-          const h = Math.min(vh * 0.95, Math.max(80, start.current.h + start.current.y - e.clientY));
-          setDragH(h);
-        }}
-        onPointerUp={() => {
-          if (!start.current) return;
-          const h = dragH ?? start.current.h;
-          let best = 0;
-          SNAPS.forEach((s, i) => {
-            if (Math.abs(s * vh - h) < Math.abs(SNAPS[best] * vh - h)) best = i;
-          });
-          start.current = null;
-          setDragH(null);
-          setSnap(best);
-        }}
-        onClick={() => !dragH && setSnap((s) => (s + 1) % SNAPS.length)}
-      >
-        <span />
-      </div>
-      <div className="sheet-body">{children}</div>
-    </section>
-  );
-}
 
 function TabBar() {
   const { t } = useI18n();

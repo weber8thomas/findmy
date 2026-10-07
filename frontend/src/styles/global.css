@@ -217,8 +217,40 @@ textarea {
   border-radius: var(--radius-xl) var(--radius-xl) 0 0;
   box-shadow: 0 -6px 28px rgb(0 0 0 / 0.16);
   z-index: 500;
-  transition: height 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
-  max-height: calc(100% - var(--tabbar-h) - 20px);
+  transition: height 0.32s cubic-bezier(0.2, 0.9, 0.25, 1);
+  /* The same room as .sheet-room: up to the top of the screen, the map hidden. */
+  max-height: calc(100% - var(--tabbar-h) - env(safe-area-inset-bottom) - env(safe-area-inset-top));
+}
+/* Under the finger, the sheet follows it at once. */
+.sheet.is-dragging {
+  transition: none;
+  user-select: none;
+}
+.is-mobile:has(.sheet.is-dragging) .leaflet-bottom {
+  transition: none;
+}
+/* Up to the top: square corners, and the strip under the status bar painted too. */
+.sheet.is-top {
+  border-radius: 0;
+}
+.sheet.is-top::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  height: env(safe-area-inset-top);
+  background: var(--panel-bg);
+}
+/* Measures the room the sheet has, for its stops. */
+.sheet-room {
+  position: absolute;
+  top: env(safe-area-inset-top);
+  bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
+  left: 0;
+  width: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
 .sheet-handle {
   position: relative;
@@ -229,11 +261,21 @@ textarea {
   touch-action: none;
   cursor: grab;
 }
+.sheet-handle:focus-visible span {
+  background: var(--tint);
+}
 /* A 40 px grab area: the band just above the sheet takes the finger too. */
 .sheet-handle::before {
   content: "";
   position: absolute;
   inset: -18px 0 0;
+}
+/* The title bar moves the sheet too, like the handle, without selecting its text. */
+.sheet .panel-header,
+.sheet-handle {
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 .sheet-handle span {
   width: 36px;

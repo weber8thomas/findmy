@@ -25,6 +25,89 @@ test("mobile layout: bottom sheet and tab bar", async ({ page, context }) => {
   await expect(sheet).not.toHaveAttribute("data-snap", before!);
 });
 
+test("the sheet stays where it's let go, from its title to over the whole map", async ({ page, context }) => {
+  await context.route(/tile\.openstreetmap\.org/, (r) => r.fulfill({ status: 200, contentType: "image/png", body: PNG }));
+  const acc = newAccount("Sheet");
+  const res = await context.request.post("/api/auth/register", {
+    data: { email: acc.email, password: acc.password, display_name: acc.name },
+  });
+  expect(res.ok()).toBeTruthy();
+  await page.goto("/people");
+  const sheet = page.getByTestId("bottom-sheet");
+  await expect(page.getByTestId("people-panel")).toBeVisible();
+  await expect(sheet).toHaveAttribute("data-snap", "half");
+  const top = async () => (await sheet.boundingBox())!.y;
+  const tabbar = (await page.locator(".tabbar").boundingBox())!;
+  const x = (await sheet.boundingBox())!.width / 2;
+  // A finger moved, then held still before letting go (`hold`), or flicked (no hold).
+  const drag = async (from: number, to: number, hold = true) => {
+    await page.mouse.move(x, from);
+    await page.mouse.down();
+    await page.mouse.move(x, to, { steps: hold ? 12 : 2 });
+    if (hold) await page.waitForTimeout(200);
+    await page.mouse.up();
+  };
+  const settled = async () => {
+    await expect(sheet).not.toHaveClass(/is-dragging/);
+    await page.waitForTimeout(400);
+    return top();
+  };
+
+  // By the handle, anywhere: it stays there.
+  let before = await top();
+  await drag(before + 10, 300);
+  await expect(sheet).toHaveAttribute("data-snap", "free");
+  expect(Math.abs((await settled()) - (300 - 10))).toBeLessThan(3);
+
+  // By the title bar, up to the top: the map is hidden.
+  const header = (await sheet.locator(".panel-header").boundingBox())!;
+  await drag(header.y + 20, 30);
+  await expect(sheet).toHaveAttribute("data-snap", "full");
+  await expect(sheet).toHaveClass(/is-top/);
+  expect(await settled()).toBeLessThan(1);
+
+  // A flick down goes to the next stop, half way.
+  await drag(10, 200, false);
+  await expect(sheet).toHaveAttribute("data-snap", "half");
+
+  // The page itself pulled down from its top (a finger, not a mouse) lowers the sheet.
+  before = await settled();
+  const cdp = await context.newCDPSession(page);
+  const finger = (type: string, y?: number) =>
+    cdp.send("Input.dispatchTouchEvent", { type, touchPoints: y == null ? [] : [{ x, y }] });
+  const y0 = before + 140;
+  await finger("touchStart", y0);
+  for (let i = 1; i <= 10; i++) await finger("touchMove", y0 + i * 15);
+  await page.waitForTimeout(200);
+  await finger("touchEnd");
+  await expect(sheet).toHaveAttribute("data-snap", "free");
+  expect(Math.abs((await settled()) - (before + 150))).toBeLessThan(3);
+
+  // Down near the tab bar it lands on its title, still showing; a tap on the handle raises it.
+  await drag(before + 160, tabbar.y - 60);
+  await expect(sheet).toHaveAttribute("data-snap", "peek");
+  const peek = (await sheet.boundingBox())!;
+  expect(Math.round(peek.height)).toBe(80);
+  await expect(sheet.locator(".panel-header h2")).toBeInViewport({ ratio: 1 });
+  await sheet.locator(".sheet-handle").click();
+  await expect(sheet).toHaveAttribute("data-snap", "half");
+
+  // Over the whole map, opening something to see on it brings the sheet down half way.
+  const created = await context.request.post("/api/devices", { data: { name: "Bike", kind: "browser", icon: "laptop" } });
+  const { device, device_token } = await created.json();
+  const report = await context.request.post("/api/report/locations", {
+    data: { fixes: [{ ts: new Date().toISOString(), lat: 48.85, lon: 2.35, accuracy: 15 }] },
+    headers: { Authorization: `Bearer ${device_token}` },
+  });
+  expect(report.status()).toBe(202);
+  await page.getByTestId("tab-devices").click();
+  await drag((await top()) + 10, 20);
+  await expect(sheet).toHaveAttribute("data-snap", "full");
+  await page.getByTestId(`device-item-${device.id}`).click();
+  await expect(page).toHaveURL(new RegExp(`/devices/${device.id}$`));
+  await expect(sheet).toHaveAttribute("data-snap", "half");
+});
+
 test("mobile history: tap the trace to see when the device was there", async ({ page, context }) => {
   await context.route(/tile\.openstreetmap\.org/, (r) => r.fulfill({ status: 200, contentType: "image/png", body: PNG }));
   const acc = newAccount("MobileHist");
