@@ -7,6 +7,21 @@ l'application l'affiche dans *Moi › Réglages › À propos*, avec la révisio
 
 ## [Non publié]
 
+## [0.5.0] - 2026-10-07
+
+### Modifié
+
+- **Le volet sous la carte reste où on le lâche** (téléphone) : on le tire par sa poignée
+  ou par sa barre de titre, et il s'arrête exactement là, du simple titre (la carte
+  presque entière) jusqu'en haut de l'écran (la carte cachée). Près du titre, de la moitié
+  ou du haut, il s'y cale ; d'un geste vif, il file au cran suivant. Tirer la page vers le
+  bas quand elle est en haut le baisse aussi. Il suit le doigt sans retard. Toucher la
+  poignée passe d'un cran à l'autre. Monté en haut, il redescend à mi-hauteur quand on
+  ouvre une personne, un appareil ou une adresse, pour la voir sur la carte.
+- **Nom et photo se modifient à part** : *Moi* montre le profil, et *Modifier* ouvre une
+  page où le nom n'est enregistré qu'avec *Enregistrer* et où retirer la photo demande
+  confirmation. Avant, un toucher de trop suffisait à les changer.
+
 ## [0.4.1] - 2026-10-07
 
 ### Corrigé
@@ -176,7 +191,8 @@ Première version, sous le nom de Locus.
 - Fournisseurs Apple facultatifs, désactivés par défaut : iCloud et réseau Find My.
 - Docker Compose (Caddy, tunnel Cloudflare, serveur anisette) et tests Playwright.
 
-[Non publié]: https://github.com/weber8thomas/findmy/compare/v0.4.1...HEAD
+[Non publié]: https://github.com/weber8thomas/findmy/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/weber8thomas/findmy/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/weber8thomas/findmy/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/weber8thomas/findmy/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/weber8thomas/findmy/compare/v0.2.0...v0.3.0
