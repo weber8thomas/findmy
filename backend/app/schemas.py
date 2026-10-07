@@ -310,6 +310,14 @@ class ZoneOut(ORM):
     created_at: datetime
 
 
+class PlaceOut(BaseModel):
+    """An address search result."""
+
+    label: str
+    lat: float
+    lon: float
+
+
 class ZoneEventOut(BaseModel):
     id: str
     zone_id: str

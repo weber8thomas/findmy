@@ -606,13 +606,24 @@ textarea {
 .row:not(:has(.row-avatar)) + .row:not(:has(.row-avatar))::before {
   left: 16px;
 }
-a.row:hover {
+/* A row that does something here rather than open a page (an address search result). */
+button.row {
+  width: 100%;
+  border: 0;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+a.row:hover,
+button.row:hover {
   background: var(--fill);
 }
-a.row:active {
+a.row:active,
+button.row:active {
   background: var(--fill-strong);
 }
-a.row:focus-visible {
+a.row:focus-visible,
+button.row:focus-visible {
   outline-offset: -2px;
   border-radius: var(--radius-lg);
 }
@@ -1129,6 +1140,50 @@ a.row:focus-visible {
   margin: 12px 0 6px;
 }
 
+/* ---------- places ---------- */
+.address-search .field {
+  margin-bottom: 8px;
+}
+.address-search input[type="search"] {
+  flex: 1;
+  min-width: 0;
+  appearance: none;
+}
+/* Scrolled into view below the sticky panel header. */
+.address-search {
+  scroll-margin: 64px 0 12px;
+}
+.address-results .banner {
+  margin: 0 0 8px;
+}
+/* Addresses are long: two lines, so the town shows. */
+.address-results .row-sub {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  white-space: normal;
+}
+.zone-place {
+  display: block;
+  overflow-wrap: anywhere;
+}
+.zone-coords {
+  display: block;
+  color: var(--muted);
+  font-size: 13px;
+}
+.address-credit {
+  margin: 0 0 4px;
+  text-align: right;
+}
+.address-credit a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  color: inherit;
+  text-underline-offset: 2px;
+}
+
 /* ---------- settings & privacy ---------- */
 .about-app {
   display: flex;
@@ -1516,7 +1571,8 @@ a.row:focus-visible {
 /* Phones and tablets: small controls grow to 40 px, easier to hit with a finger. */
 @media (pointer: coarse) {
   .btn-small,
-  .segmented button {
+  .segmented button,
+  .address-credit a {
     min-height: 40px;
   }
 }

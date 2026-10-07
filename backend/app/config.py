@@ -17,6 +17,7 @@ DEFAULT_TILE_ATTRIBUTION = (
     '<a href="https://openfreemap.org" target="_blank">OpenFreeMap</a> '
     "&copy; OpenMapTiles &copy; OpenStreetMap contributors"
 )
+DEFAULT_GEOCODER_URL = "https://nominatim.openstreetmap.org"
 
 
 class Settings(BaseSettings):
@@ -57,6 +58,9 @@ class Settings(BaseSettings):
     # Dark-mode map. Unset: OpenFreeMap dark with the default map, else the same as tile_url.
     tile_url_dark: str | None = None
     tile_attribution: str = DEFAULT_TILE_ATTRIBUTION
+    # Address search for placing zones (OpenStreetMap Nominatim, or one of your own).
+    # Empty: no address search.
+    geocoder_url: str = DEFAULT_GEOCODER_URL
 
     feature_owntracks: bool = True
     feature_findmy: bool = False
@@ -85,6 +89,14 @@ class Settings(BaseSettings):
         if self.tile_url_dark:
             return self.tile_url_dark
         return DEFAULT_TILE_URL_DARK if self.tile_url == DEFAULT_TILE_URL else self.tile_url
+
+    @property
+    def geocoder_host(self) -> str | None:
+        """Host of the address search service; None when it is turned off."""
+        url = self.geocoder_url.strip()
+        if not url:
+            return None
+        return urlparse(url).netloc or url
 
     @property
     def oidc_enabled(self) -> bool:

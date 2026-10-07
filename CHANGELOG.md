@@ -9,6 +9,16 @@ l'application l'affiche dans *Moi › Réglages › À propos*, avec la révisio
 
 ### Ajouté
 
+- **Lieux par adresse** : l'éditeur de lieu a un champ *Adresse* (« Stephansplatz 1,
+  Wien ») qui propose jusqu'à cinq résultats. En choisir un place le lieu, lui donne
+  ce nom s'il n'en a pas encore et recentre la carte sur son cercle ; *Utiliser la position
+  de cet appareil* recentre aussi la carte. Le serveur interroge OpenStreetMap Nominatim à la
+  place de l'utilisateur (`GET /api/geocode`) : seul le texte tapé sort, pas l'adresse IP. Il
+  suit la politique d'usage de Nominatim : User-Agent qui nomme Oukilé, une requête par
+  seconde au plus pour tout le serveur, réponses en cache, recherche à la validation
+  seulement, et limite chaque compte. `GEOCODER_URL` désigne un autre serveur Nominatim ;
+  vide, il désactive la recherche (`features.geocode` dans `GET /api/config`). La page
+  *Confidentialité* le mentionne.
 - **Ma position, de plusieurs appareils** : dans *Moi › Ma position*, on choisit jusqu'à
   cinq de ses appareils ou objets, par ordre de priorité (un téléphone, puis un objet…).
   La première source à jour (moins de 30 min) donne la position, sinon la plus récente.

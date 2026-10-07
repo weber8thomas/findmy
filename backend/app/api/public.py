@@ -32,7 +32,10 @@ async def config(ctx: Ctx):
             "findmy": s.feature_findmy,
             "icloud": s.feature_icloud,
             "push": ctx.push is not None,
+            "geocode": s.geocoder_host is not None,
         },
+        # For the privacy page: where typed addresses are sent (None: address search is off).
+        "geocoder_host": s.geocoder_host,
         # For the privacy page: how long the position history is kept.
         "retention_days": s.location_retention_days,
         "map": {
