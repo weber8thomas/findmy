@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Navigate, Route, Routes } from "react-router";
-import { useMe } from "./api/queries";
+import { useConfig, useMe } from "./api/queries";
 import { RealtimeProvider } from "./api/realtime";
 import { AuthPage } from "./features/auth/AuthPage";
 import { DeviceDetail } from "./features/devices/DeviceDetail";
@@ -10,12 +10,13 @@ import { ItemsPanel } from "./features/items/ItemsPanel";
 import { MePanel } from "./features/me/MePanel";
 import { PeopleList, PersonDetail } from "./features/people/People";
 import { ZoneEditor, ZonesList } from "./features/zones/Zones";
-import { useI18n } from "./i18n";
+import { savedLocale, useI18n } from "./i18n";
 import { Shell } from "./layout/Shell";
 import { useReporterLifecycle } from "./reporter/useReporter";
 
 export function App() {
   const { data: me, isLoading } = useMe();
+  const { data: config, isLoading: configLoading } = useConfig();
   const { locale, setLocale, t } = useI18n();
   useReporterLifecycle(me?.id);
 
@@ -25,7 +26,14 @@ export function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [me?.locale]);
 
-  if (isLoading)
+  // Signed out: the server's language (DEFAULT_LOCALE), unless this device already has one.
+  const serverLocale = config?.default_locale;
+  useEffect(() => {
+    if (!me && serverLocale && !savedLocale() && serverLocale !== locale) setLocale(serverLocale, false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [me, serverLocale]);
+
+  if (isLoading || (!me && configLoading))
     return (
       <div className="splash" role="status">
         <img src="/icons/icon.svg" alt="" width={64} height={64} />

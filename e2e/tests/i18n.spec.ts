@@ -1,12 +1,11 @@
 import { expect, newAccount, openContext, signIn, test } from "../fixtures";
 
-test("language switch on login page and persisted on the account", async ({ browser }) => {
+test("sign-in page in the browser's language, then the account's, set in Me", async ({ browser }) => {
   const ctx = await openContext(browser, { locale: "en-US" });
   const page = await ctx.newPage();
   await page.goto("/login");
   await expect(page.getByTestId("auth-submit")).toHaveText("Sign in");
-  await page.getByTestId("lang-fr").click();
-  await expect(page.getByTestId("auth-submit")).toHaveText("Se connecter");
+  await expect(page.getByTestId("lang-fr")).toHaveCount(0);
 
   const acc = newAccount("Lea");
   await signIn(ctx, acc, "register", "fr");

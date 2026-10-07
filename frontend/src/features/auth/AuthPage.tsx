@@ -5,7 +5,7 @@ import { api, ApiError } from "../../api/client";
 import { keys, useConfig } from "../../api/queries";
 import type { AppConfig, User } from "../../api/types";
 import type { MessageKey } from "../../i18n/en";
-import { useI18n, type Locale } from "../../i18n";
+import { useI18n } from "../../i18n";
 import { DeviceGlyph, Icon, iconSvg, type IconName } from "../../ui/icons";
 import { LandingMap } from "./LandingMap";
 import "./landing.css";
@@ -30,7 +30,7 @@ export function ssoErrorKey(code: string | null): MessageKey | null {
 }
 
 export function AuthPage({ mode }: { mode: "login" | "register" }) {
-  const { t, locale, setLocale } = useI18n();
+  const { t } = useI18n();
   const { data: config } = useConfig();
   const [params] = useSearchParams();
   const methods = authMethods(config);
@@ -92,7 +92,6 @@ export function AuthPage({ mode }: { mode: "login" | "register" }) {
               <span>{t("landing.private.body")}</span>
             </p>
           </div>
-          <LanguageSwitch value={locale} onChange={setLocale} />
         </footer>
       </section>
     </main>
@@ -241,27 +240,5 @@ function FeatureList() {
         </li>
       ))}
     </ul>
-  );
-}
-
-export function LanguageSwitch({ value, onChange }: { value: Locale; onChange: (l: Locale) => void }) {
-  const { t } = useI18n();
-  return (
-    <div className="segmented" role="radiogroup" aria-label={t("me.language")}>
-      {(["fr", "en"] as const).map((l) => (
-        <button
-          key={l}
-          type="button"
-          role="radio"
-          lang={l}
-          aria-checked={value === l}
-          className={value === l ? "active" : ""}
-          onClick={() => onChange(l)}
-          data-testid={`lang-${l}`}
-        >
-          {l === "fr" ? "Français" : "English"}
-        </button>
-      ))}
-    </div>
   );
 }

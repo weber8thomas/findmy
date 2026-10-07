@@ -38,6 +38,8 @@ describe("sign-in methods", () => {
     const html = render(BASE);
     expect(html).toContain('name="password"');
     expect(html).not.toContain('data-testid="sso-login"');
+    // The language is picked in Me after sign-in (or DEFAULT_LOCALE), not here.
+    expect(html).not.toContain('data-testid="lang-fr"');
   });
 
   it("SSO and password: a full-page link to the login URL, then the form", () => {

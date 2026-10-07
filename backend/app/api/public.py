@@ -16,6 +16,7 @@ async def config(ctx: Ctx):
     return {
         "app_name": "Oukilé",
         "registration_open": s.allow_registration,
+        "default_locale": s.default_locale,
         "auth": {
             "password": s.password_login,
             "oidc": {"name": s.oidc_name, "login_url": "/api/auth/oidc/login"}

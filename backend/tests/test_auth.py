@@ -90,7 +90,9 @@ def test_update_me_locale(api, client):
 
 
 def test_sso_off_by_default(client):
-    assert client.get("/api/config").json()["auth"] == {"password": True, "oidc": None}
+    cfg = client.get("/api/config").json()
+    assert cfg["auth"] == {"password": True, "oidc": None}
+    assert cfg["default_locale"] is None
     r = client.get("/api/auth/oidc/login", follow_redirects=False)
     assert r.status_code == 303
     assert r.headers["location"] == "/login?sso_error=disabled"

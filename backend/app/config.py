@@ -4,6 +4,7 @@ import os
 import secrets
 from functools import cached_property
 from pathlib import Path
+from typing import Literal
 from urllib.parse import urlparse
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -32,6 +33,8 @@ class Settings(BaseSettings):
     static_dir: Path | None = None
 
     allow_registration: bool = True
+    # Language of the sign-in page and of new accounts (en, fr). Unset: the browser's.
+    default_locale: Literal["en", "fr"] | None = None
     trust_proxy: bool = False
     rate_limit_enabled: bool = True
     session_days: int = 30

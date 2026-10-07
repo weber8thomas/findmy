@@ -15,20 +15,28 @@ export function translate(locale: Locale, key: MessageKey, params?: Record<strin
   return format(catalogues[locale][key] ?? en[key] ?? key, params);
 }
 
-export function detectLocale(): Locale {
+/** The language last used on this device (set once someone signed in or picked one). */
+export function savedLocale(): Locale | null {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved === "en" || saved === "fr") return saved;
   } catch {
     /* storage unavailable */
   }
+  return null;
+}
+
+export function detectLocale(): Locale {
+  const saved = savedLocale();
+  if (saved) return saved;
   const lang = typeof navigator === "undefined" ? "" : navigator.language;
   return lang?.toLowerCase().startsWith("fr") ? "fr" : "en";
 }
 
 type I18n = {
   locale: Locale;
-  setLocale: (l: Locale) => void;
+  /** `persist: false` for a default that must not stick to the device. */
+  setLocale: (l: Locale, persist?: boolean) => void;
   t: (key: MessageKey, params?: Record<string, string | number>) => string;
   relTime: (iso: string | number | Date | null | undefined) => string;
   dateTime: (iso: string | Date) => string;
@@ -45,8 +53,9 @@ export function I18nProvider({ children, initialLocale }: { children: ReactNode;
     document.documentElement.lang = locale;
   }, [locale]);
 
-  const setLocale = useCallback((l: Locale) => {
+  const setLocale = useCallback((l: Locale, persist = true) => {
     setLocaleState(l);
+    if (!persist) return;
     try {
       localStorage.setItem(STORAGE_KEY, l);
     } catch {

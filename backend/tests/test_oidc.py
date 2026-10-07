@@ -152,6 +152,13 @@ def test_sso_takes_the_email_from_userinfo(client, idp):
     assert (me["email"], me["display_name"]) == ("lucia@example.com", "lucia")
 
 
+def test_sso_new_account_language(app, client, idp):
+    app.state.ctx.settings.default_locale = "fr"
+    assert client.get("/api/config").json()["default_locale"] == "fr"
+    assert sso(client, idp).headers["location"] == "/"
+    assert client.get("/api/auth/me").json()["locale"] == "fr"
+
+
 def test_sso_without_email_is_refused(client, idp):
     idp.claims = {"sub": "u-5"}
     assert sso(client, idp).headers["location"] == "/login?sso_error=no_account"

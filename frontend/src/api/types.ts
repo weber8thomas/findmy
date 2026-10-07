@@ -115,6 +115,8 @@ export type AppNotification = {
 export type AppConfig = {
   app_name: string;
   registration_open: boolean;
+  /** Language of the sign-in page (DEFAULT_LOCALE); null: the browser's. */
+  default_locale?: "en" | "fr" | null;
   providers: string[];
   features: { owntracks: boolean; findmy: boolean; icloud: boolean; push: boolean };
   map: { tile_url: string; tile_url_dark: string; attribution: string };

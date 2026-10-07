@@ -11,7 +11,6 @@ import { toast } from "../../lib/ui-state";
 import { localDeviceFor, localDeviceStore } from "../../reporter/storage";
 import { Empty, Field, PanelHeader, Section } from "../../ui/components";
 import { Icon } from "../../ui/icons";
-import { LanguageSwitch } from "../auth/AuthPage";
 import { ThisDevice } from "./ThisDevice";
 
 export function Viewers() {
@@ -131,6 +130,28 @@ function OwnTracksSetup({ me }: { me: User }) {
       )}
       {existing.length > 0 && <p className="muted small">{existing.map((d) => d.name).join(", ")}</p>}
     </Section>
+  );
+}
+
+function LanguageSwitch({ value, onChange }: { value: Locale; onChange: (l: Locale) => void }) {
+  const { t } = useI18n();
+  return (
+    <div className="segmented" role="radiogroup" aria-label={t("me.language")}>
+      {(["fr", "en"] as const).map((l) => (
+        <button
+          key={l}
+          type="button"
+          role="radio"
+          lang={l}
+          aria-checked={value === l}
+          className={value === l ? "active" : ""}
+          onClick={() => onChange(l)}
+          data-testid={`lang-${l}`}
+        >
+          {l === "fr" ? "Français" : "English"}
+        </button>
+      ))}
+    </div>
   );
 }
 

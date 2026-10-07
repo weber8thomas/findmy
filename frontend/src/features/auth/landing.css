@@ -493,10 +493,6 @@
 .landing-private strong {
   font-size: 13.5px;
 }
-.landing-foot .segmented {
-  margin: 0;
-}
-
 /* ---------- desktop: floating panel over a full-screen map ---------- */
 @media (min-width: 880px) {
   .landing {

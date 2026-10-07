@@ -61,7 +61,9 @@ def _read_state(request: Request, ctx: AppContext) -> dict[str, str] | None:
         return None
 
 
-def _locale(request: Request) -> str:
+def _locale(request: Request, ctx: AppContext) -> str:
+    if ctx.settings.default_locale:
+        return ctx.settings.default_locale
     return "fr" if request.headers.get("accept-language", "").lower().startswith("fr") else "en"
 
 
@@ -117,7 +119,7 @@ async def _find_or_create_user(
             display_name=_display_name(claims, email),
             # Unknown to anyone: the account signs in through SSO only.
             password_hash=hash_password(secrets.token_urlsafe(32)),
-            locale=_locale(request),
+            locale=_locale(request, ctx),
             is_admin=count == 0,
         )
         db.add(user)
