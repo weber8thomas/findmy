@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { NavLink, Outlet, useLocation } from "react-router";
+import { Link, Outlet, useLocation } from "react-router";
 import { useRealtime } from "../api/realtime";
 import { useConfig, useDevices, useNotifications, usePeople, useViewers, useZones } from "../api/queries";
 import type { User } from "../api/types";
@@ -12,6 +12,7 @@ import { MapView } from "../map/MapView";
 import { localDeviceFor, localDeviceStore } from "../reporter/storage";
 import { reporterStatus } from "../reporter/useReporter";
 import { Icon, type IconName } from "../ui/icons";
+import { activeTab } from "./tabs";
 
 function useMediaQuery(query: string) {
   const [matches, setMatches] = useState(() => window.matchMedia(query).matches);
@@ -84,27 +85,29 @@ function TabBar() {
   const { t } = useI18n();
   const { pathname } = useLocation();
   const { data: notes } = useNotifications();
+  const { data: devices } = useDevices();
   const unread = notes?.filter((n) => !n.read_at).length ?? 0;
-  // `also`: pages reached from a tab without living under its path (Settings is opened from Me).
-  const tabs: { to: string; label: string; icon: IconName; badge?: number; also?: string[] }[] = [
+  const active = activeTab(pathname, devices);
+  const tabs: { to: string; label: string; icon: IconName; badge?: number }[] = [
     { to: "/people", label: t("tabs.people"), icon: "person" },
     { to: "/devices", label: t("tabs.devices"), icon: "laptop" },
     { to: "/items", label: t("tabs.items"), icon: "tag" },
-    { to: "/me", label: t("tabs.me"), icon: "me", badge: unread, also: ["/settings", "/privacy"] },
+    { to: "/me", label: t("tabs.me"), icon: "me", badge: unread },
   ];
   return (
     <nav className="tabbar" aria-label={t("a11y.mainNav")}>
       {tabs.map((tab) => (
-        <NavLink
+        <Link
           key={tab.to}
           to={tab.to}
-          className={({ isActive }) => `tab${isActive || tab.also?.includes(pathname) ? " active" : ""}`}
+          className={`tab${tab.to === active ? " active" : ""}`}
+          aria-current={tab.to === active ? "page" : undefined}
           data-testid={`tab-${tab.to.slice(1)}`}
         >
           <Icon name={tab.icon} size={22} />
           <span>{tab.label}</span>
           {tab.badge ? <span className="badge">{tab.badge}</span> : null}
-        </NavLink>
+        </Link>
       ))}
     </nav>
   );

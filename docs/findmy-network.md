@@ -12,7 +12,8 @@ positions.
 Oukilé s'appuie sur la bibliothèque open source
 [FindMy.py](https://github.com/malmeloo/FindMy.py) (MIT) pour :
 
-- se connecter avec un identifiant Apple (double authentification comprise) ;
+- se connecter avec un identifiant Apple (double authentification comprise), dans
+  **Moi › Réglages › Objets (réseau Localiser)**, où l'on ajoute aussi les balises ;
 - télécharger et déchiffrer les rapports de position de vos balises ;
 - les afficher dans l'onglet **Objets**, avec historique et zones, comme les autres appareils.
 
@@ -43,7 +44,7 @@ uv run tools/extract_findmy_items.py           # écrit ~/oukile-items/<objet>.p
   compte Apple. Les autres méthodes connues demandent soit de désactiver SIP et AMFI, soit
   de donner le mot de passe Apple et le code d'un appareil à un outil tiers qui rejoint le
   trousseau iCloud comme nouvel appareil de confiance : déconseillé pour un compte principal.
-- Dans Oukilé : **Objets › Balises du réseau Localiser › Importer un AirTag (.plist)**, avec
+- Dans Oukilé : **Moi › Réglages › Objets (réseau Localiser) › Importer un AirTag (.plist)**, avec
   `<objet>.plist` et, s'il existe, `<objet> - alignment.plist`.
 - Ces fichiers contiennent la **clé privée** de chaque objet : quiconque les possède peut le
   suivre. Ne les mettez pas dans un dossier synchronisé (Bureau, Documents, iCloud Drive)

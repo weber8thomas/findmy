@@ -7,6 +7,24 @@ l'application l'affiche dans *Moi › Réglages › À propos*, avec la révisio
 
 ## [Non publié]
 
+### Modifié
+
+- **Comptes Apple dans les Réglages** : l'onglet *Objets* ne fait plus que lister les
+  AirTags et balises, comme dans *Localiser*. Les comptes Apple se connectent et se
+  déconnectent dans *Moi › Réglages*, une page par source : *Appareils Apple (iCloud)*,
+  avec les appareils à suivre, et *Objets (réseau Localiser)*, où l'on génère une clé de
+  balise ou importe une clé privée ou un AirTag. Chaque ligne montre l'état du compte ;
+  *Objets* renvoie vers sa page s'il n'y a rien à montrer ou si Apple demande de se
+  reconnecter.
+- Sur téléphone et tablette, les petits boutons et le choix de la langue font au moins
+  40 px de haut ; le bouton retour se touche plus facilement ; les champs de fichier
+  (.plist) ont un bouton dans le style de l'application.
+
+### Corrigé
+
+- Un objet ouvert depuis *Objets* y revient, et c'est l'onglet *Objets* qui reste en
+  surbrillance (pas *Appareils*).
+
 ## [0.2.0] - 2026-10-07
 
 ### Ajouté

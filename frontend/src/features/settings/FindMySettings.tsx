@@ -6,8 +6,8 @@ import type { Device } from "../../api/types";
 import { useI18n } from "../../i18n";
 import { toast } from "../../lib/ui-state";
 import { Field, Section } from "../../ui/components";
-import { DeviceRow } from "../devices/DeviceList";
 import { AppleAccount, useProviderAccount } from "./AppleAccount";
+import { SourcePage } from "./AppleSources";
 
 type Mode = "import" | "generate" | "plist" | null;
 
@@ -16,16 +16,18 @@ function AddItem() {
   const qc = useQueryClient();
   const [mode, setMode] = useState<Mode>(null);
   const [advKey, setAdvKey] = useState<string | null>(null);
-  const done = () => {
+  // The new item is listed in Items, not here: say it was added.
+  const done = (device: Device) => {
+    toast(t("items.added"), device.name, "success");
     void qc.invalidateQueries({ queryKey: keys.devices });
   };
   const fail = (e: unknown) => toast(t("common.error"), e instanceof ApiError ? e.detail : undefined, "error");
 
   const add = useMutation({
     mutationFn: (form: FormData) => api<Device>("/items", { method: "POST", body: form }),
-    onSuccess: () => {
+    onSuccess: (device) => {
       setMode(null);
-      done();
+      done(device);
     },
     onError: fail,
   });
@@ -33,7 +35,7 @@ function AddItem() {
     mutationFn: (name: string) => api<{ device: Device; adv_key_b64: string }>("/items/generate", { method: "POST", body: { name } }),
     onSuccess: (res) => {
       setAdvKey(res.adv_key_b64);
-      done();
+      done(res.device);
     },
     onError: fail,
   });
@@ -96,22 +98,32 @@ function AddItem() {
   );
 }
 
-export function FindMySection() {
+function FindMySection() {
   const { t } = useI18n();
   const { data: account } = useProviderAccount("findmy");
   const { data: devices } = useDevices();
-  const items = devices?.filter((d) => d.kind === "findmy") ?? [];
+  const items = devices?.filter((d) => d.kind === "findmy").length ?? 0;
   return (
-    <Section title={t("items.findmy")} testId="findmy-section">
-      <AppleAccount provider="findmy" />
-      <p className="muted small">{t("items.delay")}</p>
-      {items.length === 0 && <p className="muted">{t("items.empty")}</p>}
-      <div className="list">
-        {items.map((d) => (
-          <DeviceRow key={d.id} device={d} isLocal={false} from={null} />
-        ))}
-      </div>
-      {account?.state === "logged_in" && <AddItem />}
-    </Section>
+    <>
+      <Section title={t("settings.appleAccount")} testId="findmy-section">
+        <p className="muted small">{t("settings.findmyExplain")}</p>
+        <AppleAccount provider="findmy" />
+      </Section>
+      {account?.state === "logged_in" && (
+        <Section title={t("items.add")} testId="add-item">
+          <AddItem />
+          {items > 0 && <p className="muted small">{t("items.inItems", { count: String(items) })}</p>}
+        </Section>
+      )}
+    </>
+  );
+}
+
+/** Settings › Items (Find My network): the Apple account, and adding a tag or an AirTag. */
+export function FindMySettings() {
+  return (
+    <SourcePage provider="findmy">
+      <FindMySection />
+    </SourcePage>
   );
 }

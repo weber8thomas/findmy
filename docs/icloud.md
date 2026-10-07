@@ -5,9 +5,9 @@
 ## Ce que ça fait
 
 Oukilé utilise [pyicloud](https://github.com/timlaing/pyicloud), qui parle à la même API
-privée que **icloud.com/find**. Une fois votre compte Apple connecté dans l'onglet
-**Objets → Appareils iCloud**, choisissez les appareils à **suivre**. Ils apparaissent
-ensuite dans l'onglet **Appareils**, avec :
+privée que **icloud.com/find**. Une fois votre compte Apple connecté dans
+**Moi › Réglages › Appareils Apple (iCloud)**, choisissez les appareils à **suivre**. Ils
+apparaissent ensuite dans l'onglet **Appareils**, avec :
 
 - une position mise à jour **toutes les 1 à 2 minutes** (`ICLOUD_POLL_INTERVAL_S`, 120 s
   par défaut, 60 s minimum), même quand l'appareil est verrouillé et sans qu'Oukilé y
