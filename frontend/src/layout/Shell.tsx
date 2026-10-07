@@ -4,6 +4,7 @@ import { useRealtime } from "../api/realtime";
 import { useConfig, useDevices, useNotifications, usePeople, useViewers, useZones } from "../api/queries";
 import type { User } from "../api/types";
 import { DeviceRuntime } from "../device-runtime/DeviceRuntime";
+import { AppFooter } from "../features/about/AppFooter";
 import { useI18n } from "../i18n";
 import { useStore } from "../lib/store";
 import { focusOn, toasts } from "../lib/ui-state";
@@ -80,18 +81,25 @@ function BottomSheet({ children }: { children: ReactNode }) {
 
 function TabBar() {
   const { t } = useI18n();
+  const { pathname } = useLocation();
   const { data: notes } = useNotifications();
   const unread = notes?.filter((n) => !n.read_at).length ?? 0;
-  const tabs: { to: string; label: string; icon: IconName; badge?: number }[] = [
+  // `also`: pages reached from a tab without living under its path (Settings is opened from Me).
+  const tabs: { to: string; label: string; icon: IconName; badge?: number; also?: string[] }[] = [
     { to: "/people", label: t("tabs.people"), icon: "person" },
     { to: "/devices", label: t("tabs.devices"), icon: "laptop" },
     { to: "/items", label: t("tabs.items"), icon: "tag" },
-    { to: "/me", label: t("tabs.me"), icon: "me", badge: unread },
+    { to: "/me", label: t("tabs.me"), icon: "me", badge: unread, also: ["/settings", "/privacy"] },
   ];
   return (
     <nav className="tabbar" aria-label={t("a11y.mainNav")}>
       {tabs.map((tab) => (
-        <NavLink key={tab.to} to={tab.to} className={({ isActive }) => `tab${isActive ? " active" : ""}`} data-testid={`tab-${tab.to.slice(1)}`}>
+        <NavLink
+          key={tab.to}
+          to={tab.to}
+          className={({ isActive }) => `tab${isActive || tab.also?.includes(pathname) ? " active" : ""}`}
+          data-testid={`tab-${tab.to.slice(1)}`}
+        >
           <Icon name={tab.icon} size={22} />
           <span>{tab.label}</span>
           {tab.badge ? <span className="badge">{tab.badge}</span> : null}
@@ -179,7 +187,12 @@ export function Shell({ me }: { me: User }) {
     <>
       {!mobile && <TabBar />}
       <div className="panel-scroll">
-        <Outlet />
+        <div className="panel-content">
+          <Outlet />
+        </div>
+        <footer className="panel-foot">
+          <AppFooter />
+        </footer>
       </div>
     </>
   );

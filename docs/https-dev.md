@@ -50,13 +50,13 @@ Les tests Playwright simulent la géolocalisation dans Chromium. À vérifier à
 sur de vrais appareils :
 
 1. **iPhone (Safari)** : ouvrez Oukilé, *Partager › Sur l'écran d'accueil*, ouvrez l'icône.
-   Dans *Moi*, « Utiliser ce navigateur comme appareil », acceptez la localisation.
+   Dans *Moi › Réglages*, « Utiliser ce navigateur comme appareil », acceptez la localisation.
 2. Depuis un autre appareil, « Faire sonner » : le son joue et l'écran plein s'affiche.
 3. Verrouillez l'iPhone : le partage se met en pause (limitation d'iOS). Activez les
-   notifications dans *Moi* puis relancez « Faire sonner » : une notification push arrive ;
+   notifications dans *Moi › Réglages* puis relancez « Faire sonner » : une notification push arrive ;
    la toucher ouvre Oukilé et lance le son.
 4. **Android (Chrome)** : mêmes étapes ; vérifiez la vibration et le niveau de batterie.
-5. **OwnTracks** : créez des identifiants dans *Moi*, configurez l'application en mode
+5. **OwnTracks** : créez des identifiants dans *Moi › Réglages*, configurez l'application en mode
    HTTP, verrouillez le téléphone et marchez : les positions continuent d'arriver.
 6. **Zones** : créez un lieu autour de vous, éloignez-vous de quelques centaines de mètres
    puis revenez : notifications « a quitté » / « est arrivé(e) ».

@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Navigate, Route, Routes } from "react-router";
 import { useConfig, useMe } from "./api/queries";
 import { RealtimeProvider } from "./api/realtime";
+import { PrivacyPage, PrivacyPanel } from "./features/about/Privacy";
 import { AuthPage } from "./features/auth/AuthPage";
 import { DeviceDetail } from "./features/devices/DeviceDetail";
 import { DeviceList } from "./features/devices/DeviceList";
@@ -9,6 +10,7 @@ import { HistoryPanel } from "./features/devices/HistoryPanel";
 import { ItemsPanel } from "./features/items/ItemsPanel";
 import { MePanel } from "./features/me/MePanel";
 import { PeopleList, PersonDetail } from "./features/people/People";
+import { SettingsPanel } from "./features/settings/SettingsPanel";
 import { ZoneEditor, ZonesList } from "./features/zones/Zones";
 import { savedLocale, useI18n } from "./i18n";
 import { Shell } from "./layout/Shell";
@@ -45,6 +47,7 @@ export function App() {
     return (
       <Routes>
         <Route path="/register" element={<AuthPage mode="register" />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="*" element={<AuthPage mode="login" />} />
       </Routes>
     );
@@ -63,6 +66,8 @@ export function App() {
           <Route path="/me" element={<MePanel me={me} />} />
           <Route path="/me/zones" element={<ZonesList />} />
           <Route path="/me/zones/:id" element={<ZoneEditor />} />
+          <Route path="/settings" element={<SettingsPanel me={me} />} />
+          <Route path="/privacy" element={<PrivacyPanel />} />
           <Route path="*" element={<Navigate to="/devices" replace />} />
         </Route>
       </Routes>

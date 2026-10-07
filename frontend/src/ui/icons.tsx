@@ -3,7 +3,7 @@ import type { DeviceIcon, PublicUser } from "../api/types";
 
 // Simple line icons drawn for Oukilé (24×24, stroke = currentColor).
 const PATHS: Record<
-  DeviceIcon | "person" | "pin" | "me" | "sound" | "route" | "lock" | "clock" | "refresh" | "bell" | "zone" | "locate" | "trash" | "edit" | "chevron",
+  DeviceIcon | "person" | "pin" | "me" | "sound" | "route" | "lock" | "clock" | "refresh" | "bell" | "zone" | "locate" | "trash" | "edit" | "chevron" | "gear",
   string
 > = {
   phone: '<rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/>',
@@ -34,6 +34,7 @@ const PATHS: Record<
   trash: '<path d="M4.5 7h15M10 7V4.5h4V7M6.5 7l1 13h9l1-13"/>',
   edit: '<path d="M4 20l1-4.5L15.5 5a2 2 0 013 3L8 18.5z"/>',
   chevron: '<path d="M14.5 5.5L8 12l6.5 6.5"/>',
+  gear: '<path d="M10.1 5L10.7 2.6L13.3 2.6L13.9 5A7.2 7.2 0 0 1 15.6 5.8L17.7 4.4L19.6 6.3L18.2 8.4A7.2 7.2 0 0 1 19 10.1L21.4 10.7L21.4 13.3L19 13.9A7.2 7.2 0 0 1 18.2 15.6L19.6 17.7L17.7 19.6L15.6 18.2A7.2 7.2 0 0 1 13.9 19L13.3 21.4L10.7 21.4L10.1 19A7.2 7.2 0 0 1 8.4 18.2L6.3 19.6L4.4 17.7L5.8 15.6A7.2 7.2 0 0 1 5 13.9L2.6 13.3L2.6 10.7L5 10.1A7.2 7.2 0 0 1 5.8 8.4L4.4 6.3L6.3 4.4L8.4 5.8A7.2 7.2 0 0 1 10.1 5z"/><circle cx="12" cy="12" r="2.8"/>',
 };
 
 export type IconName = keyof typeof PATHS;

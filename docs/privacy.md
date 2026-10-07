@@ -3,9 +3,9 @@
 Oukilé manipule des positions de personnes : des données sensibles. Choix de conception :
 
 - **Consentement d'abord.** Un appareil ne peut être enregistré **que depuis l'appareil
-  lui-même** (onglet *Moi*). Le partage avec une autre personne est **initié par la
-  personne localisée** et doit être **accepté** par le destinataire. Il peut être limité
-  dans le temps (1 h, fin de journée) et arrêté en un geste.
+  lui-même** (*Moi › Réglages › Cet appareil*). Le partage avec une autre personne est
+  **initié par la personne localisée** et doit être **accepté** par le destinataire. Il
+  peut être limité dans le temps (1 h, fin de journée) et arrêté en un geste.
 - **Visibilité.** Tant que le navigateur partage sa position, un **bandeau permanent**
   l'indique sur la carte, avec la liste des personnes qui la voient (*Moi › Votre
   position est visible par…*).
@@ -22,6 +22,13 @@ Oukilé manipule des positions de personnes : des données sensibles. Choix de c
 - **Mode perdu.** Dans l'application web, c'est un écran plein qui s'affiche quand Oukilé
   est ouvert sur l'appareil : il ne verrouille rien. Seul le fournisseur iCloud déclenche
   le vrai mode Perdu d'Apple.
+
+**Dans l'application.** La page *Confidentialité* (`/privacy`, lisible sans compte, liée
+depuis la page de connexion et le pied de chaque panneau) résume ces points en français
+et en anglais, avec la durée de rétention et les services tiers réellement utilisés par
+le serveur (fond de carte, Apple si iCloud ou le réseau Find My est activé, service push
+du navigateur, fournisseur SSO). Le site demande aussi à ne pas être indexé (`robots.txt`,
+`X-Robots-Tag`, balise `robots`).
 
 **Interdit :** utiliser Oukilé, OwnTracks ou des balises DIY pour suivre quelqu'un à son
 insu. C'est illégal dans la plupart des pays (en France : atteinte à la vie privée, art.

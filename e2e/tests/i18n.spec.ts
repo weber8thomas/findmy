@@ -1,6 +1,6 @@
 import { expect, newAccount, openContext, signIn, test } from "../fixtures";
 
-test("sign-in page in the browser's language, then the account's, set in Me", async ({ browser }) => {
+test("sign-in page in the browser's language, then the account's, set in Settings", async ({ browser }) => {
   const ctx = await openContext(browser, { locale: "en-US" });
   const page = await ctx.newPage();
   await page.goto("/login");
@@ -9,7 +9,7 @@ test("sign-in page in the browser's language, then the account's, set in Me", as
 
   const acc = newAccount("Lea");
   await signIn(ctx, acc, "register", "fr");
-  await page.goto("/me");
+  await page.goto("/settings");
   await expect(page.getByTestId("tab-devices")).toContainText("Appareils");
   await page.getByTestId("lang-en").click();
   await expect(page.getByTestId("tab-devices")).toContainText("Devices");

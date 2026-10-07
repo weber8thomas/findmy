@@ -131,6 +131,9 @@ export type AppNotification = {
 
 export type AppConfig = {
   app_name: string;
+  /** Server version and deployed git revision ("dev" outside a deploy). Older servers omit them. */
+  version?: string;
+  revision?: string;
   registration_open: boolean;
   /** Language of the sign-in page (DEFAULT_LOCALE); null: the browser's. */
   default_locale?: "en" | "fr" | null;
@@ -138,6 +141,8 @@ export type AppConfig = {
   features: { owntracks: boolean; findmy: boolean; icloud: boolean; push: boolean };
   map: { tile_url: string; tile_url_dark: string; attribution: string };
   vapid_public_key: string | null;
+  /** Days the position history is kept (LOCATION_RETENTION_DAYS). */
+  retention_days?: number;
   /** Sign-in methods. Older servers omit it: password only. */
   auth?: { password: boolean; oidc: { name: string; login_url: string } | null };
 };

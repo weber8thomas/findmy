@@ -7,6 +7,7 @@ import type { AppConfig, User } from "../../api/types";
 import type { MessageKey } from "../../i18n/en";
 import { useI18n } from "../../i18n";
 import { DeviceGlyph, Icon, iconSvg, type IconName } from "../../ui/icons";
+import { AppFooter } from "../about/AppFooter";
 import { LandingMap } from "./LandingMap";
 import "./landing.css";
 
@@ -92,6 +93,7 @@ export function AuthPage({ mode }: { mode: "login" | "register" }) {
               <span>{t("landing.private.body")}</span>
             </p>
           </div>
+          <AppFooter />
         </footer>
       </section>
     </main>
