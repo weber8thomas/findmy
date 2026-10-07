@@ -7,6 +7,16 @@ l'application l'affiche dans *Moi › Réglages › À propos*, avec la révisio
 
 ## [Non publié]
 
+## [0.7.0] - 2026-10-07
+
+### Ajouté
+
+- **Alerte batterie faible** : quand la batterie de l'appareil d'où vient votre position
+  passe sous 15 % (hors charge), les personnes qui voient votre position reçoivent une
+  notification, une fois. C'est votre choix, désactivé par défaut : *Réglages › Batterie
+  faible*. Sans cette option, elles ne voient jamais votre batterie ; la page
+  Confidentialité le dit.
+
 ## [0.6.1] - 2026-10-07
 
 ### Corrigé
@@ -228,7 +238,8 @@ Première version, sous le nom de Locus.
 - Fournisseurs Apple facultatifs, désactivés par défaut : iCloud et réseau Find My.
 - Docker Compose (Caddy, tunnel Cloudflare, serveur anisette) et tests Playwright.
 
-[Non publié]: https://github.com/weber8thomas/findmy/compare/v0.6.1...HEAD
+[Non publié]: https://github.com/weber8thomas/findmy/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/weber8thomas/findmy/compare/v0.6.1...v0.7.0
 [0.6.1]: https://github.com/weber8thomas/findmy/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/weber8thomas/findmy/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/weber8thomas/findmy/compare/v0.4.1...v0.5.0
