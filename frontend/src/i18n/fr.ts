@@ -123,6 +123,10 @@ const fr: Catalogue = {
   "history.last7d": "7 jours",
   "history.points": "{count} positions",
   "history.empty": "Aucune position sur cette période",
+  "history.pickHint": "Faites glisser pour voir où se trouvait l’appareil à un moment donné, ou choisissez un point du tracé sur la carte.",
+  "history.moment": "Heure de la position",
+  "history.older": "Position précédente",
+  "history.newer": "Position suivante",
 
   "people.title": "Personnes",
   "people.empty": "Personne ne partage encore sa position avec vous.",

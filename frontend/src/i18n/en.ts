@@ -122,6 +122,10 @@ const en = {
   "history.last7d": "7 days",
   "history.points": "{count} positions",
   "history.empty": "No positions in this period",
+  "history.pickHint": "Slide to see where the device was at a given time, or pick a point of the trace on the map.",
+  "history.moment": "Time of the position",
+  "history.older": "Previous position",
+  "history.newer": "Next position",
 
   "people.title": "People",
   "people.empty": "Nobody shares their location with you yet.",

@@ -10,6 +10,8 @@ export type MapUiState = {
   pick: ((lat: number, lon: number) => void) | null;
   draftZone: DraftZone;
   history: LocationPoint[] | null;
+  /** `ts` of the history point marked on the map (picked on the trace or in the panel). */
+  historyAt: string | null;
   selected: { kind: "device" | "person"; id: string } | null;
 };
 
@@ -18,6 +20,7 @@ export const mapUi = createStore<MapUiState>({
   pick: null,
   draftZone: null,
   history: null,
+  historyAt: null,
   selected: null,
 });
 

@@ -816,10 +816,27 @@ a.row:focus-visible {
 }
 .timeline li {
   position: relative;
+  padding-left: 18px;
+  border-left: 2px solid var(--separator);
+}
+/* The whole entry is the tap target, gap included. */
+.timeline button {
   display: flex;
   flex-direction: column;
-  padding: 0 0 12px 18px;
-  border-left: 2px solid var(--separator);
+  width: 100%;
+  padding: 0 0 12px;
+  border: 0;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+.timeline li.is-picked button > :first-child {
+  color: var(--tint);
+  font-weight: 600;
+}
+.timeline li.is-picked::before {
+  background: var(--tint);
+  box-shadow: 0 0 0 3px var(--tint-ring);
 }
 .timeline li::before {
   content: "";
@@ -837,6 +854,47 @@ a.row:focus-visible {
 }
 .timeline li:last-child {
   border-left-color: transparent;
+}
+/* History time picker: the picked moment, and a slider over the recorded positions. */
+.scrubber {
+  margin: 8px 0 14px;
+  padding: 12px 14px;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+.scrubber-label {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1px;
+  min-height: 42px;
+  margin: 0 0 8px;
+  font-size: 13.5px;
+  text-wrap: pretty;
+}
+.scrubber-label strong {
+  font-size: 16px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.scrubber-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.scrubber-controls input[type="range"] {
+  flex: 1;
+  min-width: 0;
+  height: 32px;
+  margin: 0;
+  cursor: pointer;
+}
+.btn-icon:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.icon-flip {
+  transform: scaleX(-1);
 }
 .notes {
   list-style: none;
@@ -1245,6 +1303,31 @@ a.row:focus-visible {
 }
 .zone-label::before {
   display: none;
+}
+/* The moment picked in the history: a ring that stands out from the trace's dots. */
+.history-pick {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  border: 5px solid var(--tint-fill);
+  box-shadow: 0 0 0 5px var(--tint-ring), var(--shadow-pin);
+}
+.leaflet-tooltip.history-label {
+  padding: 5px 9px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+  white-space: nowrap;
+}
+.history-label.leaflet-tooltip-top::before {
+  border-top-color: var(--surface);
+}
+.history-label strong {
+  font-weight: 600;
+}
+.history-label-accuracy {
+  color: var(--muted);
 }
 
 /* ---------- device-side overlays ---------- */
