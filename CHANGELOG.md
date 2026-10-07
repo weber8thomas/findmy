@@ -7,6 +7,20 @@ l'application l'affiche dans *Moi › Réglages › À propos*, avec la révisio
 
 ## [Non publié]
 
+## [0.6.1] - 2026-10-07
+
+### Corrigé
+
+- **iPhone, app installée sur l'écran d'accueil** : le bouton *Ma position*, le bandeau
+  « Partage de position activé », les messages, le bandeau hors ligne et le panneau
+  latéral (iPad) ne passent plus sous l'heure, l'encoche ou la Dynamic Island. Le volet
+  monté en haut s'arrête sous la barre d'état, et la carte cadre ce qu'elle montre en
+  dessous.
+- **OwnTracks (Android) : le profil de suivi est renvoyé une fois par jour.** L'app ignore
+  sans rien dire un profil reçu quand sa *Configuration à distance* est coupée ; il
+  attendait alors le prochain passage d'un lieu. Renvoyer les mêmes valeurs ne change
+  rien sur le téléphone.
+
 ## [0.6.0] - 2026-10-07
 
 ### Ajouté
@@ -214,7 +228,8 @@ Première version, sous le nom de Locus.
 - Fournisseurs Apple facultatifs, désactivés par défaut : iCloud et réseau Find My.
 - Docker Compose (Caddy, tunnel Cloudflare, serveur anisette) et tests Playwright.
 
-[Non publié]: https://github.com/weber8thomas/findmy/compare/v0.6.0...HEAD
+[Non publié]: https://github.com/weber8thomas/findmy/compare/v0.6.1...HEAD
+[0.6.1]: https://github.com/weber8thomas/findmy/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/weber8thomas/findmy/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/weber8thomas/findmy/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/weber8thomas/findmy/compare/v0.4.0...v0.4.1
