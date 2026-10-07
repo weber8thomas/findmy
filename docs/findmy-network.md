@@ -21,7 +21,28 @@ Deux sortes de balises sont prises en charge :
 | Type | Ce qu'il faut |
 |---|---|
 | **Balise DIY OpenHaystack** (ESP32, nRF51/52…) | Dans Oukilé : *Générer une clé de balise DIY*. Flashez la **clé d'annonce** affichée avec le firmware [OpenHaystack](https://github.com/seemoo-lab/openhaystack) ou [macless-haystack](https://github.com/dchristl/macless-haystack). La clé privée reste sur le serveur. Vous pouvez aussi importer une clé privée existante. |
-| **AirTag officiel** | Le fichier `.plist` de l'accessoire, extrait d'un Mac où l'AirTag est associé. Depuis macOS 14, ces fichiers sont chiffrés : suivez la [documentation de FindMy.py](https://docs.mikealmel.ooo/FindMy.py/) pour récupérer la clé et les déchiffrer. Le fichier « key alignment » est facultatif mais accélère la première recherche. |
+| **AirTag ou balise compatible Localiser** (Chipolo, Sitecom…) | Le fichier `.plist` de l'objet, extrait d'un Mac connecté au compte Apple propriétaire : voir *Extraire les clés de vos objets* ci-dessous. Le fichier « alignment » est facultatif mais accélère la première recherche. |
+
+## Extraire les clés de vos objets
+
+Depuis macOS 14, Localiser chiffre ses fichiers avec une clé du trousseau (« BeaconStore »).
+Le script `tools/extract_findmy_items.py` les déchiffre en fichiers `.plist`, sur le Mac,
+à lancer **vous-même** :
+
+```bash
+uv run tools/extract_findmy_items.py --list    # liste les objets
+uv run tools/extract_findmy_items.py           # écrit ~/oukile-items/<objet>.plist
+```
+
+- macOS demande deux fois le mot de passe de session pour libérer la clé : **Autoriser**
+  (pas « Toujours autoriser »).
+- « Operation not permitted » : donnez l'**accès complet au disque** au Terminal (Réglages
+  Système › Confidentialité et sécurité), puis retirez-le après.
+- Dans Oukilé : **Objets › Balises du réseau Localiser › Importer un AirTag (.plist)**, avec
+  `<objet>.plist` et, s'il existe, `<objet> - alignment.plist`.
+- Ces fichiers contiennent la **clé privée** de chaque objet : quiconque les possède peut le
+  suivre. Ne les mettez pas dans un dossier synchronisé (Bureau, Documents, iCloud Drive)
+  et **supprimez `~/oukile-items`** après l'import.
 
 ## Délai des positions
 
