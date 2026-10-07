@@ -9,8 +9,10 @@ Oukilé manipule des positions de personnes : des données sensibles. Choix de c
 - **Visibilité.** Tant que le navigateur partage sa position, un **bandeau permanent**
   l'indique sur la carte, avec la liste des personnes qui la voient (*Moi › Votre
   position est visible par…*).
-- **Moindre accès.** Une personne avec qui vous partagez ne voit que la **dernière
-  position de votre appareil principal** : ni historique, ni batterie, ni commandes.
+- **Moindre accès.** Une personne avec qui vous partagez ne voit que **votre position**,
+  prise sur l'une de vos sources (*Moi › Ma position* ; l'appareil principal par défaut),
+  et le nom de cet appareil : ni historique, ni batterie, ni commandes, ni la liste de vos
+  appareils.
   Toute ressource non autorisée renvoie un 404. Une photo de profil n'est visible que par
   les personnes avec qui un partage est en cours, dans un sens ou dans l'autre (et par
   celle que vous invitez).

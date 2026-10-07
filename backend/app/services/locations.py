@@ -10,12 +10,12 @@ from sqlalchemy import func, select
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app import access
 from app.clock import utcnow
 from app.context import AppContext
 from app.models import Device, Location, User
 from app.providers.base import LocationFix
 from app.schemas import LocationOut
+from app.services import sources
 from app.services import zones as zones_service
 from app.services.devices import battery_out, fix_out
 
@@ -100,24 +100,18 @@ async def ingest(
 
 
 async def publish_device_location(ctx: AppContext, db: AsyncSession, device: Device) -> None:
-    owner_id, recipients = await access.device_viewers(db, device)
-    loc = fix_out(device)
     ctx.hub.send_to_users(
-        [owner_id],
+        [device.owner_id],
         "device.location",
         {
             "device_id": device.id,
-            "location": loc,
+            "location": fix_out(device),
             "battery": battery_out(device),
             "last_seen_at": device.last_seen_at,
         },
     )
-    if recipients and loc is not None:
-        ctx.hub.send_to_users(
-            recipients,
-            "person.location",
-            {"user_id": owner_id, "location": loc, "device_name": device.name},
-        )
+    # The people who see the owner get the owner's location, which may come from another source.
+    await sources.device_updated(ctx, db, device)
 
 
 async def history(

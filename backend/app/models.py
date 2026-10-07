@@ -145,6 +145,22 @@ class Device(Base):
     created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
 
 
+class LocationSource(Base):
+    """One of a user's own devices their location is taken from, by priority (rank 0 first;
+    see services/sources). A table of its own: the schema is only ever created, never migrated.
+    Without rows, the primary device alone is the source."""
+
+    __tablename__ = "location_sources"
+
+    user_id: Mapped[str] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
+    )
+    device_id: Mapped[str] = mapped_column(
+        ForeignKey("devices.id", ondelete="CASCADE"), primary_key=True
+    )
+    rank: Mapped[int] = mapped_column(Integer)
+
+
 class Location(Base):
     __tablename__ = "locations"
     __table_args__ = (

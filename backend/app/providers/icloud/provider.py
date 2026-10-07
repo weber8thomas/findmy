@@ -22,7 +22,7 @@ from app.providers.apple_base import AppleAccountProvider, AppleAuthError, Apple
 from app.providers.base import Capability, CommandError, LocationFix
 from app.providers.icloud import client as ic
 from app.schemas import DeviceOut
-from app.services import locations
+from app.services import locations, sources
 from app.services.devices import device_out
 
 log = logging.getLogger(__name__)
@@ -159,8 +159,8 @@ class ICloudProvider(AppleAccountProvider):
                 kept.append(device)
             else:
                 owner = await db.get(User, account.user_id)
-                if owner is not None and owner.primary_device_id == device.id:
-                    owner.primary_device_id = None
+                if owner is not None:
+                    await sources.forget_device(db, owner, device.id)
                 await db.delete(device)
                 self.ctx.hub.send_to_users(
                     [account.user_id], "device.removed", {"device_id": device.id}

@@ -248,6 +248,35 @@ class PersonOut(BaseModel):
     device_name: str | None
 
 
+# A phone, a tag in the wallet, a watch: a few are plenty.
+MAX_SOURCES = 5
+
+
+class SourcesIn(BaseModel):
+    # My own devices, first choice first.
+    device_ids: list[str] = Field(max_length=MAX_SOURCES)
+
+    @field_validator("device_ids")
+    @classmethod
+    def _once(cls, v: list[str]) -> list[str]:
+        if len(set(v)) != len(v):
+            raise ValueError("a device can only be listed once")
+        return v
+
+
+class SourcesOut(BaseModel):
+    # In priority order; without a saved list, the primary device alone.
+    device_ids: list[str]
+
+
+class MyLocationOut(BaseModel):
+    """Where the people I share with see me, and which of my sources it comes from."""
+
+    location: FixOut | None
+    device_id: str | None
+    device_name: str | None
+
+
 # ---------- zones / notifications ----------
 
 

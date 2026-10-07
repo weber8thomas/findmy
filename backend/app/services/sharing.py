@@ -9,10 +9,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app import access
 from app.clock import utcnow
 from app.context import AppContext
-from app.models import Device, Share, ShareStatus, User
+from app.models import Share, ShareStatus, User
 from app.schemas import PersonOut, ShareOut, SharesOut
-from app.services import avatars
-from app.services.devices import fix_out
+from app.services import avatars, sources
 from app.services.notify import notify
 
 LIVE = (ShareStatus.PENDING, ShareStatus.ACCEPTED)
@@ -184,11 +183,11 @@ async def people(db: AsyncSession, user: User) -> list[PersonOut]:
         location = None
         device_name = None
         with_me: Share | None = entry["with_me"]
-        if with_me is not None and _is_active(with_me, now) and other.primary_device_id:
-            dev = await db.get(Device, other.primary_device_id)
-            if dev is not None:
-                location = fix_out(dev)
-                device_name = dev.name
+        if with_me is not None and _is_active(with_me, now):
+            resolved = await sources.resolve(db, other)
+            if resolved is not None:
+                location = resolved.fix
+                device_name = resolved.device.name
         out.append(
             PersonOut(
                 user=await avatars.public_user(db, other),

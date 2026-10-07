@@ -24,6 +24,9 @@ class ZoneHit:
 
 async def zones_watching(db: AsyncSession, device: Device) -> list[Zone]:
     """Zones that apply to this device: the owner's, plus those of people who can see it."""
+    # People's zones watch the primary device (the first source), not the location they see
+    # (services/sources): switching between a phone and a tag left at home would raise false
+    # arrivals and departures.
     owner_ids = {device.owner_id}
     _, recipients = await access.device_viewers(db, device)
     owner_ids.update(recipients)

@@ -22,7 +22,7 @@ from app.schemas import (
     TokenOut,
 )
 from app.security import hash_token, new_device_token
-from app.services import commands, locations
+from app.services import commands, locations, sources
 from app.services.devices import device_out
 
 router = APIRouter(prefix="/devices", tags=["devices"])
@@ -70,7 +70,7 @@ async def create_device(data: DeviceCreate, user: CurrentUser, ctx: Ctx, db: DB)
     await db.flush()
     # The primary device is the one people sharing with you see: the phone, once there is one.
     if owntracks or (user.primary_device_id is None and data.kind == DeviceKind.BROWSER):
-        user.primary_device_id = device.id
+        await sources.adopt(db, user, device.id)
     await db.commit()
     return DeviceCreated(device=device_out(ctx, device, user), device_token=token)
 
@@ -96,11 +96,11 @@ async def update_device(device_id: str, data: DeviceUpdate, user: CurrentUser, c
 @router.delete("/{device_id}", status_code=204)
 async def delete_device(device_id: str, user: CurrentUser, ctx: Ctx, db: DB):
     device = await access.get_owned_device(db, user, device_id)
-    if user.primary_device_id == device.id:
-        user.primary_device_id = None
+    await sources.forget_device(db, user, device.id)
     await db.delete(device)
     await db.commit()
     ctx.hub.send_to_users([user.id], "device.removed", {"device_id": device_id})
+    await sources.publish(ctx, db, user)
 
 
 @router.post("/{device_id}/rotate-token", response_model=TokenOut)

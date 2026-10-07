@@ -1,8 +1,9 @@
 """Authorization rules, in one place.
 
 - An owner sees and controls all of their devices.
-- A user who receives an accepted, unexpired share sees only the sharer's *primary* device
-  location (no history, no battery, no commands).
+- A user who receives an accepted, unexpired share sees only the sharer's location, taken from
+  one of their sources (services/sources; the primary device by default), and the name of
+  that device: no history, no battery, no commands, not the list of their devices.
 - A profile photo is seen by its owner, by both sides of an accepted, unexpired share, and
   by whoever a pending invitation is addressed to (not by the inviter before acceptance).
 - Anything else is reported as 404, never 403, so ids cannot be probed.
@@ -56,7 +57,8 @@ async def recipient_ids_of(db: AsyncSession, owner_id: str) -> list[str]:
 
 
 async def device_viewers(db: AsyncSession, device: Device) -> tuple[str, list[str]]:
-    """(owner id, ids of people who see this device as the owner's location)."""
+    """(owner id, ids of people who follow this device as the owner): only for the primary
+    device, the one their zone alerts watch."""
     owner = await db.get(User, device.owner_id)
     recipients: list[str] = []
     if owner is not None and owner.primary_device_id == device.id:
