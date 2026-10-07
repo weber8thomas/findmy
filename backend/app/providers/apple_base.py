@@ -71,6 +71,8 @@ class AppleAccountProvider(PollingProvider):
         super().__init__()
         self.settings = settings
         self.interval_s = max(self.min_interval_s, interval_s)
+        # When true, accounts are polled even with no device yet: poll_account adds them itself.
+        self.auto_track = False
         self._pending: dict[str, tuple[AppleClient, float]] = {}
         self._clients: dict[str, AppleClient] = {}
         self._locks: dict[str, asyncio.Lock] = {}
@@ -187,7 +189,7 @@ class AppleAccountProvider(PollingProvider):
                     .scalars()
                     .all()
                 )
-                if not devices:
+                if not devices and not self.auto_track:
                     continue
                 await self.poll_one(db, account, devices)
 

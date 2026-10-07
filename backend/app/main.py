@@ -24,6 +24,8 @@ from app.services import housekeeping
 from app.services.push import PushService
 
 log = logging.getLogger("locus")
+# uvicorn only configures its own loggers; without this the app's INFO logs are dropped.
+logging.basicConfig(level=logging.INFO, format="%(levelname)s:     %(name)s - %(message)s")
 
 
 def build_providers(settings: Settings) -> list[Provider]:
@@ -117,7 +119,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         response = await call_next(request)
         h = response.headers
         h.setdefault("X-Content-Type-Options", "nosniff")
-        h.setdefault("Referrer-Policy", "same-origin")
+        h.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
         h.setdefault("Permissions-Policy", "geolocation=(self), camera=(), microphone=()")
         if not request.url.path.startswith("/api/"):
             h.setdefault("Content-Security-Policy", _csp(request, settings))

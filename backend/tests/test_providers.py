@@ -6,7 +6,7 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import select
+from sqlalchemy import select, update
 
 from app.config import Settings
 from app.main import create_app
@@ -287,6 +287,31 @@ def test_icloud_track_poll_and_commands(apple):
         f"/api/devices/{dev['id']}/commands", json={"type": "lost_mode_off"}, headers=api.h(a)
     )
     assert r.json()["status"] == "acked"
+
+
+def test_icloud_poll_tracks_every_device(apple):
+    c, api, fake, app = apple
+    a = api.register()
+    connect(api, a, "icloud")
+    ts = datetime.now(UTC) - timedelta(minutes=1)
+    fake.snapshots = {
+        "abc": ICloudSnapshot("abc", "iPhone", "iPhone 16", 48.85, 2.29, 12, ts, 0.8, True),
+        "def": ICloudSnapshot("def", "AirPods", "AirPods Pro", None, None, None, None, None, None),
+    }
+    run_poll(c, app, "icloud")
+    devices = {d["name"]: d for d in c.get("/api/devices", headers=api.h(a)).json()}
+    assert set(devices) == {"iPhone", "AirPods"}
+    assert devices["iPhone"]["location"]["lat"] == 48.85
+    assert devices["AirPods"]["icon"] == "earbuds" and devices["AirPods"]["location"] is None
+
+    async def due_now():
+        async with app.state.ctx.sessionmaker() as db:
+            await db.execute(update(ProviderAccount).values(next_poll_at=None))
+            await db.commit()
+
+    c.portal.call(due_now)
+    run_poll(c, app, "icloud")
+    assert len(c.get("/api/devices", headers=api.h(a)).json()) == 2
 
 
 def test_icloud_command_failure_restores_state(apple):

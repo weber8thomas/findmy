@@ -7,7 +7,7 @@ import { useStore } from "../../lib/store";
 import { localDeviceFor, localDeviceStore } from "../../reporter/storage";
 import { reporterStatus } from "../../reporter/useReporter";
 import { BatteryBadge, Empty, PanelHeader } from "../../ui/components";
-import { Icon } from "../../ui/icons";
+import { DeviceGlyph } from "../../ui/icons";
 
 export function DeviceRow({ device, isLocal, from }: { device: Device; isLocal: boolean; from: { lat: number; lon: number } | null }) {
   const { t, relTime, distance } = useI18n();
@@ -15,8 +15,8 @@ export function DeviceRow({ device, isLocal, from }: { device: Device; isLocal: 
   const dist = from && loc && !isLocal ? haversineM(from.lat, from.lon, loc.lat, loc.lon) : null;
   return (
     <Link to={`/devices/${device.id}`} className="row" data-testid={`device-item-${device.id}`}>
-      <span className={`row-avatar${device.online ? " is-online" : ""}`}>
-        <Icon name={device.icon} size={22} />
+      <span className={`row-avatar row-avatar-device${device.online ? " is-online" : ""}`}>
+        <DeviceGlyph icon={device.icon} size={30} />
       </span>
       <span className="row-main">
         <span className="row-title">

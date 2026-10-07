@@ -24,11 +24,18 @@ export function AppleAccount({ provider }: { provider: "icloud" | "findmy" }) {
   const [method, setMethod] = useState<string | null>(null);
   const [code, setCode] = useState("");
   const refresh = () => qc.invalidateQueries({ queryKey: ["provider", provider] });
-  const fail = (e: unknown) => toast(t("common.error"), e instanceof ApiError ? e.detail : undefined, "error");
+  const [error, setError] = useState<string | null>(null);
+  const fail = (e: unknown) => {
+    const detail = e instanceof ApiError ? e.detail : e instanceof Error ? e.message : undefined;
+    setError(detail ?? t("common.error"));
+    toast(t("common.error"), detail, "error");
+  };
 
   const login = useMutation({
-    mutationFn: () =>
-      api<LoginResult>(`/providers/${provider}/login`, { method: "POST", body: { apple_id: appleId, password } }),
+    mutationFn: () => {
+      setError(null);
+      return api<LoginResult>(`/providers/${provider}/login`, { method: "POST", body: { apple_id: appleId, password } });
+    },
     onSuccess: (res) => {
       if (res.state === "require_2fa") {
         setMethods(res.methods ?? []);
@@ -46,8 +53,10 @@ export function AppleAccount({ provider }: { provider: "icloud" | "findmy" }) {
     onError: fail,
   });
   const submit = useMutation({
-    mutationFn: () =>
-      api<LoginResult>(`/providers/${provider}/2fa/submit`, { method: "POST", body: { method_id: method, code } }),
+    mutationFn: () => {
+      setError(null);
+      return api<LoginResult>(`/providers/${provider}/2fa/submit`, { method: "POST", body: { method_id: method, code } });
+    },
     onSuccess: () => {
       setMethods(null);
       setCode("");
@@ -104,8 +113,9 @@ export function AppleAccount({ provider }: { provider: "icloud" | "findmy" }) {
         <Field label={t("items.twoFactor")} hint={t("items.twoFactorHelp")}>
           <input inputMode="numeric" autoComplete="one-time-code" value={code} onChange={(e) => setCode(e.target.value)} required pattern="[0-9]{6}" />
         </Field>
+        {error && <p className="banner banner-danger" role="alert">{error}</p>}
         <button className="btn btn-primary btn-block" disabled={submit.isPending}>
-          {t("common.save")}
+          {submit.isPending ? t("items.connecting") : t("common.save")}
         </button>
       </form>
     );
@@ -121,13 +131,14 @@ export function AppleAccount({ provider }: { provider: "icloud" | "findmy" }) {
       {account?.state === "reauth_required" && <p className="banner banner-danger">{t("items.reauth")}</p>}
       <p className="banner banner-warning small">{t("items.warning")}</p>
       <Field label={t("items.appleId")}>
-        <input type="email" value={appleId} onChange={(e) => setAppleId(e.target.value)} required autoComplete="off" />
+        <input type="text" inputMode="email" value={appleId} onChange={(e) => setAppleId(e.target.value)} required autoComplete="off" />
       </Field>
       <Field label={t("items.applePassword")}>
         <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="off" />
       </Field>
+      {error && <p className="banner banner-danger" role="alert">{error}</p>}
       <button className="btn btn-primary btn-block" disabled={login.isPending}>
-        {t("items.connect")}
+        {login.isPending ? t("items.connecting") : t("items.connect")}
       </button>
     </form>
   );

@@ -4,6 +4,7 @@ web API as icloud.com/find, with Apple's own play-sound and Lost Mode. Unofficia
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 from typing import Any
 
@@ -14,7 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import Settings
 from app.deps import DB, Ctx, CurrentUser, rate_limit
-from app.models import Command, CommandType, Device, DeviceKind, ProviderAccount
+from app.models import Command, CommandType, Device, DeviceKind, ProviderAccount, User
 from app.providers.apple_base import AppleAccountProvider, AppleAuthError, AppleClient
 from app.providers.base import Capability, CommandError, LocationFix
 from app.providers.icloud import client as ic
@@ -22,10 +23,23 @@ from app.schemas import DeviceOut
 from app.services import locations
 from app.services.devices import device_out
 
+log = logging.getLogger(__name__)
+
 
 class TrackIn(BaseModel):
     icloud_device_id: str = Field(min_length=1, max_length=200)
     name: str | None = Field(default=None, max_length=80)
+
+
+def _new_device(owner_id: str, snap: ic.ICloudSnapshot, name: str | None = None) -> Device:
+    return Device(
+        owner_id=owner_id,
+        name=(name or snap.name or snap.model or "Apple device").strip()[:80],
+        kind=DeviceKind.ICLOUD,
+        icon=_icon_for(snap.model),
+        token_hash=None,
+        provider_config={"icloud_device_id": snap.icloud_id, "model": snap.model},
+    )
 
 
 def _icon_for(model: str) -> str:
@@ -36,8 +50,8 @@ def _icon_for(model: str) -> str:
         return "laptop"
     if "watch" in m:
         return "watch"
-    if "airpods" in m:
-        return "tag"
+    if "airpods" in m or "beats" in m:
+        return "earbuds"
     return "phone"
 
 
@@ -49,6 +63,7 @@ class ICloudProvider(AppleAccountProvider):
 
     def __init__(self, settings: Settings):
         super().__init__(settings, settings.icloud_poll_interval_s)
+        self.auto_track = settings.icloud_auto_track
 
     def cookie_dir(self, user_id: str) -> Path:
         return self.settings.data_dir / "icloud" / user_id
@@ -60,6 +75,8 @@ class ICloudProvider(AppleAccountProvider):
         self, db: AsyncSession, account: ProviderAccount, client: AppleClient, devices: list[Device]
     ) -> None:
         snapshots = await client.locate()  # type: ignore[attr-defined]
+        if self.auto_track:
+            devices = devices + await self._add_new_devices(db, account, snapshots, devices)
         for device in devices:
             snap = snapshots.get((device.provider_config or {}).get("icloud_device_id"))
             if snap is None or snap.lat is None or snap.lon is None or snap.ts is None:
@@ -73,6 +90,35 @@ class ICloudProvider(AppleAccountProvider):
                 battery_charging=snap.charging,
             )
             await locations.ingest(self.ctx, db, device, [fix], source="icloud")
+
+    async def _add_new_devices(
+        self,
+        db: AsyncSession,
+        account: ProviderAccount,
+        snapshots: dict[str, ic.ICloudSnapshot],
+        devices: list[Device],
+    ) -> list[Device]:
+        """Track every device of the Apple account, like the Find My app lists them all."""
+        known = {(d.provider_config or {}).get("icloud_device_id") for d in devices}
+        added = [
+            _new_device(account.user_id, snap)
+            for icloud_id, snap in snapshots.items()
+            if icloud_id not in known
+        ]
+        if not added:
+            return []
+        db.add_all(added)
+        await db.flush()
+        owner = await db.get(User, account.user_id)
+        if owner is not None:
+            if owner.primary_device_id is None:
+                owner.primary_device_id = added[0].id
+            for device in added:
+                self.ctx.hub.send_to_users(
+                    [owner.id], "device.updated", device_out(self.ctx, device, owner)
+                )
+        log.info("iCloud: now tracking %d new device(s)", len(added))
+        return added
 
     async def refresh(self, device: Device) -> None:
         await self.request_refresh(device)
@@ -123,6 +169,7 @@ class ICloudProvider(AppleAccountProvider):
             except AppleAuthError as e:
                 await provider.mark_reauth(db, account, str(e))
                 raise HTTPException(status.HTTP_409_CONFLICT, str(e)) from None
+            log.info("iCloud returned %d device(s)", len(snaps))
             tracked = {
                 (d.provider_config or {}).get("icloud_device_id"): d.id
                 for d in (
@@ -151,14 +198,7 @@ class ICloudProvider(AppleAccountProvider):
             snap = snaps.get(data.icloud_device_id)
             if snap is None:
                 raise HTTPException(status.HTTP_404_NOT_FOUND, "device not found in iCloud")
-            device = Device(
-                owner_id=user.id,
-                name=(data.name or snap.name or snap.model or "Apple device").strip()[:80],
-                kind=DeviceKind.ICLOUD,
-                icon=_icon_for(snap.model),
-                token_hash=None,
-                provider_config={"icloud_device_id": snap.icloud_id, "model": snap.model},
-            )
+            device = _new_device(user.id, snap, data.name)
             db.add(device)
             await db.flush()
             if user.primary_device_id is None:

@@ -6,7 +6,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 Locale = Literal["en", "fr"]
-DeviceIcon = Literal["phone", "tablet", "laptop", "desktop", "watch", "tag"]
+DeviceIcon = Literal["phone", "tablet", "laptop", "desktop", "watch", "earbuds", "tag"]
 
 
 class ORM(BaseModel):

@@ -841,6 +841,45 @@ a.row:hover {
 .pin.is-selected {
   transform: scale(1.2);
 }
+.pin-device {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  background: #fff;
+  box-shadow:
+    0 1px 2px rgb(15 23 42 / 0.25),
+    0 6px 16px rgb(15 23 42 / 0.22);
+}
+.pin-device.is-online,
+.pin-device.is-local {
+  background: #fff;
+}
+.pin-device.is-online::after {
+  content: "";
+  position: absolute;
+  right: 1px;
+  bottom: 1px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #22c55e;
+  border: 2px solid #fff;
+}
+.pin-device.is-lost {
+  box-shadow:
+    0 0 0 3px #dc2626,
+    0 6px 16px rgb(15 23 42 / 0.22);
+}
+.pin-device.is-selected {
+  box-shadow:
+    0 0 0 3px #6366f1,
+    0 8px 20px rgb(15 23 42 / 0.3);
+}
+.row-avatar-device {
+  background: #fff;
+  box-shadow: 0 0 0 1px rgb(15 23 42 / 0.08);
+}
 .pin-person {
   background: linear-gradient(135deg, #6366f1, #7c3aed);
   color: #fff;

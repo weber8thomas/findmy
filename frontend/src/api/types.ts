@@ -21,7 +21,7 @@ export type LostMode = {
 };
 
 export type DeviceKind = "browser" | "owntracks" | "findmy" | "icloud";
-export type DeviceIcon = "phone" | "tablet" | "laptop" | "desktop" | "watch" | "tag";
+export type DeviceIcon = "phone" | "tablet" | "laptop" | "desktop" | "watch" | "earbuds" | "tag";
 
 export type Device = {
   id: string;

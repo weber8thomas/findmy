@@ -1,12 +1,12 @@
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Circle, CircleMarker, MapContainer, Marker, Polyline, TileLayer, Tooltip, useMap, useMapEvents } from "react-leaflet";
 import { useNavigate } from "react-router";
 import type { Device, LocationPoint, Person, Zone } from "../api/types";
 import { useStore } from "../lib/store";
 import { mapUi } from "../lib/ui-state";
-import { iconSvg, initials } from "../ui/icons";
+import { deviceGlyphSvg, initials } from "../ui/icons";
 
 const ACCENT = "#6366f1";
 
@@ -23,15 +23,17 @@ function escapeHtml(s: string): string {
   return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 }
 
-function deviceIcon(d: Device, selected: boolean, local: boolean) {
+const PIN = 44;
+
+function deviceIcon(d: Device, selected: boolean, local: boolean, offset: [number, number]) {
   const cls = ["pin", "pin-device", d.online ? "is-online" : "", selected ? "is-selected" : "", local ? "is-local" : "", d.lost_mode.enabled ? "is-lost" : ""]
     .filter(Boolean)
     .join(" ");
   return L.divIcon({
     className: "pin-wrap",
-    html: `<div class="${cls}" data-testid="marker-device-${d.id}" title="${escapeHtml(d.name)}">${iconSvg(d.icon, 20)}</div>`,
-    iconSize: [40, 40],
-    iconAnchor: [20, 20],
+    html: `<div class="${cls}" data-testid="marker-device-${d.id}" title="${escapeHtml(d.name)}">${deviceGlyphSvg(d.icon, 30)}</div>`,
+    iconSize: [PIN, PIN],
+    iconAnchor: [PIN / 2 - offset[0], PIN / 2 - offset[1]],
   });
 }
 
@@ -42,6 +44,33 @@ function personIcon(p: Person, selected: boolean) {
     iconSize: [40, 40],
     iconAnchor: [20, 20],
   });
+}
+
+/** Pixel offsets that fan out markers overlapping on screen at the current zoom, so none hides another. */
+function spreadOffsets(devices: Device[], project: (lat: number, lon: number) => L.Point): Map<string, [number, number]> {
+  const clusters: { members: { id: string; p: L.Point }[]; center: L.Point }[] = [];
+  for (const d of devices) {
+    if (!d.location) continue;
+    const p = project(d.location.lat, d.location.lon);
+    const hit = clusters.find((c) => c.center.distanceTo(p) < PIN);
+    if (hit) {
+      hit.members.push({ id: d.id, p });
+      const n = hit.members.length;
+      hit.center = hit.center.multiplyBy((n - 1) / n).add(p.divideBy(n));
+    } else {
+      clusters.push({ members: [{ id: d.id, p }], center: p });
+    }
+  }
+  const out = new Map<string, [number, number]>();
+  for (const { members, center } of clusters) {
+    if (members.length < 2) continue;
+    const r = PIN * (members.length > 4 ? 0.9 : 0.6);
+    members.forEach(({ id, p }, i) => {
+      const a = (2 * Math.PI * i) / members.length - Math.PI / 2;
+      out.set(id, [Math.round(center.x + r * Math.cos(a) - p.x), Math.round(center.y + r * Math.sin(a) - p.y)]);
+    });
+  }
+  return out;
 }
 
 /** Space covered by the side panel (desktop) or the bottom sheet + tab bar (mobile). */
@@ -78,7 +107,7 @@ function Controller({ points }: { points: [number, number][] }) {
   useEffect(() => {
     if (didFit.current || points.length === 0) return;
     didFit.current = true;
-    map.fitBounds(L.latLngBounds(points), fitOptions(map, points.length === 1 ? 15 : 16));
+    map.fitBounds(L.latLngBounds(points), fitOptions(map, 18));
   }, [points, map]);
 
   useEffect(() => {
@@ -148,17 +177,7 @@ export function MapView({ tileUrl, attribution, devices, people, zones, localDev
       )}
       {ui.history && ui.history.length > 0 && <HistoryLayer points={ui.history} />}
 
-      {devices.map((d) =>
-        d.location ? (
-          <DeviceMarker
-            key={d.id}
-            device={d}
-            selected={ui.selected?.kind === "device" && ui.selected.id === d.id}
-            local={d.id === localDeviceId}
-            onClick={() => navigate(`/devices/${d.id}`)}
-          />
-        ) : null,
-      )}
+      <DeviceLayer devices={devices} localDeviceId={localDeviceId} onOpen={(id) => navigate(`/devices/${id}`)} />
       {people.map((p) =>
         p.location ? (
           <Marker
@@ -173,12 +192,51 @@ export function MapView({ tileUrl, attribution, devices, people, zones, localDev
   );
 }
 
-function DeviceMarker({ device, selected, local, onClick }: { device: Device; selected: boolean; local: boolean; onClick: () => void }) {
+const NO_OFFSET: [number, number] = [0, 0];
+
+function DeviceLayer({ devices, localDeviceId, onOpen }: { devices: Device[]; localDeviceId: string | null; onOpen: (id: string) => void }) {
+  const map = useMap();
+  const ui = useStore(mapUi);
+  const [zoom, setZoom] = useState(() => map.getZoom());
+  useMapEvents({ zoomend: () => setZoom(map.getZoom()) });
+  const offsets = useMemo(() => spreadOffsets(devices, (lat, lon) => map.project([lat, lon], zoom)), [devices, zoom, map]);
+  return (
+    <>
+      {devices.map((d) =>
+        d.location ? (
+          <DeviceMarker
+            key={d.id}
+            device={d}
+            selected={ui.selected?.kind === "device" && ui.selected.id === d.id}
+            local={d.id === localDeviceId}
+            offset={offsets.get(d.id) ?? NO_OFFSET}
+            onClick={() => onOpen(d.id)}
+          />
+        ) : null,
+      )}
+    </>
+  );
+}
+
+function DeviceMarker({
+  device,
+  selected,
+  local,
+  offset,
+  onClick,
+}: {
+  device: Device;
+  selected: boolean;
+  local: boolean;
+  offset: [number, number];
+  onClick: () => void;
+}) {
   const loc = device.location!;
+  const [dx, dy] = offset;
   const icon = useMemo(
-    () => deviceIcon(device, selected, local),
+    () => deviceIcon(device, selected, local, [dx, dy]),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [device.id, device.icon, device.name, device.online, device.lost_mode.enabled, selected, local],
+    [device.id, device.icon, device.name, device.online, device.lost_mode.enabled, selected, local, dx, dy],
   );
   return (
     <>

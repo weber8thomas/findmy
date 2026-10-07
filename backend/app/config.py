@@ -39,6 +39,7 @@ class Settings(BaseSettings):
 
     findmy_poll_interval_s: int = 300
     icloud_poll_interval_s: int = 120
+    icloud_auto_track: bool = True
     anisette_url: str | None = None
 
     zone_confirm_fixes: int = 2
