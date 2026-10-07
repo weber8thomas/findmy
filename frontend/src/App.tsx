@@ -9,7 +9,8 @@ import { DeviceList } from "./features/devices/DeviceList";
 import { HistoryPanel } from "./features/devices/HistoryPanel";
 import { ItemsPanel } from "./features/items/ItemsPanel";
 import { MePanel } from "./features/me/MePanel";
-import { MyLocationPanel } from "./features/me/MyLocation";
+import { MeDetail, MeHistory } from "./features/me/MeDetail";
+import { MySourcesPanel } from "./features/me/MyLocation";
 import { PeopleList, PersonDetail } from "./features/people/People";
 import { FindMySettings } from "./features/settings/FindMySettings";
 import { ICloudSettings } from "./features/settings/ICloudSettings";
@@ -61,16 +62,20 @@ export function App() {
       <Routes>
         <Route element={<Shell me={me} />}>
           <Route path="/people" element={<PeopleList />} />
+          <Route path="/people/me" element={<MeDetail me={me} base="/people/me" back="/people" />} />
+          <Route path="/people/me/history" element={<MeHistory back="/people/me" />} />
           <Route path="/people/:id" element={<PersonDetail />} />
           <Route path="/devices" element={<DeviceList />} />
           <Route path="/devices/:id" element={<DeviceDetail />} />
           <Route path="/devices/:id/history" element={<HistoryPanel />} />
           <Route path="/items" element={<ItemsPanel />} />
           <Route path="/me" element={<MePanel me={me} />} />
-          <Route path="/me/location" element={<MyLocationPanel me={me} />} />
+          <Route path="/me/location" element={<MeDetail me={me} base="/me/location" back="/me" />} />
+          <Route path="/me/location/history" element={<MeHistory back="/me/location" />} />
           <Route path="/me/zones" element={<ZonesList />} />
           <Route path="/me/zones/:id" element={<ZoneEditor />} />
           <Route path="/settings" element={<SettingsPanel me={me} />} />
+          <Route path="/settings/location" element={<MySourcesPanel />} />
           <Route path="/settings/icloud" element={<ICloudSettings />} />
           <Route path="/settings/findmy" element={<FindMySettings />} />
           <Route path="/privacy" element={<PrivacyPanel />} />

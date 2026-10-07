@@ -18,10 +18,10 @@ test("my location falls back to my second source, live for the people I share wi
   const marcoRow = c.locator('[data-testid^="person-item-"]', { hasText: "Marco" });
   await expect(marcoRow).toContainText("Pas encore de position");
 
-  // Marco adds his laptop as a second source, in Me › My location.
-  await page.goto("/me");
-  await page.getByTestId("link-location").click();
-  await expect(page).toHaveURL(/\/me\/location$/);
+  // Marco adds his laptop as a second source, in Settings › My location sources.
+  await page.goto("/settings");
+  await page.getByTestId("link-settings-sources").click();
+  await expect(page).toHaveURL(/\/settings\/location$/);
   await expect(page.getByTestId("sources")).toContainText("La première source à jour (moins de 30 min) est utilisée");
   const list = page.getByTestId("source-list").locator("li");
   await expect(list).toHaveCount(1);
@@ -32,7 +32,6 @@ test("my location falls back to my second source, live for the people I share wi
   // The phone has nothing to say: the laptop is used.
   await expect(page.getByTestId(`source-${laptop.id}`)).toHaveAttribute("data-in-use", "true");
   await expect(page.getByTestId(`source-${laptop.id}`)).toContainText("Utilisée maintenant");
-  await expect(page.getByTestId("my-location")).toContainText("via MacBook");
   await expect(marcoRow).toContainText("MacBook");
 
   // The phone reports: first and up to date, it takes over, live on both sides.
@@ -51,8 +50,22 @@ test("my location falls back to my second source, live for the people I share wi
   await expect(page.getByTestId(`source-${laptop.id}`)).toHaveAttribute("data-in-use", "true");
   await expect(marcoRow).toContainText("MacBook");
 
-  // People › Me says the same.
+  // People › Me says the same, and opens my page: like a device's, without the settings.
   await page.getByTestId("tab-people").click();
   await expect(page.getByTestId("person-me")).toContainText("via MacBook");
+  await page.getByTestId("person-me").click();
+  await expect(page).toHaveURL(/\/people\/me$/);
+  await expect(page.getByTestId("tab-people")).toHaveAttribute("aria-current", "page");
+  await expect(page.getByTestId("my-location")).toContainText("via MacBook");
+  await expect(page.getByTestId("my-coords")).toContainText("48.86060, 2.33760");
+  await expect(page.locator('select[name="source-device"]')).toHaveCount(0);
+  await expect(page.getByTestId("link-sources")).toContainText("MacBook, Fairphone5");
+  // Only the phone sends its own position: nothing to refresh.
+  await expect(page.getByTestId("btn-my-refresh")).toBeDisabled();
+  await page.getByTestId("btn-my-history").click();
+  await expect(page).toHaveURL(/\/people\/me\/history$/);
+  await expect(page.getByTestId("history-panel")).toContainText("MacBook");
+  await page.getByTestId("back").click();
+  await expect(page).toHaveURL(/\/people\/me$/);
   await claireCtx.close();
 });

@@ -257,8 +257,8 @@ const fr: Catalogue = {
 
   "location.title": "Ma position",
   "location.via": "via {device}",
-  "location.explain": "Ce que voient les personnes avec qui vous partagez votre position.",
-  "location.sources": "Sources",
+  "location.sourcesTitle": "Sources de ma position",
+  "location.noRefresh": "{device} envoie sa position de lui-même : on ne peut pas la lui demander.",
   "location.rule": "La première source à jour (moins de 30 min) est utilisée, sinon la plus récente.",
   "location.inUse": "Utilisée maintenant",
   "location.moveUp": "Monter {name}",

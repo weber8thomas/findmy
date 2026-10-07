@@ -16,8 +16,10 @@ const RANGES = [
 
 const accuracy = (p: LocationPoint) => (p.accuracy != null ? ` · ±${Math.round(p.accuracy)} m` : "");
 
-export function HistoryPanel() {
-  const { id = "" } = useParams();
+/** A device's trace; `deviceId` and `back` for a page that is not the device's own (Me). */
+export function HistoryPanel({ deviceId, back }: { deviceId?: string; back?: string } = {}) {
+  const params = useParams();
+  const id = deviceId ?? params.id ?? "";
   const { t, dateTime } = useI18n();
   const [hours, setHours] = useState(24);
   const { data: devices } = useDevices();
@@ -34,7 +36,7 @@ export function HistoryPanel() {
   const pick = (p: LocationPoint) => patchMapUi({ historyAt: p.ts });
   return (
     <div data-testid="history-panel">
-      <PanelHeader title={`${t("history.title")} · ${device?.name ?? ""}`} back={`/devices/${id}`} />
+      <PanelHeader title={`${t("history.title")} · ${device?.name ?? ""}`} back={back ?? `/devices/${id}`} />
       <div className="segmented" role="radiogroup">
         {RANGES.map((r) => (
           <button key={r.hours} role="radio" aria-checked={hours === r.hours} className={hours === r.hours ? "active" : ""} onClick={() => setHours(r.hours)}>

@@ -143,7 +143,7 @@ function MeRow() {
   if (!me?.primary_device_id) return null;
   const loc = mine?.location;
   return (
-    <Link to="/me/location" className="row" data-testid="person-me">
+    <Link to="/people/me" className="row" data-testid="person-me">
       <Avatar user={me} />
       <span className="row-main">
         <span className="row-title">{t("people.me")}</span>

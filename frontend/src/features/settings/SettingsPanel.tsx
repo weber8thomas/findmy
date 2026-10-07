@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { api } from "../../api/client";
-import { keys, useConfig, useDevices } from "../../api/queries";
+import { keys, useConfig, useDevices, useMyLocation } from "../../api/queries";
 import type { Device, User } from "../../api/types";
 import { useI18n, type Locale } from "../../i18n";
 import { currentSubscription, enablePush, pushSupport } from "../../lib/push";
@@ -165,6 +165,26 @@ function LanguageSwitch({ value, onChange }: { value: Locale; onChange: (l: Loca
   );
 }
 
+/** Where my location is taken from: its own page, to choose and order the devices. */
+function SourcesLink() {
+  const { t } = useI18n();
+  const { data: mine } = useMyLocation();
+  return (
+    <Section>
+      <Link to="/settings/location" className="link-row" data-testid="link-settings-sources">
+        <Icon name="pin" />
+        <span className="link-row-text">
+          {t("location.sourcesTitle")}
+          <span className="link-row-sub">
+            {mine?.device_name ? t("location.via", { device: mine.device_name }) : t("devices.noLocation")}
+          </span>
+        </span>
+        <Icon name="chevron" className="icon-flip link-row-chevron" />
+      </Link>
+    </Section>
+  );
+}
+
 function About() {
   const { t } = useI18n();
   const { data: config } = useConfig();
@@ -230,6 +250,7 @@ export function SettingsPanel({ me }: { me: User }) {
       <PanelHeader title={t("settings.title")} back="/me" />
       <ThisDevice me={me} />
       <PushSettings me={me} />
+      <SourcesLink />
       {config?.features.owntracks && <OwnTracksSetup me={me} />}
       <AppleSources />
       <Section title={t("me.language")}>

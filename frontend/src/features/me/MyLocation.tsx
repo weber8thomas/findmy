@@ -1,13 +1,12 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { api } from "../../api/client";
 import { keys, useDevices, useMyLocation, useSources } from "../../api/queries";
-import type { Device, User } from "../../api/types";
+import type { Device } from "../../api/types";
 import { useI18n } from "../../i18n";
-import { focusOn, patchMapUi, toast } from "../../lib/ui-state";
+import { toast } from "../../lib/ui-state";
 import { Empty, PanelHeader, Section } from "../../ui/components";
-import { Avatar, DeviceGlyph, Icon } from "../../ui/icons";
-import { Viewers } from "./MePanel";
+import { DeviceGlyph, Icon } from "../../ui/icons";
 
 // Same limit as the server (schemas.MAX_SOURCES).
 const MAX_SOURCES = 5;
@@ -146,25 +145,13 @@ function AddSource({ devices, onAdd, busy }: { devices: Device[]; onAdd: (id: st
   );
 }
 
-/** Me › My location: where the people I share with see me, and the devices it is taken from. */
-export function MyLocationPanel({ me }: { me: User }) {
-  const { t, relTime } = useI18n();
+/** Settings › My location sources: the devices my location is taken from, first choice first. */
+export function MySourcesPanel() {
+  const { t } = useI18n();
   const { data: devices, isLoading } = useDevices();
   const { data: sources } = useSources();
   const { data: mine } = useMyLocation();
   const save = useSaveSources();
-
-  // My face is the subject of the map here.
-  useEffect(() => {
-    patchMapUi({ selected: { kind: "person", id: me.id } });
-    return () => patchMapUi({ selected: null });
-  }, [me.id]);
-  const loc = mine?.location;
-  useEffect(() => {
-    if (loc) focusOn(loc.lat, loc.lon);
-    // Only on arrival, not on every position update.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loc == null]);
 
   const byId = new Map((devices ?? []).map((d) => [d.id, d]));
   const list = (sources?.device_ids ?? []).flatMap((id) => byId.get(id) ?? []);
@@ -177,18 +164,9 @@ export function MyLocationPanel({ me }: { me: User }) {
   };
 
   return (
-    <div data-testid="my-location-panel">
-      <PanelHeader title={t("location.title")} back="/me" />
-      <div className="my-location" data-testid="my-location">
-        <Avatar user={me} />
-        <span className="row-main">
-          <span className="row-title">{loc ? t("location.via", { device: mine?.device_name ?? "" }) : t("devices.noLocation")}</span>
-          <span className="row-sub">{loc ? relTime(loc.ts) : t("location.explain")}</span>
-        </span>
-      </div>
-      <Viewers />
-
-      <Section title={t("location.sources")} testId="sources">
+    <div data-testid="my-sources-panel">
+      <PanelHeader title={t("location.sourcesTitle")} back="/settings" />
+      <Section testId="sources">
         <p className="muted small">{t("location.rule")}</p>
         {isLoading ? (
           <Empty>{t("common.loading")}</Empty>

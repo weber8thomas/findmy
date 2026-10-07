@@ -256,8 +256,8 @@ const en = {
 
   "location.title": "My location",
   "location.via": "via {device}",
-  "location.explain": "What the people you share your location with see.",
-  "location.sources": "Sources",
+  "location.sourcesTitle": "My location sources",
+  "location.noRefresh": "{device} sends its position by itself: it cannot be asked for one.",
   "location.rule": "The first up-to-date source (less than 30 min old) is used, otherwise the most recent one.",
   "location.inUse": "In use now",
   "location.moveUp": "Move {name} up",

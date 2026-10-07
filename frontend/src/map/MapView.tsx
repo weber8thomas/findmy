@@ -351,8 +351,11 @@ export function MapView({ tileUrl, night, attribution, devices, faces, zones, fr
       {ui.history && ui.history.length > 0 && <HistoryLayer points={ui.history} pickedTs={ui.historyAt} />}
 
       <DeviceLayer devices={devices} localDeviceId={localDeviceId} onOpen={(id) => navigate(`/devices/${id}`)} />
-      {/* Mine opens where my location is set; someone else's, their page. */}
-      <FaceLayer faces={faces} onOpen={(f) => navigate(f.isMe ? "/me/location" : `/people/${f.user.id}`)} />
+      {/* Mine opens my page, in the tab it is on; someone else's, theirs. */}
+      <FaceLayer
+        faces={faces}
+        onOpen={(f) => navigate(f.isMe ? (tab === "/people" ? "/people/me" : "/me/location") : `/people/${f.user.id}`)}
+      />
     </MapContainer>
   );
 }
