@@ -19,12 +19,12 @@ export default defineConfig({
       manifest: {
         name: "Oukilé",
         short_name: "Oukilé",
-        description: "Find your devices and people, from any browser.",
+        description: "The family’s devices, and the people who share their location, on one private map.",
         start_url: "/",
         scope: "/",
         display: "standalone",
-        background_color: "#0f172a",
-        theme_color: "#4f46e5",
+        background_color: "#f2f2f7",
+        theme_color: "#f2f2f7",
         icons: [
           { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
           { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },

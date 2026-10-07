@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import en, { type MessageKey } from "./en";
 import fr from "./fr";
 
@@ -22,7 +22,8 @@ export function detectLocale(): Locale {
   } catch {
     /* storage unavailable */
   }
-  return navigator.language?.toLowerCase().startsWith("fr") ? "fr" : "en";
+  const lang = typeof navigator === "undefined" ? "" : navigator.language;
+  return lang?.toLowerCase().startsWith("fr") ? "fr" : "en";
 }
 
 type I18n = {
@@ -36,12 +37,16 @@ type I18n = {
 
 const I18nContext = createContext<I18n | null>(null);
 
-export function I18nProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>(detectLocale);
+export function I18nProvider({ children, initialLocale }: { children: ReactNode; initialLocale?: Locale }) {
+  const [locale, setLocaleState] = useState<Locale>(() => initialLocale ?? detectLocale());
+
+  // Screen readers pick their voice from <html lang>, including on the first load.
+  useEffect(() => {
+    document.documentElement.lang = locale;
+  }, [locale]);
 
   const setLocale = useCallback((l: Locale) => {
     setLocaleState(l);
-    document.documentElement.lang = l;
     try {
       localStorage.setItem(STORAGE_KEY, l);
     } catch {

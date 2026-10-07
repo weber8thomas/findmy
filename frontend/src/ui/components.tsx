@@ -11,7 +11,7 @@ export function PanelHeader({ title, back, right }: { title: ReactNode; back?: s
     <header className="panel-header">
       {back && (
         <button className="btn-icon" onClick={() => navigate(back)} aria-label={t("common.back")} data-testid="back">
-          ‹
+          <Icon name="chevron" size={20} />
         </button>
       )}
       <h2>{title}</h2>
@@ -43,7 +43,12 @@ export function BatteryBadge({ battery }: { battery: Battery | null }) {
       <span className="battery-body">
         <span className="battery-fill" style={{ width: `${Math.max(6, pct)}%` }} />
       </span>
-      {pct}%{battery.charging ? " ⚡" : ""}
+      {pct}%
+      {battery.charging && (
+        <svg className="battery-bolt" viewBox="0 0 10 14" width="8" height="11" role="img" aria-label={t("devices.charging")}>
+          <path d="M6.2 0L0 8.2h4.1L3 14l7-8.4H5.6z" fill="currentColor" />
+        </svg>
+      )}
     </span>
   );
 }

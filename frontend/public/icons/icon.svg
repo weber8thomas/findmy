@@ -1,13 +1,23 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Oukilé: a lowercase "é" whose accent is a location pin. -->
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#6366f1"/>
-      <stop offset="1" stop-color="#7c3aed"/>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#47a0ff"/>
+      <stop offset="1" stop-color="#0a52d1"/>
     </linearGradient>
+    <radialGradient id="glow" cx=".62" cy=".22" r=".6">
+      <stop offset="0" stop-color="#fff" stop-opacity=".22"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </radialGradient>
   </defs>
-  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
-  <ellipse cx="256" cy="398" rx="92" ry="22" fill="#1e1b4b" opacity=".35"/>
-  <path d="M256 92c-70 0-126 55-126 124 0 92 126 186 126 186s126-94 126-186c0-69-56-124-126-124z" fill="#fff"/>
-  <circle cx="256" cy="214" r="46" fill="#6d28d9"/>
-  <circle cx="256" cy="214" r="18" fill="#fff"/>
+  <rect width="512" height="512" rx="114" fill="url(#bg)"/>
+  <rect width="512" height="512" rx="114" fill="url(#glow)"/>
+  <g transform="translate(250 268) scale(.86) translate(-250 -260)">
+    <g fill="none" stroke="#fff" stroke-linecap="round">
+      <path d="M140 322H364" stroke-width="50" stroke-linecap="butt"/>
+      <path d="M364 322A112 112 0 1 0 336 396" stroke-width="62"/>
+    </g>
+    <path transform="translate(262 150) rotate(30) scale(1.18)" fill="#fff" fill-rule="evenodd"
+      d="M0 0C-14-22-46-52-46-92A46 46 0 1 1 46-92C46-52 14-22 0 0ZM0-111A19 19 0 1 0 0-73A19 19 0 1 0 0-111Z"/>
+  </g>
 </svg>

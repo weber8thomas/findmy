@@ -31,7 +31,7 @@ export function ZonesList() {
       <div className="list">
         {zones?.map((z) => (
           <Link key={z.id} to={`/me/zones/${z.id}`} className="row" data-testid={`zone-item-${z.id}`} onClick={() => focusOn(z.lat, z.lon, 15)}>
-            <span className="row-avatar">
+            <span className="row-avatar row-avatar-zone">
               <Icon name="zone" />
             </span>
             <span className="row-main">

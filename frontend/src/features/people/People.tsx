@@ -8,7 +8,7 @@ import { useI18n } from "../../i18n";
 import { directionsUrl } from "../../lib/geo";
 import { focusOn, patchMapUi, toast } from "../../lib/ui-state";
 import { ActionButton, Empty, Field, PanelHeader, Section } from "../../ui/components";
-import { initials } from "../../ui/icons";
+import { avatarTone, initials } from "../../ui/icons";
 
 function useInvalidatePeople() {
   const qc = useQueryClient();
@@ -122,7 +122,7 @@ function PersonRow({ person }: { person: Person }) {
           : t("people.notSharingWithYou");
   return (
     <Link to={`/people/${person.user.id}`} className="row" data-testid={`person-item-${person.user.id}`}>
-      <span className="row-avatar avatar-person">{initials(person.user.display_name)}</span>
+      <span className={`row-avatar avatar-person ${avatarTone(person.user.id)}`}>{initials(person.user.display_name)}</span>
       <span className="row-main">
         <span className="row-title">{person.user.display_name}</span>
         <span className="row-sub">{sub}</span>
