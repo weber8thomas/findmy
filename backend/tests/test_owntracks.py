@@ -2,7 +2,9 @@
 
 import itertools
 import time
+from datetime import timedelta
 
+from app.providers import owntracks
 from tests.test_misc import basic
 
 HOME = {"name": "Home", "lat": 48.8584, "lon": 2.2945, "radius_m": 200}
@@ -180,6 +182,19 @@ def test_profile_follows_the_places_on_android(api, client):
     reply = post(client, a, phone, transition("leave", *FAR), ua=ANDROID)
     assert profile(reply)["locatorDisplacement"] == 100
     assert post(client, a, phone, location(*FAR), ua=ANDROID) == []
+
+
+def test_profile_sent_again_a_day_later(api, client, monkeypatch):
+    """The app ignores a profile while its remote configuration is off, and never says so."""
+    a = api.register("A")
+    phone = api.device(a, "Phone", kind="owntracks")
+    zone(api, client, a, HOME)
+    assert profile(post(client, a, phone, location(*FAR), ua=ANDROID))["locatorInterval"] == 60
+    assert post(client, a, phone, location(*FAR), ua=ANDROID) == []
+    monkeypatch.setattr(owntracks, "PROFILE_RESEND", timedelta(0))  # a day has gone by
+    reply = post(client, a, phone, location(*FAR), ua=ANDROID)
+    assert actions(reply) == ["setConfiguration"]
+    assert profile(reply)["locatorInterval"] == 60
 
 
 def test_no_profile_for_ios(api, client):

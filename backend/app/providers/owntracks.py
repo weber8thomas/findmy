@@ -14,7 +14,7 @@ from __future__ import annotations
 import base64
 import hashlib
 import json
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Request, status
@@ -42,6 +42,13 @@ ANDROID_USER_AGENT = "Owntracks-Android/"
 # What the app was last sent, in Device.provider_config. Forgotten when it is set up again.
 WAYPOINTS_KEY = "waypoints_hash"
 PROFILE_KEY = "profile"
+PROFILE_SENT_KEY = "profile_sent_at"
+SYNC_KEYS = (WAYPOINTS_KEY, PROFILE_KEY, PROFILE_SENT_KEY)
+
+# The app never says whether it applied a profile: it ignores one sent while its remote
+# configuration is off. Sent again this often, it catches up within a day; resending the same
+# values changes nothing on the phone.
+PROFILE_RESEND = timedelta(days=1)
 
 
 def _basic_auth(request: Request) -> tuple[str, str] | None:
@@ -136,10 +143,8 @@ def _digest(waypoints: list[dict[str, Any]]) -> str:
 def forget_sync(device: Device) -> None:
     """The app is being set up again (maybe reinstalled): send it everything anew."""
     cfg = device.provider_config or {}
-    if WAYPOINTS_KEY in cfg or PROFILE_KEY in cfg:
-        device.provider_config = {
-            k: v for k, v in cfg.items() if k not in (WAYPOINTS_KEY, PROFILE_KEY)
-        }
+    if any(k in cfg for k in SYNC_KEYS):
+        device.provider_config = {k: v for k, v in cfg.items() if k not in SYNC_KEYS}
 
 
 def _profile(ctx: AppContext, device: Device, zones: list[Zone]) -> str | None:
@@ -154,8 +159,20 @@ def _profile(ctx: AppContext, device: Device, zones: list[Zone]) -> str | None:
     return "calm" if inside else "reactive"
 
 
+def _sent_long_ago(cfg: dict, now: datetime) -> bool:
+    try:
+        return now - datetime.fromisoformat(cfg[PROFILE_SENT_KEY]) >= PROFILE_RESEND
+    except (KeyError, TypeError, ValueError):
+        return True
+
+
 async def commands_for(
-    ctx: AppContext, db: AsyncSession, device: Device, *, android: bool
+    ctx: AppContext,
+    db: AsyncSession,
+    device: Device,
+    *,
+    android: bool,
+    now: datetime | None = None,
 ) -> list[dict[str, Any]]:
     """`cmd` messages for the reply: what changed since the app was last told."""
     zones = list(
@@ -181,7 +198,8 @@ async def commands_for(
         cfg[WAYPOINTS_KEY] = digest
 
     profile = _profile(ctx, device, zones) if android else None
-    if profile is not None and cfg.get(PROFILE_KEY) != profile:
+    now = now or datetime.now(UTC)
+    if profile is not None and (cfg.get(PROFILE_KEY) != profile or _sent_long_ago(cfg, now)):
         out.append(
             {
                 "_type": "cmd",
@@ -190,6 +208,7 @@ async def commands_for(
             }
         )
         cfg[PROFILE_KEY] = profile
+        cfg[PROFILE_SENT_KEY] = now.isoformat()
 
     if cfg != (device.provider_config or {}):
         device.provider_config = cfg
