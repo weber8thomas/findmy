@@ -38,7 +38,9 @@ def client_ip(conn: HTTPConnection, ctx: AppContext) -> str:
     if ctx.settings.trust_proxy:
         fwd = conn.headers.get("x-forwarded-for")
         if fwd:
-            return fwd.split(",")[0].strip()
+            # The last entry is the one added by our proxy; earlier ones come from the
+            # client and can be forged to dodge rate limits.
+            return fwd.split(",")[-1].strip()
     return conn.client.host if conn.client else "unknown"
 
 

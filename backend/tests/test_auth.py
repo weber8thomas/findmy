@@ -1,3 +1,5 @@
+from types import SimpleNamespace
+
 from fastapi.testclient import TestClient
 
 from app.config import Settings
@@ -92,3 +94,20 @@ def test_sso_off_by_default(client):
     r = client.get("/api/auth/oidc/login", follow_redirects=False)
     assert r.status_code == 303
     assert r.headers["location"] == "/login?sso_error=disabled"
+
+
+def test_client_ip_behind_proxy(settings):
+    from starlette.requests import Request
+
+    from app.deps import client_ip
+
+    def ip(trust: bool, fwd: str | None) -> str:
+        headers = [(b"x-forwarded-for", fwd.encode())] if fwd else []
+        scope = {"type": "http", "headers": headers, "client": ("192.0.2.10", 5000)}
+        settings.trust_proxy = trust
+        return client_ip(Request(scope), SimpleNamespace(settings=settings))
+
+    assert ip(False, "1.2.3.4") == "192.0.2.10"
+    assert ip(True, None) == "192.0.2.10"
+    # A client-supplied entry comes first; the proxy appends the real address.
+    assert ip(True, "6.6.6.6, 203.0.113.9") == "203.0.113.9"
