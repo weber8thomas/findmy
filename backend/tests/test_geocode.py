@@ -23,8 +23,7 @@ WIEN = [
         "category": "place",
         "type": "house",
         "name": "",
-        "display_name": "1, Stephansplatz, Innere Stadt, Wien, "
-        "1010, Österreich",
+        "display_name": "1, Stephansplatz, Innere Stadt, Wien, 1010, Österreich",
     },
     {
         "place_id": 100000002,
@@ -33,8 +32,7 @@ WIEN = [
         "category": "highway",
         "type": "residential",
         "name": "Stephansplatz",
-        "display_name": "Stephansplatz, Innere Stadt, Wien, "
-        "1010, Österreich",
+        "display_name": "Stephansplatz, Innere Stadt, Wien, 1010, Österreich",
     },
 ]
 
@@ -68,14 +66,12 @@ def test_results_mapped_and_asked_in_the_users_language(api, nominatim):
     assert r.status_code == 200, r.text
     assert r.json() == [
         {
-            "label": "1, Stephansplatz, Innere Stadt, Wien, "
-            "1010, Österreich",
+            "label": "1, Stephansplatz, Innere Stadt, Wien, 1010, Österreich",
             "lat": 48.2084263,
             "lon": 16.3731453,
         },
         {
-            "label": "Stephansplatz, Innere Stadt, Wien, "
-            "1010, Österreich",
+            "label": "Stephansplatz, Innere Stadt, Wien, 1010, Österreich",
             "lat": 48.209,
             "lon": 16.3727,
         },
